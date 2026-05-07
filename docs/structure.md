@@ -39,7 +39,7 @@ version 1.0.0
 │   ├── init.sql                # Схема БД: Users, Rooms, MarvelCards (20+ записів)
 │   └── seed_cards.sql          # Дані для 20 карток (атака, захист, cost)
 ├── docs/                       # Матеріали для захисту
-│   ├── presentation.pdf        # Презентація продукту (7-10 хв)
-│   └── demo_video.mp4          # Запис екрану (trailer) ігрового процесу
+│   ├── plan.md
+│   ├── process.md
 ├── style_guides/               # Дотримання Google HTML/CSS & JS Style Guide
 └── README.md                   # Опис проєкту та інструкція запуску
