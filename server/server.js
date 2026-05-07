@@ -4,6 +4,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const db = require('./db/connection');
+const cardsRouter = require('./routes/cards');
 
 const app = express();
 const server = http.createServer(app);
@@ -18,6 +19,8 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+
+app.use('/api/cards', cardsRouter);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'Server is running', timestamp: new Date() });
