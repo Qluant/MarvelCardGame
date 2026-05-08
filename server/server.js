@@ -8,6 +8,7 @@ const cardsRouter = require('./routes/cards');
 const authRoutes = require('./routes/auth');
 const playersRoutes = require('./routes/players');
 const infoRoutes = require('./routes/info');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -18,10 +19,11 @@ const io = socketIo(server, {
   },
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/cards', cardsRouter);
 app.use('/api/auth', authRoutes);
@@ -82,26 +84,39 @@ io.on('connection', (socket) => {
     });
   });
 
-  const handleLeave = () => {
-    for (const roomId in rooms) {
-      const room = rooms[roomId];
-      if (room.players.find(p => p.id === socket.id)) {
-        room.players = room.players.filter(p => p.id !== socket.id);
-        socket.leave(roomId);
-        if (room.players.length === 0) {
-          delete rooms[roomId];
-        } else {
-          io.to(roomId).emit('player-left', { playerId: socket.id });
+  socket.on('get-rooms', () => {
+    socket.emit('rooms-update', getPublicRooms());
+  });
+
+  socket.on('check-game-state', ({ roomId, nickname }) => {
+    const room = rooms[roomId];
+    if (room) {
+      const playerIndex = room.players.findIndex(p => p.nickname === nickname);
+      if (playerIndex !== -1) {
+        room.players[playerIndex].id = socket.id;
+        socket.join(roomId);
+        if (room.players.length === 2) {
+          socket.emit('game-start', room);
         }
       }
     }
-    io.emit('rooms-update', getPublicRooms());
-  };
+  });
 
-  socket.on('leave-room', handleLeave);
+  socket.on('leave-room', (roomId) => {
+    socket.leave(roomId);
+    if (rooms[roomId]) {
+      rooms[roomId].players = rooms[roomId].players.filter(p => p.id !== socket.id);
+      if (rooms[roomId].players.length === 0) {
+        delete rooms[roomId];
+      } else {
+        io.to(roomId).emit('player-left', { playerId: socket.id });
+      }
+    }
+    io.emit('rooms-update', getPublicRooms());
+  });
+
   socket.on('disconnect', () => {
     console.log(`Client disconnected: ${socket.id}`);
-    handleLeave();
   });
 });
 

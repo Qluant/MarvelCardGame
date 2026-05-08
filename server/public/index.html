@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Great Battle - Marvel Card Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-logo">Great Battle</div>
+      <nav class="header-nav">
+        <a href="#" onclick="navigate('lobby')">Lobby</a>
+        <a href="#" onclick="navigate('top10')">Top 10</a>
+        <a href="#" onclick="navigate('info')">Info</a>
+        <a href="#" id="nav-profile" style="display:none;" onclick="navigate('profile')">Profile</a>
+        <a href="#" id="nav-login" onclick="navigate('login')">Login</a>
+        <button id="nav-logout" style="display:none;" class="logout-btn" onclick="handleLogout()">Logout</button>
+      </nav>
+    </header>
+
+    <div class="app-container-routed">
+      <main class="main-content">
+        
+        <!-- LOGIN VIEW -->
+        <div id="view-login" class="view page-container" style="max-width: 400px;">
+          <div class="login-form">
+            <h2>Sign In</h2>
+            <form onsubmit="handleLogin(event)">
+              <div>
+                <label>Nickname</label>
+                <input type="text" id="login-nickname" required />
+              </div>
+              <div>
+                <label>Password</label>
+                <input type="password" id="login-password" required />
+              </div>
+              <button type="submit">Battle</button>
+            </form>
+            <button onclick="navigate('register')">Don't have an account? Register</button>
+          </div>
+        </div>
+
+        <!-- REGISTER VIEW -->
+        <div id="view-register" class="view page-container" style="max-width: 400px;">
+          <div class="register-form">
+            <h2>Create Account</h2>
+            <form onsubmit="handleRegister(event)">
+              <div>
+                <label>Nickname</label>
+                <input type="text" id="reg-nickname" required />
+              </div>
+              <div>
+                <label>Password</label>
+                <input type="password" id="reg-password" required />
+              </div>
+              <button type="submit">Sign Up</button>
+            </form>
+            <button onclick="navigate('login')">Already have an account? Login</button>
+          </div>
+        </div>
+
+        <!-- LOBBY VIEW -->
+        <div id="view-lobby" class="view page-container">
+          <div class="room-list glass-panel">
+            <h2>Battle Lobby</h2>
+            
+            <div class="create-room" style="margin-bottom: 20px; padding: 20px;">
+              <h3>Create Room</h3>
+              <form onsubmit="handleCreateRoom(event)" style="flex-direction: row; align-items: flex-end;">
+                <div>
+                  <label>Room Name</label>
+                  <input type="text" id="create-room-name" required />
+                </div>
+                <div>
+                  <label>Private</label>
+                  <input type="checkbox" id="create-room-private" onchange="document.getElementById('create-room-pwd').style.display = this.checked ? 'block' : 'none'" />
+                </div>
+                <div id="create-room-pwd" style="display:none;">
+                  <label>Password</label>
+                  <input type="password" id="create-room-password" />
+                </div>
+                <button type="submit">Create</button>
+              </form>
+            </div>
+
+            <h3>Active Open Rooms</h3>
+            <div id="lobby-rooms-container">
+              <p>Loading rooms...</p>
+            </div>
+            
+            <div id="join-private-modal" style="display:none; margin-top:20px; padding: 20px; background: rgba(0,0,0,0.8); border: 1px solid var(--marvel-red);">
+              <h3 id="join-private-title">Join Private Room</h3>
+              <input type="hidden" id="join-private-id" />
+              <div>
+                <label>Password</label>
+                <input type="password" id="join-private-password" />
+              </div>
+              <div style="margin-top:10px;">
+                <button onclick="submitJoinPrivate()">Join</button>
+                <button onclick="document.getElementById('join-private-modal').style.display='none'" style="background: transparent; border: 1px solid var(--marvel-grey);">Cancel</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- TOP 10 VIEW -->
+        <div id="view-top10" class="view page-container">
+          <div class="glass-panel leaderboard-panel">
+            <h2>Top 10 Performers</h2>
+            <table class="leaderboard">
+              <thead><tr><th>Rank</th><th>Nickname</th><th>Wins</th><th>Loses</th><th>Winstreak</th></tr></thead>
+              <tbody id="top10-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PROFILE VIEW -->
+        <div id="view-profile" class="view page-container">
+          <div class="glass-panel profile-panel">
+            <h2 id="profile-title">Profile</h2>
+            <div class="profile-stats">
+              <div class="stat-box"><span>Games Played</span><strong id="profile-games">0</strong></div>
+              <div class="stat-box"><span>Wins</span><strong id="profile-wins">0</strong></div>
+              <div class="stat-box"><span>Loses</span><strong id="profile-loses">0</strong></div>
+              <div class="stat-box"><span>Winstreak</span><strong id="profile-winstreak">0</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- INFO VIEW -->
+        <div id="view-info" class="view page-container info-page">
+          <h2>Heroes & Cards Compendium</h2>
+          <div class="heroes-list" id="info-heroes-list"></div>
+        </div>
+
+        <!-- GAME BOARD VIEW -->
+        <div id="view-game" class="view board" style="padding:0; width:100vw;">
+          <button class="leave-btn" onclick="handleLeaveGame()">Resign</button>
+          
+          <div class="timer">60</div>
+
+          <!-- ENEMY ZONE -->
+          <div class="enemy-zone">
+            <div class="enemy-hand">
+              <ul class="hand-fanned-enemy" id="enemy-hand-list"></ul>
+            </div>
+            <div class="hero-portrait-container">
+              <img id="enemy-avatar" src="" alt="Enemy Hero" class="hero-avatar" />
+              <div class="hero-hp" id="enemy-hp">30</div>
+              <h3 class="hero-name" id="enemy-nickname">Waiting...</h3>
+            </div>
+          </div>
+          
+          <!-- BATTLEFIELD -->
+          <div class="battlefield">
+            <div class="battlefield-half enemy-half">
+              <ul id="enemy-active-cards"></ul>
+            </div>
+            <div class="battlefield-divider"></div>
+            <div class="battlefield-half player-half">
+              <ul id="player-active-cards"></ul>
+            </div>
+          </div>
+
+          <!-- PLAYER ZONE -->
+          <div class="player-zone">
+            <div class="hero-portrait-container">
+              <img id="player-avatar" src="" alt="Player Hero" class="hero-avatar" />
+              <div class="hero-hp" id="player-hp">30</div>
+              <h3 class="hero-name" id="player-nickname">Player</h3>
+            </div>
+            <div class="player-hand">
+              <ul class="hand-fanned" id="player-hand-list"></ul>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- SOCKET.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/app.js"></script>
+  </body>
+</html>
