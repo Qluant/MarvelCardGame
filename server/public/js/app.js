@@ -7,6 +7,8 @@ let playerActiveCards = [];
 let enemyActiveCards = [];
 let enemyHandCount = 0;
 let gameStarted = false;
+let gameTimerInterval = null;
+let gameTimeLeft = 60;
 
 const API_URL = 'http://localhost:3000/api';
 
@@ -72,7 +74,7 @@ window.handleLogin = async function(e) {
   try {
     const res = await fetch(`${API_URL}/auth/login`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nickname, password })
+      body: JSON.stringify({ username: nickname, password })
     });
     const data = await res.json();
     if (res.ok) {
@@ -91,11 +93,17 @@ window.handleRegister = async function(e) {
   e.preventDefault();
   const nickname = document.getElementById('reg-nickname').value;
   const password = document.getElementById('reg-password').value;
+  const confirmPassword = document.getElementById('reg-confirm-password').value;
+
+  if (password !== confirmPassword) {
+    alert('Passwords do not match!');
+    return;
+  }
   
   try {
     const res = await fetch(`${API_URL}/auth/register`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nickname, password })
+      body: JSON.stringify({ username: nickname, password })
     });
     const data = await res.json();
     if (res.ok) {
@@ -208,17 +216,56 @@ function setupSocketListeners() {
   });
 
   socket.on('game-start', (room) => {
+    if (currentRoomId !== room.id) {
+      enterGame(room.id);
+    }
     gameStarted = true;
-    const opponent = room.players.find(p => p.nickname !== currentUser.nickname);
+    const opponent = room.players.find(p => p.id !== socket.id) || room.players[0];
     if (opponent) {
       document.getElementById('enemy-nickname').innerText = opponent.nickname;
       document.getElementById('enemy-avatar').src = `https://picsum.photos/seed/${opponent.nickname}/120/120`;
       enemyHandCount = 3;
       renderBoard();
+      
+      // Start Timer
+      if (gameTimerInterval) clearInterval(gameTimerInterval);
+      gameTimeLeft = 60;
+      document.querySelector('.timer').innerText = gameTimeLeft;
+      
+      const tickTimer = () => {
+        gameTimeLeft--;
+        if (gameTimeLeft >= 0) {
+          document.querySelector('.timer').innerText = gameTimeLeft;
+        } else {
+          // Timer reached 0, pass turn to another player automatically
+          gameTimeLeft = 60;
+          document.querySelector('.timer').innerText = gameTimeLeft;
+          socket.emit('make-move', { roomId: currentRoomId, move: null, passTurn: true });
+        }
+      };
+      
+      gameTimerInterval = setInterval(tickTimer, 1000);
     }
   });
 
   socket.on('move-made', (data) => {
+    if (data.passTurn) {
+      if (gameTimerInterval) clearInterval(gameTimerInterval);
+      gameTimeLeft = 60;
+      document.querySelector('.timer').innerText = gameTimeLeft;
+      gameTimerInterval = setInterval(() => {
+        gameTimeLeft--;
+        if (gameTimeLeft >= 0) {
+          document.querySelector('.timer').innerText = gameTimeLeft;
+        } else {
+          gameTimeLeft = 60;
+          document.querySelector('.timer').innerText = gameTimeLeft;
+          socket.emit('make-move', { roomId: currentRoomId, move: null, passTurn: true });
+        }
+      }, 1000);
+      return;
+    }
+    
     if (data.playerId !== socket.id) {
       enemyHandCount = Math.max(0, enemyHandCount - 1);
       enemyActiveCards.push(data.move);
@@ -227,6 +274,7 @@ function setupSocketListeners() {
   });
 
   socket.on('player-left', () => {
+    if (gameTimerInterval) clearInterval(gameTimerInterval);
     alert('Opponent left! You win!');
     navigate('lobby');
   });
@@ -248,7 +296,6 @@ window.attemptJoinRoom = function(roomId, isPrivate) {
     document.getElementById('join-private-modal').style.display = 'block';
   } else {
     socket.emit('join-room', { roomId, nickname: currentUser.nickname });
-    enterGame(roomId);
   }
 }
 
@@ -257,7 +304,6 @@ window.submitJoinPrivate = function() {
   const password = document.getElementById('join-private-password').value;
   document.getElementById('join-private-modal').style.display = 'none';
   socket.emit('join-room', { roomId, password, nickname: currentUser.nickname });
-  enterGame(roomId);
 }
 
 function enterGame(roomId) {
@@ -278,11 +324,15 @@ function enterGame(roomId) {
   enemyActiveCards = [];
   enemyHandCount = 0;
   
+  if (gameTimerInterval) clearInterval(gameTimerInterval);
+  document.querySelector('.timer').innerText = '60';
+  
   renderBoard();
   socket.emit('check-game-state', { roomId, nickname: currentUser.nickname });
 }
 
 window.handleLeaveGame = function() {
+  if (gameTimerInterval) clearInterval(gameTimerInterval);
   socket.emit('leave-room', currentRoomId);
   navigate('lobby');
 }
@@ -305,14 +355,16 @@ function renderBoard() {
   // Render Player Hand
   const pHandList = document.getElementById('player-hand-list');
   pHandList.innerHTML = '';
+  
   playerHand.forEach((card, idx) => {
     const mid = (playerHand.length - 1) / 2;
     const offset = idx - mid;
-    const rotate = offset * 4;
-    const translateY = Math.abs(offset) * 8;
+    const rotate = offset * 6; // slightly more rotation
+    const translateY = Math.abs(offset) * 12; // arc curve
+    const translateX = offset * 40; // horizontal spread
     
     pHandList.innerHTML += `
-      <li class="hand-slot" style="transform: rotate(${rotate}deg) translateY(${translateY}px)">
+      <li class="hand-slot" style="transform: translateX(${translateX}px) translateY(${translateY}px) rotate(${rotate}deg)">
         ${renderCard(card, true, `playCard(${card.id})`)}
       </li>
     `;
@@ -324,10 +376,11 @@ function renderBoard() {
   for (let i = 0; i < enemyHandCount; i++) {
     const mid = (enemyHandCount - 1) / 2;
     const offset = i - mid;
-    const rotate = offset * -4;
-    const translateY = Math.abs(offset) * -8;
+    const rotate = offset * -6;
+    const translateY = Math.abs(offset) * -12;
+    const translateX = offset * 40;
     eHandList.innerHTML += `
-      <li class="card-back" style="transform: rotate(${rotate}deg) translateY(${translateY}px)">
+      <li class="card-back" style="transform: translateX(${translateX}px) translateY(${translateY}px) rotate(${rotate}deg)">
         <div class="card-back-stamp">M</div>
       </li>
     `;

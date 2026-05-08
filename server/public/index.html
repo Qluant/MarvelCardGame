@@ -58,6 +58,10 @@
                 <label>Password</label>
                 <input type="password" id="reg-password" required />
               </div>
+              <div>
+                <label>Confirm Password</label>
+                <input type="password" id="reg-confirm-password" required />
+              </div>
               <button type="submit">Sign Up</button>
             </form>
             <button onclick="navigate('login')">Already have an account? Login</button>
@@ -71,14 +75,14 @@
             
             <div class="create-room" style="margin-bottom: 20px; padding: 20px;">
               <h3>Create Room</h3>
-              <form onsubmit="handleCreateRoom(event)" style="flex-direction: row; align-items: flex-end;">
+              <form onsubmit="handleCreateRoom(event)">
                 <div>
                   <label>Room Name</label>
                   <input type="text" id="create-room-name" required />
                 </div>
-                <div>
-                  <label>Private</label>
-                  <input type="checkbox" id="create-room-private" onchange="document.getElementById('create-room-pwd').style.display = this.checked ? 'block' : 'none'" />
+                <div style="flex-direction: row; align-items: center; gap: 10px;">
+                  <input type="checkbox" id="create-room-private" onchange="document.getElementById('create-room-pwd').style.display = this.checked ? 'block' : 'none'" style="width: auto; margin: 0;" />
+                  <label style="margin: 0;">Private Room</label>
                 </div>
                 <div id="create-room-pwd" style="display:none;">
                   <label>Password</label>
@@ -147,13 +151,13 @@
 
           <!-- ENEMY ZONE -->
           <div class="enemy-zone">
-            <div class="enemy-hand">
-              <ul class="hand-fanned-enemy" id="enemy-hand-list"></ul>
-            </div>
             <div class="hero-portrait-container">
               <img id="enemy-avatar" src="" alt="Enemy Hero" class="hero-avatar" />
               <div class="hero-hp" id="enemy-hp">30</div>
               <h3 class="hero-name" id="enemy-nickname">Waiting...</h3>
+            </div>
+            <div class="enemy-hand">
+              <ul class="hand-fanned-enemy" id="enemy-hand-list"></ul>
             </div>
           </div>
           
@@ -170,13 +174,13 @@
 
           <!-- PLAYER ZONE -->
           <div class="player-zone">
+            <div class="player-hand">
+              <ul class="hand-fanned" id="player-hand-list"></ul>
+            </div>
             <div class="hero-portrait-container">
               <img id="player-avatar" src="" alt="Player Hero" class="hero-avatar" />
               <div class="hero-hp" id="player-hp">30</div>
               <h3 class="hero-name" id="player-nickname">Player</h3>
-            </div>
-            <div class="player-hand">
-              <ul class="hand-fanned" id="player-hand-list"></ul>
             </div>
           </div>
         </div>
