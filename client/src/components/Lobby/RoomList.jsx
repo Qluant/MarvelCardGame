@@ -1,65 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import CreateRoom from './CreateRoom';
 import JoinRoom from './JoinRoom';
+import { socket } from '../../socket';
 
-function RoomList({ user, onJoinGame, onLogout }) {
-  // Mock data
-  const [rooms, setRooms] = useState([
-    { id: 1, name: "Tony's Room", isPrivate: false },
-    { id: 2, name: "Secret Lair", isPrivate: true }
-  ]);
+function RoomList({ user }) {
+  const [rooms, setRooms] = useState([]);
   const [joiningPrivateRoom, setJoiningPrivateRoom] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    socket.on('rooms-update', (updatedRooms) => {
+      setRooms(updatedRooms);
+    });
+
+    socket.on('room-created', (room) => {
+      navigate(`/game/${room.id}`);
+    });
+
+    socket.on('error', (msg) => alert(msg));
+
+    // Request initial list
+    socket.emit('get-rooms');
+
+    return () => {
+      socket.off('rooms-update');
+      socket.off('room-created');
+      socket.off('error');
+    };
+  }, [navigate]);
 
   const handleCreateRoom = (newRoom) => {
-    // TODO: emit create room event to server
-    const room = {
-      id: rooms.length + 1,
-      name: newRoom.name,
-      isPrivate: newRoom.isPrivate
-    };
-    setRooms([...rooms, room]);
+    socket.emit('create-room', { ...newRoom, nickname: user.nickname });
   };
 
   const handleAttemptJoin = (room) => {
     if (room.isPrivate) {
       setJoiningPrivateRoom(room);
     } else {
-      onJoinGame(room.id);
+      socket.emit('join-room', { roomId: room.id, nickname: user.nickname });
+      navigate(`/game/${room.id}`);
     }
   };
 
   const handleJoinPrivate = (roomId, password) => {
-    // TODO: verify password with server
-    console.log(`Joining private room ${roomId} with pass ${password}`);
     setJoiningPrivateRoom(null);
-    onJoinGame(roomId);
+    socket.emit('join-room', { roomId, password, nickname: user.nickname });
+    navigate(`/game/${roomId}`);
   };
 
   return (
-    <div className="room-list">
-      <h2>Lobby</h2>
-      <p>Welcome, {user?.nickname}!</p>
-      <button onClick={onLogout}>Logout</button>
+    <div className="page-container">
+      <div className="room-list glass-panel">
+        <h2>Battle Lobby</h2>
+        <CreateRoom onCreateRoom={handleCreateRoom} />
 
-      <CreateRoom onCreateRoom={handleCreateRoom} />
+        <h3>Active Open Rooms</h3>
+        {rooms.length === 0 ? <p>No open rooms. Create one!</p> : (
+          <ul>
+            {rooms.map(room => (
+              <li key={room.id} className="room-item">
+                <span>{room.name} {room.isPrivate ? '🔒' : ''}</span>
+                <button onClick={() => handleAttemptJoin(room)}>Join</button>
+              </li>
+            ))}
+          </ul>
+        )}
 
-      <h3>Active Rooms</h3>
-      <ul>
-        {rooms.map(room => (
-          <li key={room.id} className="room-item">
-            <span>{room.name} {room.isPrivate ? '(Private)' : ''}</span>
-            <button onClick={() => handleAttemptJoin(room)}>Join</button>
-          </li>
-        ))}
-      </ul>
-
-      {joiningPrivateRoom && (
-        <JoinRoom 
-          room={joiningPrivateRoom} 
-          onJoin={handleJoinPrivate} 
-          onCancel={() => setJoiningPrivateRoom(null)} 
-        />
-      )}
+        {joiningPrivateRoom && (
+          <JoinRoom 
+            room={joiningPrivateRoom} 
+            onJoin={handleJoinPrivate} 
+            onCancel={() => setJoiningPrivateRoom(null)} 
+          />
+        )}
+      </div>
     </div>
   );
 }
