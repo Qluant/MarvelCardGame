@@ -80,6 +80,7 @@ io.on('connection', (socket) => {
     io.to(moveData.roomId).emit('move-made', {
       playerId: socket.id,
       move: moveData.move,
+      passTurn: !!moveData.passTurn,
       timestamp: new Date(),
     });
   });

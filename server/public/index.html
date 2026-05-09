@@ -146,8 +146,23 @@
         <!-- GAME BOARD VIEW -->
         <div id="view-game" class="view board" style="padding:0; width:100vw;">
           <button class="leave-btn" onclick="handleLeaveGame()">Resign</button>
-          
+          <button class="end-turn-btn" id="end-turn-btn" onclick="handleEndTurn()">End Turn</button>
+
           <div class="timer">60</div>
+
+          <!-- TURN OVERLAY -->
+          <div class="turn-overlay" id="turn-overlay" style="display:none;"></div>
+
+          <!-- END TURN CONFIRMATION -->
+          <div class="confirm-modal" id="end-turn-modal" style="display:none;">
+            <div class="confirm-box">
+              <p>End your turn?</p>
+              <div class="confirm-actions">
+                <button class="confirm-yes" onclick="confirmEndTurn()">Yes</button>
+                <button class="confirm-no" onclick="document.getElementById('end-turn-modal').style.display='none'">Cancel</button>
+              </div>
+            </div>
+          </div>
 
           <!-- ENEMY ZONE -->
           <div class="enemy-zone">
@@ -166,7 +181,9 @@
             <div class="battlefield-half enemy-half">
               <ul id="enemy-active-cards"></ul>
             </div>
-            <div class="battlefield-divider"></div>
+            <div class="battlefield-divider">
+              <div class="turn-indicator waiting" id="turn-indicator">Waiting for opponent...</div>
+            </div>
             <div class="battlefield-half player-half">
               <ul id="player-active-cards"></ul>
             </div>
@@ -181,6 +198,24 @@
               <img id="player-avatar" src="" alt="Player Hero" class="hero-avatar" />
               <div class="hero-hp" id="player-hp">30</div>
               <h3 class="hero-name" id="player-nickname">Player</h3>
+            </div>
+          </div>
+
+          <!-- AP BARS (Middle Right) -->
+          <div class="ap-side-container">
+            <div class="ap-section enemy-ap-section">
+              <div class="ap-label">ENEMY AP</div>
+              <div class="ap-display">
+                <div id="enemy-ap-bubbles" class="ap-bubbles"></div>
+                <div id="enemy-ap-text" class="ap-text">3/3</div>
+              </div>
+            </div>
+            <div class="ap-section player-ap-section">
+              <div class="ap-label">YOUR AP</div>
+              <div class="ap-display">
+                <div id="player-ap-bubbles" class="ap-bubbles"></div>
+                <div id="player-ap-text" class="ap-text">3/3</div>
+              </div>
             </div>
           </div>
         </div>

@@ -9,6 +9,13 @@ let enemyHandCount = 0;
 let gameStarted = false;
 let gameTimerInterval = null;
 let gameTimeLeft = 60;
+let isMyTurn = false;
+// Action Points
+let playerAP = 3;
+let playerMaxAP = 3;
+let enemyAP = 3;
+let enemyMaxAP = 3;
+const AP_CAP = 10;
 
 const API_URL = 'http://localhost:3000/api';
 
@@ -167,7 +174,7 @@ async function loadInfo() {
   });
 }
 
-// Card Renderer
+// Card Renderer (hand / info view)
 function renderCard(card, isHand = false, onClick = null) {
   const seed = card.name.replace(/\s/g, '');
   const placeholderImg = `https://picsum.photos/seed/${seed}/200/150`;
@@ -186,6 +193,19 @@ function renderCard(card, isHand = false, onClick = null) {
           <span class="stat-defense">🛡️ ${card.defense}</span>
         </div>
       </div>
+    </div>
+  `;
+}
+
+// Compact board card renderer (Hearthstone-style: image + stat badges only)
+function renderBoardCard(card) {
+  const seed = card.name.replace(/\s/g, '');
+  const placeholderImg = `https://picsum.photos/seed/${seed}/200/150`;
+  return `
+    <div class="board-minion" title="${card.name}: ${card.description}">
+      <img src="${placeholderImg}" alt="${card.name}" class="board-minion-img"/>
+      <div class="board-minion-atk">${card.attack}</div>
+      <div class="board-minion-def">${card.defense}</div>
     </div>
   `;
 }
@@ -220,11 +240,17 @@ function setupSocketListeners() {
       enterGame(room.id);
     }
     gameStarted = true;
+    // First player in the room goes first
+    isMyTurn = room.players[0].id === socket.id;
+    updateEndTurnButton();
     const opponent = room.players.find(p => p.id !== socket.id) || room.players[0];
     if (opponent) {
       document.getElementById('enemy-nickname').innerText = opponent.nickname;
       document.getElementById('enemy-avatar').src = `https://picsum.photos/seed/${opponent.nickname}/120/120`;
-      enemyHandCount = 3;
+      enemyHandCount = playerHand.length; // mirror our own hand size
+      // Both start with 3 AP
+      playerAP = 3; playerMaxAP = 3;
+      enemyAP = 3;  enemyMaxAP = 3;
       renderBoard();
       
       // Start Timer
@@ -237,10 +263,10 @@ function setupSocketListeners() {
         if (gameTimeLeft >= 0) {
           document.querySelector('.timer').innerText = gameTimeLeft;
         } else {
-          // Timer reached 0, pass turn to another player automatically
+          // Timer reached 0, pass turn automatically
           gameTimeLeft = 60;
           document.querySelector('.timer').innerText = gameTimeLeft;
-          socket.emit('make-move', { roomId: currentRoomId, move: null, passTurn: true });
+          doPassTurn();
         }
       };
       
@@ -250,6 +276,22 @@ function setupSocketListeners() {
 
   socket.on('move-made', (data) => {
     if (data.passTurn) {
+      // Flip whose turn it is
+      isMyTurn = !isMyTurn;
+      updateEndTurnButton();
+
+      // AP: the player whose turn is STARTING gets +1 max and +1 current AP (accumulation)
+      if (data.playerId === socket.id) {
+        // I just passed → enemy's turn starts
+        enemyMaxAP = Math.min(enemyMaxAP + 1, AP_CAP);
+        enemyAP    = Math.min(enemyAP + 1, enemyMaxAP);
+      } else {
+        // Enemy just passed → my turn starts
+        playerMaxAP = Math.min(playerMaxAP + 1, AP_CAP);
+        playerAP    = Math.min(playerAP + 1, playerMaxAP);
+      }
+
+      // Reset timer
       if (gameTimerInterval) clearInterval(gameTimerInterval);
       gameTimeLeft = 60;
       document.querySelector('.timer').innerText = gameTimeLeft;
@@ -260,14 +302,24 @@ function setupSocketListeners() {
         } else {
           gameTimeLeft = 60;
           document.querySelector('.timer').innerText = gameTimeLeft;
-          socket.emit('make-move', { roomId: currentRoomId, move: null, passTurn: true });
+          doPassTurn();
         }
       }, 1000);
+
+      // Show turn change overlay
+      if (data.playerId === socket.id) {
+        showTurnOverlay('Your turn is over', '#4dabf7', 'Enemy Turn', '#e03131');
+      } else {
+        showTurnOverlay('Enemy Turn is over', '#e03131', 'Your Turn!', '#4dabf7');
+      }
+      renderBoard();
       return;
     }
     
     if (data.playerId !== socket.id) {
+      // Enemy played a card — deduct their AP and remove a card back
       enemyHandCount = Math.max(0, enemyHandCount - 1);
+      enemyAP = Math.max(0, enemyAP - (data.move ? data.move.cost : 0));
       enemyActiveCards.push(data.move);
       renderBoard();
     }
@@ -306,6 +358,44 @@ window.submitJoinPrivate = function() {
   socket.emit('join-room', { roomId, password, nickname: currentUser.nickname });
 }
 
+// ── Turn helpers ──────────────────────────────────────────────────────────────
+
+function doPassTurn() {
+  socket.emit('make-move', { roomId: currentRoomId, move: null, passTurn: true });
+}
+
+function updateEndTurnButton() {
+  const btn = document.getElementById('end-turn-btn');
+  if (!btn) return;
+  btn.disabled = !isMyTurn;
+  btn.style.opacity = isMyTurn ? '1' : '0.4';
+  btn.style.cursor = isMyTurn ? 'pointer' : 'not-allowed';
+}
+
+function showTurnOverlay(firstText, firstColor, secondText, secondColor) {
+  const overlay = document.getElementById('turn-overlay');
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `<span class="overlay-text" style="color:${firstColor}">${firstText}</span>`;
+
+  // After 1.5s swap to second message, then fade out
+  setTimeout(() => {
+    overlay.innerHTML = `<span class="overlay-text" style="color:${secondColor}">${secondText}</span>`;
+    setTimeout(() => {
+      overlay.style.display = 'none';
+    }, 1500);
+  }, 1500);
+}
+
+window.handleEndTurn = function() {
+  if (!isMyTurn) return;
+  document.getElementById('end-turn-modal').style.display = 'flex';
+}
+
+window.confirmEndTurn = function() {
+  document.getElementById('end-turn-modal').style.display = 'none';
+  doPassTurn();
+}
+
 function enterGame(roomId) {
   currentRoomId = roomId;
   navigate('game');
@@ -323,6 +413,14 @@ function enterGame(roomId) {
   playerActiveCards = [];
   enemyActiveCards = [];
   enemyHandCount = 0;
+  enemyCardsPlayedThisTurn = 0;
+  isMyTurn = false;
+  
+  // Initialize AP
+  playerAP = 3;
+  playerMaxAP = 3;
+  enemyAP = 3;
+  enemyMaxAP = 3;
   
   if (gameTimerInterval) clearInterval(gameTimerInterval);
   document.querySelector('.timer').innerText = '60';
@@ -338,34 +436,86 @@ window.handleLeaveGame = function() {
 }
 
 window.playCard = function(cardId) {
-  if (!gameStarted) return alert("Waiting for opponent!");
-  if (playerActiveCards.length >= 7) return;
+  if (!gameStarted) return alert('Waiting for opponent!');
+  if (!isMyTurn) return; // silently block — not your turn
   
   const cardIndex = playerHand.findIndex(c => c.id === cardId);
   if (cardIndex !== -1) {
     const card = playerHand[cardIndex];
+    if (playerAP < card.cost) return alert("Not enough AP!");
+    if (playerActiveCards.length >= 7) return;
+
+    playerAP -= card.cost;
     playerHand.splice(cardIndex, 1);
     playerActiveCards.push(card);
-    socket.emit('make-move', { roomId: currentRoomId, move: card });
+    socket.emit('make-move', { roomId: currentRoomId, move: card, passTurn: false });
     renderBoard();
   }
 };
 
 function renderBoard() {
-  // Render Player Hand
+  // Update turn indicator
+  const indicator = document.getElementById('turn-indicator');
+  if (indicator) {
+    if (!gameStarted) {
+      indicator.textContent = 'Waiting for opponent...';
+      indicator.className = 'turn-indicator waiting';
+    } else if (isMyTurn) {
+      indicator.textContent = '⚔ Your Turn';
+      indicator.className = 'turn-indicator my-turn';
+    } else {
+      indicator.textContent = '🛡 Enemy Turn';
+      indicator.className = 'turn-indicator enemy-turn';
+    }
+  }
+
+  // Update AP Displays
+  const pApText = document.getElementById('player-ap-text');
+  const pApBubbles = document.getElementById('player-ap-bubbles');
+  const eApText = document.getElementById('enemy-ap-text');
+  const eApBubbles = document.getElementById('enemy-ap-bubbles');
+
+  if (pApText && pApBubbles) {
+    pApText.textContent = `${playerAP}/10`;
+    pApBubbles.innerHTML = '';
+    // Always show 10 bubbles
+    for (let i = 0; i < 10; i++) {
+      let state = 'locked';
+      if (i < playerMaxAP) {
+        state = i < playerAP ? 'filled' : 'empty';
+      }
+      pApBubbles.innerHTML += `<div class="ap-bubble ${state}"></div>`;
+    }
+  }
+
+  if (eApText && eApBubbles) {
+    eApText.textContent = `${enemyAP}/10`;
+    eApBubbles.innerHTML = '';
+    // Always show 10 bubbles
+    for (let i = 0; i < 10; i++) {
+      let state = 'locked';
+      if (i < enemyMaxAP) {
+        state = i < enemyAP ? 'filled' : 'empty';
+      }
+      eApBubbles.innerHTML += `<div class="ap-bubble ${state}"></div>`;
+    }
+  }
+
+  // Render Player Hand — only clickable on your turn
   const pHandList = document.getElementById('player-hand-list');
   pHandList.innerHTML = '';
   
   playerHand.forEach((card, idx) => {
     const mid = (playerHand.length - 1) / 2;
     const offset = idx - mid;
-    const rotate = offset * 6; // slightly more rotation
-    const translateY = Math.abs(offset) * 12; // arc curve
-    const translateX = offset * 40; // horizontal spread
+    const rotate = offset * 6;
+    const translateY = Math.abs(offset) * 12;
+    const translateX = offset * 40;
+    const onClickStr = isMyTurn ? `playCard(${card.id})` : null;
     
     pHandList.innerHTML += `
-      <li class="hand-slot" style="transform: translateX(${translateX}px) translateY(${translateY}px) rotate(${rotate}deg)">
-        ${renderCard(card, true, `playCard(${card.id})`)}
+      <li class="hand-slot${isMyTurn ? '' : ' no-play'}" style="transform: translateX(${translateX}px) translateY(${translateY}px) rotate(${rotate}deg) scale(0.7)">
+        ${renderCard(card, true, onClickStr)}
       </li>
     `;
   });
@@ -380,7 +530,7 @@ function renderBoard() {
     const translateY = Math.abs(offset) * -12;
     const translateX = offset * 40;
     eHandList.innerHTML += `
-      <li class="card-back" style="transform: translateX(${translateX}px) translateY(${translateY}px) rotate(${rotate}deg)">
+      <li class="card-back" style="transform: translateX(${translateX}px) translateY(${translateY}px) rotate(${rotate}deg) scale(0.7)">
         <div class="card-back-stamp">M</div>
       </li>
     `;
@@ -388,8 +538,8 @@ function renderBoard() {
 
   // Render Active Cards
   const pActiveList = document.getElementById('player-active-cards');
-  pActiveList.innerHTML = playerActiveCards.map(c => `<li class="active-card-slot">${renderCard(c)}</li>`).join('');
+  pActiveList.innerHTML = playerActiveCards.map(c => `<li class="active-card-slot">${renderBoardCard(c)}</li>`).join('');
   
   const eActiveList = document.getElementById('enemy-active-cards');
-  eActiveList.innerHTML = enemyActiveCards.map(c => `<li class="active-card-slot">${renderCard(c)}</li>`).join('');
+  eActiveList.innerHTML = enemyActiveCards.map(c => `<li class="active-card-slot">${renderBoardCard(c)}</li>`).join('');
 }

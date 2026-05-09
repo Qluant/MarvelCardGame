@@ -291,6 +291,220 @@ button[type="submit"]:active {
   z-index: 100;
 }
 
+/* AP Side Container - Vertical & Centered Right */
+.ap-side-container {
+  position: absolute;
+  right: 25px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Bring them closer together */
+  z-index: 100;
+  pointer-events: none;
+  background: rgba(0,0,0,0.3);
+  padding: 20px 10px;
+  border-radius: 30px;
+  border: 1px solid rgba(255,255,255,0.05);
+  backdrop-filter: blur(5px);
+}
+
+.ap-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.ap-label {
+  font-family: var(--font-header);
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 1px;
+  font-weight: bold;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  margin-bottom: 5px;
+}
+
+.ap-display {
+  display: flex;
+  flex-direction: column-reverse; /* Stack bubbles vertically */
+  align-items: center;
+  gap: 12px;
+}
+
+.ap-bubbles {
+  display: flex;
+  flex-direction: column-reverse; /* Bottom to top */
+  gap: 6px;
+}
+
+.ap-bubble {
+  width: 12px;
+  height: 12px;
+  background: rgba(20,20,20,0.8);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 2px;
+  transform: rotate(45deg);
+  box-shadow: inset 0 0 4px rgba(0,0,0,1);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* State: Locked (Beyond Max AP) */
+.ap-bubble.locked {
+  opacity: 0.2;
+  background: transparent;
+  border-color: rgba(255,255,255,0.05);
+}
+
+/* State: Empty (Available slot but spent) */
+.ap-bubble.empty {
+  background: rgba(40,40,40,0.6);
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* State: Filled (Current AP) */
+.ap-bubble.filled {
+  background: #3498db;
+  border-color: #5dade2;
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.8), inset 0 0 4px rgba(255,255,255,0.4);
+}
+
+.enemy-ap-section .ap-bubble.filled {
+  background: #e67e22;
+  border-color: #f39c12;
+  box-shadow: 0 0 10px rgba(230, 126, 34, 0.8), inset 0 0 4px rgba(255,255,255,0.4);
+}
+
+.ap-text {
+  font-family: var(--font-header);
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #3498db;
+  text-align: center;
+  text-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
+  margin-top: 5px;
+}
+
+.enemy-ap-section .ap-text {
+  color: #e67e22;
+  text-shadow: 0 0 8px rgba(230, 126, 34, 0.5);
+}
+
+/* End Turn button */
+.end-turn-btn {
+  position: absolute;
+  bottom: 220px;
+  right: 120px;
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+  font-family: var(--font-header);
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.5), 0 0 8px rgba(46,204,113,0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+}
+.end-turn-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.6), 0 0 14px rgba(46,204,113,0.6);
+}
+.end-turn-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Turn Overlay */
+.turn-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  pointer-events: none;
+  background: rgba(0,0,0,0.35);
+  animation: overlayFadeIn 0.3s ease;
+}
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.overlay-text {
+  font-family: var(--font-header);
+  font-size: 3.5rem;
+  font-weight: bold;
+  text-shadow: 0 0 30px currentColor, 0 4px 12px rgba(0,0,0,0.9);
+  animation: overlayPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+@keyframes overlayPop {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+/* Confirmation modal */
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.55);
+  z-index: 600;
+  backdrop-filter: blur(4px);
+}
+.confirm-box {
+  background: var(--glass-bg);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 16px;
+  padding: 32px 48px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+}
+.confirm-box p {
+  font-family: var(--font-header);
+  font-size: 1.6rem;
+  color: white;
+  margin-bottom: 24px;
+}
+.confirm-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+.confirm-yes {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+  font-family: var(--font-header);
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 10px 28px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.confirm-yes:hover { transform: scale(1.05); box-shadow: 0 4px 14px rgba(46,204,113,0.5); }
+.confirm-no {
+  background: rgba(255,255,255,0.1);
+  color: #ccc;
+  font-family: var(--font-header);
+  font-size: 1rem;
+  padding: 10px 28px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.confirm-no:hover { background: rgba(255,255,255,0.18); }
+
 .coin-toss {
   position: absolute;
   top: 50%;
@@ -332,12 +546,29 @@ button[type="submit"]:active {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   width: 100%;
   position: relative;
   z-index: 10;
-  height: 180px;
+  height: 200px;
   flex-shrink: 0;
+}
+
+.player-zone {
+  justify-content: flex-start;
+  padding-top: 10px;
+}
+.player-zone .hero-portrait-container {
+  transform: translateY(-40px);
+  z-index: 40;
+}
+
+.enemy-zone {
+  justify-content: flex-end;
+  padding-bottom: 10px;
+}
+.enemy-zone .hero-portrait-container {
+  transform: translateY(40px);
+  z-index: 40;
 }
 
 .hero-portrait-container {
@@ -349,11 +580,11 @@ button[type="submit"]:active {
 }
 
 .hero-avatar {
-  width: 120px;
-  height: 120px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid var(--marvel-darker);
+  border: 3px solid var(--marvel-darker);
   box-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 10px var(--marvel-red-glow);
   background: #222;
   flex-shrink: 0;
@@ -361,21 +592,22 @@ button[type="submit"]:active {
 
 .hero-hp {
   position: absolute;
-  bottom: 0;
-  right: -10px;
+  bottom: -4px;
+  right: -14px;
   background: #4CAF50;
   color: white;
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-header);
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: bold;
   border: 3px solid var(--marvel-darker);
   box-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  z-index: 50;
 }
 
 .hero-name {
@@ -398,8 +630,9 @@ button[type="submit"]:active {
   pointer-events: none; /* Let clicks pass through empty areas */
 }
 
-.player-hand { bottom: 0px; }
-.enemy-hand { top: -60px; }
+.player-hand { bottom: -50px; z-index: 30; }
+.player-hand:has(li:hover) { z-index: 60; }
+.enemy-hand { top: -50px; z-index: 10; }
 
 .hand-fanned, .hand-fanned-enemy {
   display: flex;
@@ -420,9 +653,10 @@ button[type="submit"]:active {
 }
 
 .hand-fanned li:hover {
-  z-index: 100;
-  transform: translateY(-80px) scale(1.1) !important;
-  margin: 0 15px;
+  z-index: 200 !important;
+  transform: translateX(0px) translateY(-140px) rotate(0deg) scale(1) !important;
+  margin: 0 20px;
+  position: relative;
 }
 
 /* ==========================================================================
@@ -451,11 +685,74 @@ button[type="submit"]:active {
 }
 
 .battlefield-divider {
-  height: 2px;
+  height: 40px;
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 4px 0;
+}
+
+.battlefield-divider::before {
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 2px;
   background: linear-gradient(90deg, transparent, rgba(230, 36, 41, 0.5), transparent);
   box-shadow: 0 0 10px var(--marvel-red-glow);
-  margin: 10px 0;
+}
+
+/* Turn indicator pill */
+.turn-indicator {
+  position: relative;
+  z-index: 10;
+  padding: 5px 20px;
+  border-radius: 20px;
+  font-family: var(--font-header);
+  font-size: 0.95rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 2px solid transparent;
+  transition: background 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
+  white-space: nowrap;
+}
+
+.turn-indicator.waiting {
+  background: rgba(80,80,80,0.8);
+  color: #aaa;
+  border-color: rgba(150,150,150,0.3);
+}
+
+.turn-indicator.my-turn {
+  background: rgba(10, 60, 120, 0.9);
+  color: #74c0fc;
+  border-color: #4dabf7;
+  box-shadow: 0 0 16px rgba(77, 171, 247, 0.6);
+  animation: pulseTurn 1.5s ease-in-out infinite;
+}
+
+.turn-indicator.enemy-turn {
+  background: rgba(100, 10, 10, 0.9);
+  color: #ff8787;
+  border-color: #e03131;
+  box-shadow: 0 0 16px rgba(224, 49, 49, 0.5);
+}
+
+@keyframes pulseTurn {
+  0%, 100% { box-shadow: 0 0 16px rgba(77, 171, 247, 0.6); }
+  50%       { box-shadow: 0 0 28px rgba(77, 171, 247, 1); }
+}
+
+/* Cards greyed out when not your turn */
+.hand-slot.no-play {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.hand-slot.no-play .marvel-card {
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* ==========================================================================
@@ -585,22 +882,70 @@ button[type="submit"]:active {
 }
 
 .active-card-slot {
-  width: 160px;
-  height: 240px;
+  width: 96px;
+  height: 96px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.active-card-slot .marvel-card {
-  transform: scale(1) !important;
-  transform-origin: center;
+/* Hearthstone-style board minion — compact rectangle */
+.board-minion {
+  position: relative;
+  width: 72px;
+  height: 100px;
+  border-radius: 8px;
+  overflow: visible;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: #1a1a2e;
+  border: 2px solid #c8a44a;
+  box-shadow: 0 0 10px rgba(0,0,0,0.8), 0 0 5px rgba(200,164,74,0.4);
 }
 
-.active-card-slot .marvel-card:hover {
-  transform: scale(1) translateY(-5px) !important;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.6), 0 0 15px var(--marvel-red-glow);
+.board-minion:hover {
+  transform: scale(1.12) translateY(-8px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.8), 0 0 12px rgba(200,164,74,0.7);
+  z-index: 50;
 }
+
+.board-minion-img {
+  width: 100%;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 6px 6px 0 0;
+  display: block;
+}
+
+.board-minion-atk,
+.board-minion-def {
+  position: absolute;
+  bottom: -10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-header);
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: white;
+  border: 2px solid rgba(0,0,0,0.7);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.8);
+}
+
+.board-minion-atk {
+  left: -6px;
+  background: #e05a00;
+}
+
+.board-minion-def {
+  right: -6px;
+  background: #1a6fbb;
+}
+
 /* ==========================================================================
    Header & Navigation
    ========================================================================== */
