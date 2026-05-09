@@ -342,7 +342,7 @@ function setupSocketListeners() {
       document.getElementById('enemy-avatar').src = '';
       playerHand = [
         { id: 1, name: 'Unibeam',     category: 'Trade',  cost: 5, attack: 8, defense: 0, description: 'Concentrated beam.' },
-        { id: 2, name: 'Stark Decoy', category: 'Summon', cost: 1, attack: 1, defense: 2, description: 'Holographic decoy.' },
+        { id: 2, name: 'Stark Tech Decoy', category: 'Summon', cost: 1, attack: 1, defense: 2, description: 'Holographic decoy.' },
       ];
       playerActiveCards = [];
       enemyActiveCards = [];
@@ -530,7 +530,7 @@ function enterGame(roomId) {
   
   playerHand = [
     { id: 1, name: 'Unibeam', category: 'Trade', cost: 5, attack: 8, defense: 0, description: 'Concentrated beam.' },
-    { id: 2, name: 'Stark Decoy', category: 'Summon', cost: 1, attack: 1, defense: 2, description: 'Holographic decoy.' },
+    { id: 2, name: 'Stark Tech Decoy', category: 'Summon', cost: 1, attack: 1, defense: 2, description: 'Holographic decoy.' },
   ];
   playerActiveCards = [];
   enemyActiveCards = [];
