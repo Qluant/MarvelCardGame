@@ -17,7 +17,7 @@ let enemyAP = 3;
 let enemyMaxAP = 3;
 const AP_CAP = 10;
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = '/api';
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
