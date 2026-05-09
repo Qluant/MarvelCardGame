@@ -47,8 +47,19 @@ function updateHeaderAuth() {
   }
 }
 
+// Tracks whether the user is locked inside a room (waiting or playing)
+let inRoom = false;
+
 // Router
 function navigate(viewName) {
+  // Block navigation away from game/waiting unless explicitly leaving
+  const lockingViews = ['game', 'waiting'];
+  const currentActive = document.querySelector('.view.active');
+  const currentViewId = currentActive ? currentActive.id.replace('view-', '') : null;
+  if (inRoom && lockingViews.includes(currentViewId) && !lockingViews.includes(viewName)) {
+    return; // silently block — user must use the Leave/Resign button
+  }
+
   document.querySelectorAll('.view').forEach(v => {
     v.style.display = 'none';
     v.classList.remove('active');
@@ -58,6 +69,15 @@ function navigate(viewName) {
   if (target) {
     target.style.display = 'flex';
     target.classList.add('active');
+  }
+
+  const header = document.querySelector('.app-header');
+  if (header) {
+    if (viewName === 'game' || viewName === 'waiting') {
+      header.style.display = 'none';
+    } else {
+      header.style.display = 'flex';
+    }
   }
 
   // View specific logic
@@ -236,9 +256,34 @@ function setupSocketListeners() {
   });
 
   socket.on('game-start', (room) => {
-    if (currentRoomId !== room.id) {
-      enterGame(room.id);
+    if (window.waitingTipsInterval) clearInterval(window.waitingTipsInterval);
+
+    // If this player joined via join-room (not create-room), enterGame was never called —
+    // initialise the full game state here
+    if (!currentRoomId || currentRoomId !== room.id) {
+      currentRoomId = room.id;
+      inRoom = true;
+      gameStarted = false;
+      document.getElementById('player-nickname').innerText = currentUser.nickname;
+      document.getElementById('player-avatar').src = `https://picsum.photos/seed/${currentUser.nickname}/120/120`;
+      document.getElementById('enemy-nickname').innerText = 'Opponent';
+      document.getElementById('enemy-avatar').src = '';
+      playerHand = [
+        { id: 1, name: 'Unibeam',     category: 'Trade',  cost: 5, attack: 8, defense: 0, description: 'Concentrated beam.' },
+        { id: 2, name: 'Stark Decoy', category: 'Summon', cost: 1, attack: 1, defense: 2, description: 'Holographic decoy.' },
+      ];
+      playerActiveCards = [];
+      enemyActiveCards = [];
+      enemyHandCount = 0;
+      playerAP = 3; playerMaxAP = 3;
+      enemyAP = 3;  enemyMaxAP = 3;
     }
+
+    // Unlock temporarily so navigate to 'game' is allowed from 'waiting' or 'lobby'
+    inRoom = false;
+    navigate('game');
+    inRoom = true;
+
     gameStarted = true;
     // First player in the room goes first
     isMyTurn = room.players[0].id === socket.id;
@@ -326,7 +371,7 @@ function setupSocketListeners() {
   });
 
   socket.on('player-left', () => {
-    if (gameTimerInterval) clearInterval(gameTimerInterval);
+    exitRoom();
     alert('Opponent left! You win!');
     navigate('lobby');
   });
@@ -398,7 +443,9 @@ window.confirmEndTurn = function() {
 
 function enterGame(roomId) {
   currentRoomId = roomId;
-  navigate('game');
+  inRoom = true;
+  navigate('waiting');
+  startWaitingTips();
   
   gameStarted = false;
   document.getElementById('enemy-nickname').innerText = 'Waiting...';
@@ -429,11 +476,74 @@ function enterGame(roomId) {
   socket.emit('check-game-state', { roomId, nickname: currentUser.nickname });
 }
 
-window.handleLeaveGame = function() {
-  if (gameTimerInterval) clearInterval(gameTimerInterval);
-  socket.emit('leave-room', currentRoomId);
-  navigate('lobby');
+window.waitingTipsInterval = null;
+let waitingTipsList = [];
+
+async function startWaitingTips() {
+  if (window.waitingTipsInterval) clearInterval(window.waitingTipsInterval);
+  const tipEl = document.getElementById('waiting-tip');
+  
+  if (waitingTipsList.length === 0) {
+    try {
+      const res = await fetch('/data/tips.json');
+      if (res.ok) {
+        waitingTipsList = await res.json();
+      } else {
+        waitingTipsList = ["Wait for your opponent to join."];
+      }
+    } catch (e) {
+      waitingTipsList = ["Wait for your opponent to join."];
+    }
+  }
+
+  const showRandomTip = () => {
+    if (waitingTipsList.length > 0) {
+      const tip = waitingTipsList[Math.floor(Math.random() * waitingTipsList.length)];
+      tipEl.style.opacity = 0;
+      setTimeout(() => {
+        tipEl.innerText = tip;
+        tipEl.style.opacity = 1;
+        tipEl.style.transition = "opacity 0.5s";
+      }, 500);
+    }
+  };
+
+  showRandomTip();
+  window.waitingTipsInterval = setInterval(showRandomTip, 5000);
 }
+
+function exitRoom() {
+  inRoom = false;
+  if (gameTimerInterval) clearInterval(gameTimerInterval);
+  if (window.waitingTipsInterval) clearInterval(window.waitingTipsInterval);
+  currentRoomId = null;
+  gameStarted = false;
+}
+
+// Called from Resign button inside active game
+window.handleResign = function() {
+  if (!currentRoomId) return;
+  socket.emit('leave-room', currentRoomId);
+  exitRoom();
+  navigate('lobby');
+};
+
+// Called from Cancel/Leave button inside waiting room
+window.handleLeaveWaiting = function() {
+  if (!currentRoomId) return;
+  socket.emit('leave-room', currentRoomId);
+  exitRoom();
+  navigate('lobby');
+};
+
+// Generic leave (kept for backward compat — routes to the right handler)
+window.handleLeaveGame = function() {
+  if (gameStarted) {
+    window.handleResign();
+  } else {
+    window.handleLeaveWaiting();
+  }
+};
 
 window.playCard = function(cardId) {
   if (!gameStarted) return alert('Waiting for opponent!');

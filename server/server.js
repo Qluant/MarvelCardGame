@@ -68,6 +68,7 @@ io.on('connection', (socket) => {
     if (!room) return socket.emit('error', 'Room not found');
     if (room.players.length >= 2) return socket.emit('error', 'Room is full');
     if (room.isPrivate && room.password !== password) return socket.emit('error', 'Invalid password');
+    if (room.players.find(p => p.nickname === nickname)) return socket.emit('error', 'You are already in this room');
 
     room.players.push({ id: socket.id, nickname });
     socket.join(roomId);
@@ -118,6 +119,18 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log(`Client disconnected: ${socket.id}`);
+    for (const roomId in rooms) {
+      const room = rooms[roomId];
+      if (room.players.find(p => p.id === socket.id)) {
+        room.players = room.players.filter(p => p.id !== socket.id);
+        if (room.players.length === 0) {
+          delete rooms[roomId];
+        } else {
+          io.to(roomId).emit('player-left', { playerId: socket.id });
+        }
+        io.emit('rooms-update', getPublicRooms());
+      }
+    }
   });
 });
 

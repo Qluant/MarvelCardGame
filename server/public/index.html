@@ -113,6 +113,22 @@
           </div>
         </div>
 
+        <!-- WAITING VIEW -->
+        <div id="view-waiting" class="view page-container">
+          <div class="waiting-container glass-panel" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; text-align: center;">
+            <h1 class="waiting-title" style="font-family: var(--font-comic); font-size: 4rem; color: var(--marvel-red); text-shadow: 2px 2px 0px #000; margin: 0; letter-spacing: 4px;">Waiting...</h1>
+            <div class="waiting-spinner" style="width: 60px; height: 60px; border: 6px solid var(--glass-border); border-top: 6px solid var(--marvel-red); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <div class="waiting-tip-container" style="max-width: 400px; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 12px; border: 1px solid var(--marvel-red);">
+              <h3 style="color: var(--marvel-grey); margin-bottom: 10px; font-size: 1rem; letter-spacing: 2px;">TIP</h3>
+              <p id="waiting-tip" style="font-size: 1.2rem; line-height: 1.5;">Loading tips...</p>
+            </div>
+            <button class="leave-btn" style="position: relative; background: transparent; border: 2px solid var(--marvel-grey); color: white; padding: 10px 20px; border-radius: 8px; font-family: var(--font-header); font-size: 1.2rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--marvel-red)'; this.style.color='var(--marvel-red)';" onmouseout="this.style.borderColor='var(--marvel-grey)'; this.style.color='white';" onclick="handleLeaveWaiting()">Leave Room</button>
+            <style>
+              @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            </style>
+          </div>
+        </div>
+
         <!-- TOP 10 VIEW -->
         <div id="view-top10" class="view page-container">
           <div class="glass-panel leaderboard-panel">
@@ -145,7 +161,7 @@
 
         <!-- GAME BOARD VIEW -->
         <div id="view-game" class="view board" style="padding:0; width:100vw;">
-          <button class="leave-btn" onclick="handleLeaveGame()">Resign</button>
+          <button class="leave-btn" onclick="handleResign()">Resign</button>
           <button class="end-turn-btn" id="end-turn-btn" onclick="handleEndTurn()">End Turn</button>
 
           <div class="timer">60</div>
