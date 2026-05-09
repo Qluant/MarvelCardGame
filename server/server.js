@@ -105,34 +105,73 @@ io.on('connection', (socket) => {
   });
 
   socket.on('leave-room', (roomId) => {
+    removePlayerFromRoom(socket.id, roomId);
     socket.leave(roomId);
-    if (rooms[roomId]) {
-      rooms[roomId].players = rooms[roomId].players.filter(p => p.id !== socket.id);
-      if (rooms[roomId].players.length === 0) {
-        delete rooms[roomId];
-      } else {
-        io.to(roomId).emit('player-left', { playerId: socket.id });
-      }
-    }
-    io.emit('rooms-update', getPublicRooms());
   });
 
   socket.on('disconnect', () => {
     console.log(`Client disconnected: ${socket.id}`);
     for (const roomId in rooms) {
-      const room = rooms[roomId];
-      if (room.players.find(p => p.id === socket.id)) {
-        room.players = room.players.filter(p => p.id !== socket.id);
-        if (room.players.length === 0) {
-          delete rooms[roomId];
-        } else {
-          io.to(roomId).emit('player-left', { playerId: socket.id });
-        }
-        io.emit('rooms-update', getPublicRooms());
+      if (rooms[roomId].players.find(p => p.id === socket.id)) {
+        removePlayerFromRoom(socket.id, roomId);
+        break; // a socket can only be in one room
       }
     }
   });
 });
+
+// ── Room teardown helper ────────────────────────────────────────────────────
+function removePlayerFromRoom(socketId, roomId) {
+  const room = rooms[roomId];
+  if (!room) return;
+
+  const wasGame = room.players.length === 2; // game was in progress
+  const loser   = room.players.find(p => p.id === socketId);
+  const winner  = room.players.find(p => p.id !== socketId);
+
+  room.players = room.players.filter(p => p.id !== socketId);
+
+  if (room.players.length === 0 || wasGame) {
+    delete rooms[roomId];
+
+    if (wasGame && loser && winner) {
+      // Notify each player individually with their outcome
+      io.to(winner.id).emit('game-over', { outcome: 'win',  opponentNickname: loser.nickname  });
+      io.to(loser.id).emit('game-over',  { outcome: 'loss', opponentNickname: winner.nickname });
+
+      // Persist stats to DB
+      recordResult(winner.nickname, loser.nickname);
+    }
+  }
+  // If the creator is still alone in a waiting room — room stays open
+
+  io.emit('rooms-update', getPublicRooms());
+}
+
+// ── Stats persistence ───────────────────────────────────────────────────────
+async function recordResult(winnerNick, loserNick) {
+  try {
+    await db.query(`
+      UPDATE Player
+      SET wins = wins + 1,
+          games_played = games_played + 1,
+          winstreak = winstreak + 1
+      WHERE nickname = ?
+    `, [winnerNick]);
+
+    await db.query(`
+      UPDATE Player
+      SET loses = loses + 1,
+          games_played = games_played + 1,
+          winstreak = 0
+      WHERE nickname = ?
+    `, [loserNick]);
+
+    console.log(`Stats recorded: ${winnerNick} beat ${loserNick}`);
+  } catch (err) {
+    console.error('Failed to record result:', err);
+  }
+}
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -176,11 +176,13 @@ async function loadInfo() {
   const data = await res.json();
   const list = document.getElementById('info-heroes-list');
   list.innerHTML = '';
+
   data.forEach(hero => {
     let cardsHtml = '';
     if (hero.cards && hero.cards.length && hero.cards[0] && hero.cards[0].name) {
       hero.cards.forEach(c => {
-         cardsHtml += `<div class="card-wrapper">${renderCard(c)}</div>`;
+        const encoded = encodeURIComponent(JSON.stringify(c));
+        cardsHtml += `<div class="card-wrapper info-card-wrapper" data-card="${encoded}">${renderCard(c)}</div>`;
       });
     } else {
       cardsHtml = '<p>No cards available.</p>';
@@ -192,18 +194,88 @@ async function loadInfo() {
       </div>
     `;
   });
+
+  initCardPreview();
+}
+
+function initCardPreview() {
+  // Create singleton tooltip if not yet present
+  let tooltip = document.getElementById('card-preview-tooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'card-preview-tooltip';
+    tooltip.className = 'card-preview-tooltip';
+    document.body.appendChild(tooltip);
+  }
+
+  // Delegate events from the info list
+  const list = document.getElementById('info-heroes-list');
+
+  list.addEventListener('mouseenter', (e) => {
+    const wrapper = e.target.closest('.info-card-wrapper');
+    if (!wrapper) return;
+    const card = JSON.parse(decodeURIComponent(wrapper.dataset.card));
+    const imgSrc = cardImageUrl(card.name);
+    const fallback = `https://picsum.photos/seed/${card.name.replace(/\s/g,'')}/400/280`;
+    const categoryColor = { Trade: 'var(--color-trade)', Hybrid: 'var(--color-hybrid)', Summon: 'var(--color-summon)' }[card.category] || 'white';
+
+    tooltip.innerHTML = `
+      <div class="cp-image-wrap">
+        <img src="${imgSrc}" onerror="this.src='${fallback}'" alt="${card.name}" class="cp-image"/>
+      </div>
+      <div class="cp-body">
+        <h3 class="cp-name">${card.name}</h3>
+        <span class="cp-category" style="color:${categoryColor}">${card.category}</span>
+        <p class="cp-desc">${card.description}</p>
+        <div class="cp-stats">
+          <span class="cp-atk">⚔️ ${card.attack}</span>
+          <span class="cp-cost">💠 ${card.cost} AP</span>
+          <span class="cp-def">🛡️ ${card.defense}</span>
+        </div>
+      </div>
+    `;
+    tooltip.classList.add('visible');
+    positionTooltip(e, tooltip);
+  }, true);
+
+  list.addEventListener('mousemove', (e) => {
+    if (!e.target.closest('.info-card-wrapper')) return;
+    positionTooltip(e, tooltip);
+  }, true);
+
+  list.addEventListener('mouseleave', (e) => {
+    if (e.target.closest('.info-card-wrapper') && !e.relatedTarget?.closest('.info-card-wrapper')) {
+      tooltip.classList.remove('visible');
+    }
+  }, true);
+}
+
+function positionTooltip(e, tooltip) {
+  const TW = 300, TH = 360, MARGIN = 16;
+  let x = e.clientX + MARGIN;
+  let y = e.clientY + MARGIN;
+  if (x + TW > window.innerWidth)  x = e.clientX - TW - MARGIN;
+  if (y + TH > window.innerHeight) y = e.clientY - TH - MARGIN;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top  = y + 'px';
+}
+
+// Map a card name to its local image path (name -> snake_case filename)
+function cardImageUrl(cardName) {
+  const filename = cardName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/(^_|_$)/g, '');
+  return `/assets/images/${filename}.jpg`;
 }
 
 // Card Renderer (hand / info view)
 function renderCard(card, isHand = false, onClick = null) {
-  const seed = card.name.replace(/\s/g, '');
-  const placeholderImg = `https://picsum.photos/seed/${seed}/200/150`;
+  const imgSrc = cardImageUrl(card.name);
+  const fallback = `https://picsum.photos/seed/${card.name.replace(/\s/g, '')}/200/150`;
   const onClickStr = onClick ? `onclick="${onClick}"` : '';
   
   return `
     <div class="marvel-card" ${onClickStr}>
       <div class="card-cost">${card.cost}</div>
-      <div class="card-image-container"><img src="${placeholderImg}" alt="${card.name}" class="card-image"/></div>
+      <div class="card-image-container"><img src="${imgSrc}" alt="${card.name}" class="card-image" onerror="this.src='${fallback}'"/></div>
       <div class="card-body">
         <h4>${card.name}</h4>
         <div class="card-category">${card.category}</div>
@@ -219,11 +291,11 @@ function renderCard(card, isHand = false, onClick = null) {
 
 // Compact board card renderer (Hearthstone-style: image + stat badges only)
 function renderBoardCard(card) {
-  const seed = card.name.replace(/\s/g, '');
-  const placeholderImg = `https://picsum.photos/seed/${seed}/200/150`;
+  const imgSrc = cardImageUrl(card.name);
+  const fallback = `https://picsum.photos/seed/${card.name.replace(/\s/g, '')}/200/150`;
   return `
     <div class="board-minion" title="${card.name}: ${card.description}">
-      <img src="${placeholderImg}" alt="${card.name}" class="board-minion-img"/>
+      <img src="${imgSrc}" alt="${card.name}" class="board-minion-img" onerror="this.src='${fallback}'"/>
       <div class="board-minion-atk">${card.attack}</div>
       <div class="board-minion-def">${card.defense}</div>
     </div>
@@ -370,10 +442,13 @@ function setupSocketListeners() {
     }
   });
 
-  socket.on('player-left', () => {
+  socket.on('game-over', ({ outcome, opponentNickname }) => {
     exitRoom();
-    alert('Opponent left! You win!');
-    navigate('lobby');
+    if (outcome === 'win') {
+      showGameResult('VICTORY', `${opponentNickname} has resigned.`, '#2ecc71');
+    } else {
+      showGameResult('DEFEAT', 'You have resigned.', '#e03131');
+    }
   });
 
   socket.on('error', (msg) => alert(msg));
@@ -520,12 +595,45 @@ function exitRoom() {
   gameStarted = false;
 }
 
+function showGameResult(title, subtitle, color) {
+  // Ensure we unlock navigation first
+  inRoom = false;
+
+  let overlay = document.getElementById('game-result-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'game-result-overlay';
+    document.body.appendChild(overlay);
+  }
+
+  overlay.innerHTML = `
+    <div class="gr-box">
+      <div class="gr-title" style="color:${color}">${title}</div>
+      <div class="gr-subtitle">${subtitle}</div>
+      <div class="gr-countdown">Returning to lobby in <span id="gr-count">3</span>s...</div>
+    </div>
+  `;
+  overlay.style.display = 'flex';
+
+  // Countdown then navigate
+  let secs = 3;
+  const tick = setInterval(() => {
+    secs--;
+    const el = document.getElementById('gr-count');
+    if (el) el.textContent = secs;
+    if (secs <= 0) {
+      clearInterval(tick);
+      overlay.style.display = 'none';
+      navigate('lobby');
+    }
+  }, 1000);
+}
+
 // Called from Resign button inside active game
 window.handleResign = function() {
   if (!currentRoomId) return;
   socket.emit('leave-room', currentRoomId);
-  exitRoom();
-  navigate('lobby');
+  // Don't navigate here; wait for 'game-over' from server to show results
 };
 
 // Called from Cancel/Leave button inside waiting room
