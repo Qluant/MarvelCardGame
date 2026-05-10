@@ -831,6 +831,7 @@ button[type="submit"]:active {
   /* clamp to 2 lines so long names never push stats off */
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   min-height: 2.2em;
@@ -854,6 +855,7 @@ button[type="submit"]:active {
   /* clamp to 3 lines so description never pushes stats bar off */
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

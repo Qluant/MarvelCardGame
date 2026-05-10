@@ -216,12 +216,11 @@ function initCardPreview() {
     if (!wrapper) return;
     const card = JSON.parse(decodeURIComponent(wrapper.dataset.card));
     const imgSrc = cardImageUrl(card.name);
-    const fallback = `https://picsum.photos/seed/${card.name.replace(/\s/g,'')}/400/280`;
     const categoryColor = { Trade: 'var(--color-trade)', Hybrid: 'var(--color-hybrid)', Summon: 'var(--color-summon)' }[card.category] || 'white';
 
     tooltip.innerHTML = `
       <div class="cp-image-wrap">
-        <img src="${imgSrc}" onerror="this.src='${fallback}'" alt="${card.name}" class="cp-image"/>
+        <img src="${imgSrc}" alt="${card.name}" class="cp-image"/>
       </div>
       <div class="cp-body">
         <h3 class="cp-name">${card.name}</h3>
@@ -269,13 +268,12 @@ function cardImageUrl(cardName) {
 // Card Renderer (hand / info view)
 function renderCard(card, isHand = false, onClick = null) {
   const imgSrc = cardImageUrl(card.name);
-  const fallback = `https://picsum.photos/seed/${card.name.replace(/\s/g, '')}/200/150`;
   const onClickStr = onClick ? `onclick="${onClick}"` : '';
   
   return `
     <div class="marvel-card" ${onClickStr}>
       <div class="card-cost">${card.cost}</div>
-      <div class="card-image-container"><img src="${imgSrc}" alt="${card.name}" class="card-image" onerror="this.src='${fallback}'"/></div>
+      <div class="card-image-container"><img src="${imgSrc}" alt="${card.name}" class="card-image"/></div>
       <div class="card-body">
         <h4>${card.name}</h4>
         <div class="card-category">${card.category}</div>
@@ -292,10 +290,9 @@ function renderCard(card, isHand = false, onClick = null) {
 // Compact board card renderer (Hearthstone-style: image + stat badges only)
 function renderBoardCard(card) {
   const imgSrc = cardImageUrl(card.name);
-  const fallback = `https://picsum.photos/seed/${card.name.replace(/\s/g, '')}/200/150`;
   return `
     <div class="board-minion" title="${card.name}: ${card.description}">
-      <img src="${imgSrc}" alt="${card.name}" class="board-minion-img" onerror="this.src='${fallback}'"/>
+      <img src="${imgSrc}" alt="${card.name}" class="board-minion-img"/>
       <div class="board-minion-atk">${card.attack}</div>
       <div class="board-minion-def">${card.defense}</div>
     </div>
@@ -337,7 +334,7 @@ function setupSocketListeners() {
       inRoom = true;
       gameStarted = false;
       document.getElementById('player-nickname').innerText = currentUser.nickname;
-      document.getElementById('player-avatar').src = `https://picsum.photos/seed/${currentUser.nickname}/120/120`;
+      document.getElementById('player-avatar').src = ``;
       document.getElementById('enemy-nickname').innerText = 'Opponent';
       document.getElementById('enemy-avatar').src = '';
       playerHand = [
@@ -363,7 +360,7 @@ function setupSocketListeners() {
     const opponent = room.players.find(p => p.id !== socket.id) || room.players[0];
     if (opponent) {
       document.getElementById('enemy-nickname').innerText = opponent.nickname;
-      document.getElementById('enemy-avatar').src = `https://picsum.photos/seed/${opponent.nickname}/120/120`;
+      document.getElementById('enemy-avatar').src = ``;
       enemyHandCount = playerHand.length; // mirror our own hand size
       // Both start with 3 AP
       playerAP = 3; playerMaxAP = 3;
@@ -526,7 +523,7 @@ function enterGame(roomId) {
   document.getElementById('enemy-nickname').innerText = 'Waiting...';
   document.getElementById('enemy-avatar').src = '';
   document.getElementById('player-nickname').innerText = currentUser.nickname;
-  document.getElementById('player-avatar').src = `https://picsum.photos/seed/${currentUser.nickname}/120/120`;
+  document.getElementById('player-avatar').src = ``;
   
   playerHand = [
     { id: 1, name: 'Unibeam', category: 'Trade', cost: 5, attack: 8, defense: 0, description: 'Concentrated beam.' },
