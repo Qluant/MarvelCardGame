@@ -11,11 +11,13 @@ let gameTimerInterval = null;
 let gameTimeLeft = 60;
 let isMyTurn = false;
 let initialCoinTossDone = false;
+let playerStagedCards = [];
+let enemyStagedCount = 0;
 // Action Points
 let playerAP = 3;
-let playerMaxAP = 3;
+let playerMaxAP = 10;
 let enemyAP = 3;
-let enemyMaxAP = 3;
+let enemyMaxAP = 10;
 const AP_CAP = 10;
 
 const API_URL = '/api';
@@ -32,6 +34,28 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSocketListeners();
   
   updateHeaderAuth();
+
+  // ── Reconnect to an active game if the page was refreshed ───────────────
+  const savedGame = sessionStorage.getItem('activeGame');
+  if (savedGame && currentUser) {
+    const { roomId, nickname } = JSON.parse(savedGame);
+    if (nickname === currentUser.nickname) {
+      // Restore in-room state and ask the server what state we're in.
+      // Do NOT navigate to 'game' yet — let the server response decide:
+      //   game-start          → active game, go to game view
+      //   waiting-room-restore → still waiting, go to waiting view
+      //   room-gone           → room is dead, clear session and go to lobby
+      currentRoomId = roomId;
+      inRoom = true;
+      // Use 'connect' to guarantee the socket is ready before asking the server.
+      // Emitting before connection is established causes the event to be lost.
+      socket.once('connect', () => {
+        socket.emit('check-game-state', { roomId, nickname });
+      });
+      return; // skip the default navigate below
+    }
+  }
+
   navigate(currentUser ? 'lobby' : 'login');
 });
 
@@ -453,13 +477,15 @@ function setupSocketListeners() {
   socket.on('game-start', (room) => {
     if (window.waitingTipsInterval) clearInterval(window.waitingTipsInterval);
 
-    // If this player joined via join-room (not create-room), enterGame was never called —
-    // initialise the full game state here
+    // Detect if this is a reconnect (we already have state) vs a fresh join
+    const isReconnect = currentRoomId === room.id && gameStarted;
+
     if (!currentRoomId || currentRoomId !== room.id) {
+      // Fresh joiner path (joined via join-room, enterGame was never called)
       currentRoomId = room.id;
       inRoom = true;
+      localStorage.setItem('activeGame', JSON.stringify({ roomId: room.id, nickname: currentUser.nickname }));
       gameStarted = false;
-      document.getElementById('player-nickname').innerText = currentUser.nickname;
       document.getElementById('player-avatar').src = ``;
       document.getElementById('enemy-nickname').innerText = 'Opponent';
       document.getElementById('enemy-avatar').src = '';
@@ -473,19 +499,26 @@ function setupSocketListeners() {
     inRoom = false;
     navigate('game');
     inRoom = true;
+    
+    // Unconditionally set player nickname so it doesn't say "PLAYER" on reconnect
+    document.getElementById('player-nickname').innerText = currentUser.nickname;
+    inRoom = true;
 
     gameStarted = true;
-    // First player in the room goes first
     isMyTurn = room.players[0].id === socket.id;
     updateEndTurnButton();
     const opponent = room.players.find(p => p.id !== socket.id) || room.players[0];
     if (opponent) {
       document.getElementById('enemy-nickname').innerText = opponent.nickname;
       document.getElementById('enemy-avatar').src = ``;
-      enemyHandCount = 0; // will be updated by deal-hand
-      // Both start with 3 AP
-      playerAP = 3; playerMaxAP = 3;
-      enemyAP = 3;  enemyMaxAP = 3;
+
+      if (!isReconnect) {
+        // Fresh game — reset counts; they will be populated by deal-hand / opponent-hand-count
+        enemyHandCount = 0;
+        playerAP = 3; playerMaxAP = 3;
+        enemyAP = 3;  enemyMaxAP = 3;
+      }
+
       renderBoard();
       
       initialCoinTossDone = false;
@@ -550,23 +583,17 @@ function setupSocketListeners() {
     gameTimerInterval = setInterval(tickTimer, 1000);
   };
 
-  socket.on('move-made', (data) => {
-    if (data.passTurn) {
-      // Flip whose turn it is
-      isMyTurn = !isMyTurn;
-      updateEndTurnButton();
-
-      // AP: the player whose turn is STARTING gets +1 max and +1 current AP (accumulation)
-      if (data.playerId === socket.id) {
-        // I just passed → enemy's turn starts
-        enemyMaxAP = Math.min(enemyMaxAP + 1, AP_CAP);
-        enemyAP    = Math.min(enemyAP + 1, enemyMaxAP);
+  socket.on('sync-game-state', (state) => {
+    // Detect turn flip to show overlay
+    if (isMyTurn !== undefined && isMyTurn !== state.isMyTurn) {
+      if (state.isMyTurn === true) {
+        showTurnOverlay('Enemy Turn is over', '#e03131', 'Your Turn!', '#4dabf7');
+      } else if (state.isMyTurn === false) {
+        showTurnOverlay('Your turn is over', '#4dabf7', 'Enemy Turn', '#e03131');
       } else {
-        // Enemy just passed → my turn starts
-        playerMaxAP = Math.min(playerMaxAP + 1, AP_CAP);
-        playerAP    = Math.min(playerAP + 1, playerMaxAP);
+        showTurnOverlay('Round Ending...', '#e67e22', 'Resolving Combat', '#e67e22');
       }
-
+      
       // Reset timer
       if (gameTimerInterval) clearInterval(gameTimerInterval);
       gameTimeLeft = 60;
@@ -578,42 +605,84 @@ function setupSocketListeners() {
         } else {
           gameTimeLeft = 60;
           document.querySelector('.timer').innerText = gameTimeLeft;
-          doPassTurn();
+          if (isMyTurn) doPassTurn(); // Auto pass if time runs out
         }
       }, 1000);
+    }
 
-      // Show turn change overlay
-      if (data.playerId === socket.id) {
-        showTurnOverlay('Your turn is over', '#4dabf7', 'Enemy Turn', '#e03131');
-      } else {
-        showTurnOverlay('Enemy Turn is over', '#e03131', 'Your Turn!', '#4dabf7');
-      }
-      renderBoard();
-      return;
-    }
-    
-    if (data.playerId !== socket.id) {
-      // Enemy played a card — deduct their AP and remove a card back
-      enemyHandCount = Math.max(0, enemyHandCount - 1);
-      enemyAP = Math.max(0, enemyAP - (data.move ? data.move.cost : 0));
-      enemyActiveCards.push(data.move);
-      renderBoard();
-    }
+    isMyTurn = state.isMyTurn;
+    updateEndTurnButton();
+
+    playerHP = state.player.hp;
+    playerAP = state.player.ap;
+    playerMaxAP = state.player.maxAp;
+    playerHand = state.player.hand || [];
+    playerActiveCards = state.player.board || [];
+    playerStagedCards = state.player.stagedCards || [];
+    document.getElementById('player-hp').innerText = playerHP;
+
+    enemyHP = state.opponent.hp;
+    enemyAP = state.opponent.ap;
+    enemyMaxAP = state.opponent.maxAp;
+    enemyHandCount = state.opponent.handCount;
+    enemyActiveCards = state.opponent.board || [];
+    enemyStagedCount = state.opponent.stagedCount || 0;
+    document.getElementById('enemy-hp').innerText = enemyHP;
+
+    renderBoard();
   });
 
   socket.on('game-over', ({ outcome, opponentNickname }) => {
     exitRoom();
+    const banner = document.getElementById('reconnect-banner');
+    if (banner) banner.remove();
     if (outcome === 'win') {
-      showGameResult('VICTORY', `${opponentNickname} has resigned.`, '#2ecc71');
+      showGameResult('VICTORY', `${opponentNickname} disconnected or HP reached 0.`, '#2ecc71');
     } else {
-      showGameResult('DEFEAT', 'You have resigned.', '#e03131');
+      showGameResult('DEFEAT', 'You resigned, ran out of time, or HP reached 0.', '#e03131');
     }
   });
 
-  socket.on('deal-hand', (cards) => {
-    playerHand = cards;
-    enemyHandCount = cards.length;
-    animateDealHand(cards);
+  socket.on('opponent-reconnecting', ({ secondsLeft, rejoinsLeft }) => {
+    let banner = document.getElementById('reconnect-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'reconnect-banner';
+      banner.className = 'reconnect-banner';
+      document.getElementById('view-game').appendChild(banner);
+    }
+    banner.innerHTML = `
+      <span class="rb-icon">⚠️</span>
+      <span class="rb-text">Opponent disconnected &mdash; waiting for them to return (<span id="rb-count">${secondsLeft}</span>s) &middot; ${rejoinsLeft} rejoins left</span>
+    `;
+    let secs = secondsLeft;
+    if (window._rbInterval) clearInterval(window._rbInterval);
+    window._rbInterval = setInterval(() => {
+      secs--;
+      const el = document.getElementById('rb-count');
+      if (el) el.textContent = secs;
+      if (secs <= 0) clearInterval(window._rbInterval);
+    }, 1000);
+  });
+
+  socket.on('opponent-reconnected', ({ nickname }) => {
+    const banner = document.getElementById('reconnect-banner');
+    if (banner) banner.remove();
+    if (window._rbInterval) clearInterval(window._rbInterval);
+  });
+
+  // Room no longer exists (game ended, never existed, or player not in it)
+  socket.on('room-gone', () => {
+    exitRoom(); // clears sessionStorage and in-room state
+    navigate('lobby');
+  });
+
+  // Player refreshed while in the waiting room — bring them back to it
+  socket.on('waiting-room-restore', ({ roomId }) => {
+    currentRoomId = roomId;
+    inRoom = true;
+    navigate('waiting');
+    startWaitingTips();
   });
 
   socket.on('error', (msg) => alert(msg));
@@ -656,7 +725,7 @@ window.submitJoinPrivate = function() {
 // ── Turn helpers ──────────────────────────────────────────────────────────────
 
 function doPassTurn() {
-  socket.emit('make-move', { roomId: currentRoomId, move: null, passTurn: true });
+  socket.emit('pass-turn', currentRoomId);
 }
 
 function updateEndTurnButton() {
@@ -665,6 +734,8 @@ function updateEndTurnButton() {
   btn.disabled = !isMyTurn;
   btn.style.opacity = isMyTurn ? '1' : '0.4';
   btn.style.cursor = isMyTurn ? 'pointer' : 'not-allowed';
+  btn.textContent = 'End Turn';
+  btn.classList.remove('ready');
 }
 
 function showTurnOverlay(firstText, firstColor, secondText, secondColor) {
@@ -694,6 +765,8 @@ window.confirmEndTurn = function() {
 function enterGame(roomId) {
   currentRoomId = roomId;
   inRoom = true;
+  // Persist so a refresh can reconnect
+  localStorage.setItem('activeGame', JSON.stringify({ roomId, nickname: currentUser.nickname }));
   navigate('waiting');
   startWaitingTips();
   
@@ -706,7 +779,7 @@ function enterGame(roomId) {
   playerHand = [];
   playerActiveCards = [];
   enemyActiveCards = [];
-  enemyHandCount = 0; // will be set by deal-hand from server
+  enemyHandCount = 0;
   enemyCardsPlayedThisTurn = 0;
   isMyTurn = false;
   
@@ -765,6 +838,8 @@ function exitRoom() {
   if (window.waitingTipsInterval) clearInterval(window.waitingTipsInterval);
   currentRoomId = null;
   gameStarted = false;
+  // Clear reconnect session so refresh doesn't attempt to re-enter a dead room
+  localStorage.removeItem('activeGame');
 }
 
 function showGameResult(title, subtitle, color) {
@@ -825,21 +900,23 @@ window.handleLeaveGame = function() {
   }
 };
 
-window.playCard = function(cardId) {
+window.playCard = function(cardUid) {
   if (!gameStarted) return alert('Waiting for opponent!');
-  if (!isMyTurn) return; // silently block — not your turn
+  if (!isMyTurn) return; // block if not your turn
+
   
-  const cardIndex = playerHand.findIndex(c => c.id === cardId);
+  const cardIndex = playerHand.findIndex(c => c.uid === cardUid);
   if (cardIndex !== -1) {
     const card = playerHand[cardIndex];
     if (playerAP < card.cost) return alert("Not enough AP!");
-    if (playerActiveCards.length >= 7) return;
-
-    playerAP -= card.cost;
-    playerHand.splice(cardIndex, 1);
-    playerActiveCards.push(card);
-    socket.emit('make-move', { roomId: currentRoomId, move: card, passTurn: false });
-    renderBoard();
+    
+    // Let the server validate and apply the move.
+    // For now, Trade/Hybrid cards always attack the enemy Hero directly.
+    socket.emit('play-card', { 
+      roomId: currentRoomId, 
+      cardUid: card.uid, 
+      targetUid: 'hero' 
+    });
   }
 };
 
@@ -901,7 +978,7 @@ function renderBoard() {
     const rotate = offset * 6;
     const translateY = Math.abs(offset) * 12;
     const translateX = offset * 40;
-    const onClickStr = isMyTurn ? `playCard(${card.id})` : null;
+    const onClickStr = isMyTurn ? `playCard('${card.uid}')` : null;
     
     pHandList.innerHTML += `
       <li class="hand-slot${isMyTurn ? '' : ' no-play'}" style="transform: translateX(${translateX}px) translateY(${translateY}px) rotate(${rotate}deg) scale(0.7)">
@@ -926,10 +1003,25 @@ function renderBoard() {
     `;
   }
 
+  // Render Enemy Staged
+  const eStagedList = document.getElementById('enemy-staged-cards');
+  eStagedList.innerHTML = '';
+  for (let i = 0; i < enemyStagedCount; i++) {
+    eStagedList.innerHTML += `
+      <li class="card-back" style="transform: scale(0.6)">
+        <div class="card-back-stamp">?</div>
+      </li>
+    `;
+  }
+
   // Render Active Cards
   const pActiveList = document.getElementById('player-active-cards');
   pActiveList.innerHTML = playerActiveCards.map(c => `<li class="active-card-slot">${renderBoardCard(c)}</li>`).join('');
   
   const eActiveList = document.getElementById('enemy-active-cards');
   eActiveList.innerHTML = enemyActiveCards.map(c => `<li class="active-card-slot">${renderBoardCard(c)}</li>`).join('');
+
+  // Render Player Staged
+  const pStagedList = document.getElementById('player-staged-cards');
+  pStagedList.innerHTML = playerStagedCards.map(c => `<li style="transform: scale(0.6)">${renderCard(c, false)}</li>`).join('');
 }
