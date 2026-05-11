@@ -1344,3 +1344,115 @@ button[type="submit"]:active {
   from { opacity: 0; transform: scale(0.5); }
   to { opacity: 1; transform: scale(1); }
 }
+
+/* ==========================================================================
+   Character Select
+   ========================================================================== */
+
+.character-select-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 40px;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.character-select-subtitle {
+  color: var(--marvel-grey);
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  margin: -16px 0 0;
+}
+
+.hero-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+.hero-tile {
+  background: rgba(255,255,255,0.04);
+  border: 2px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s, background 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.hero-tile:hover {
+  border-color: var(--marvel-red);
+  background: rgba(230, 36, 41, 0.08);
+  transform: translateY(-4px);
+}
+
+.hero-tile.selected {
+  border-color: var(--marvel-red);
+  background: rgba(230, 36, 41, 0.15);
+  box-shadow: 0 0 16px var(--marvel-red-glow);
+}
+
+.hero-tile-name {
+  font-family: var(--font-comic);
+  font-size: 1.4rem;
+  color: var(--marvel-light);
+  letter-spacing: 1px;
+}
+
+.hero-tile-ability {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.hero-tile-ability.buff  { background: rgba(0,200,100,0.2); color: #00c864; border: 1px solid #00c864; }
+.hero-tile-ability.debuff { background: rgba(180,0,255,0.2); color: #c87eff; border: 1px solid #c87eff; }
+.hero-tile-ability.none  { background: rgba(136,136,136,0.2); color: var(--marvel-grey); border: 1px solid var(--marvel-grey); }
+
+.hero-tile-card-count {
+  font-size: 0.8rem;
+  color: var(--marvel-grey);
+}
+
+.hero-tile-select-btn {
+  margin-top: 8px;
+  padding: 8px 20px;
+  background: var(--marvel-red);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-family: var(--font-header);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.hero-tile-select-btn:hover { opacity: 0.85; }
+
+.character-select-back-btn {
+  background: transparent;
+  border: 1px solid var(--marvel-grey);
+  color: var(--marvel-grey);
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-family: var(--font-header);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.character-select-back-btn:hover {
+  border-color: var(--marvel-light);
+  color: var(--marvel-light);
+}

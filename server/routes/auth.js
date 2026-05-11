@@ -23,7 +23,7 @@ const DBAdapter = {
   
   async create(username, passwordHash) {
     const [result] = await db.query(
-      'INSERT INTO Player (avatar, nickname, password, games_played, wins, loses, winstreak) VALUES (NULL, ?, ?, 0, 0, 0, 0)',
+      'INSERT INTO Player (avatar, nickname, password, games_played, wins, loses, winstreak, selected_hero_id) VALUES (NULL, ?, ?, 0, 0, 0, 0, NULL)',
       [username, passwordHash]
     );
     return { id: result.insertId, nickname: username };

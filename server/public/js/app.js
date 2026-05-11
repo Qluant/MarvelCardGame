@@ -84,6 +84,7 @@ function navigate(viewName) {
   if (viewName === 'top10') loadTop10();
   if (viewName === 'profile' && currentUser) loadProfile();
   if (viewName === 'info') loadInfo();
+  if (viewName === 'character-select') loadCharacterSelect();
   if (viewName === 'lobby') {
     if (!currentUser) return navigate('login');
     socket.emit('get-rooms');
@@ -107,6 +108,18 @@ window.handleLogin = async function(e) {
     if (res.ok) {
       localStorage.setItem('token', data.token);
       currentUser = { nickname };
+
+      // Restore hero selection from DB
+      try {
+        const profileRes = await fetch(`${API_URL}/players/${nickname}`);
+        if (profileRes.ok) {
+          const profile = await profileRes.json();
+          if (profile.selected_hero_id) {
+            currentUser.heroId = profile.selected_hero_id;
+          }
+        }
+      } catch (_) {}
+
       localStorage.setItem('user', JSON.stringify(currentUser));
       updateHeaderAuth();
       navigate('lobby');
@@ -170,6 +183,59 @@ async function loadProfile() {
   document.getElementById('profile-loses').innerText = p.loses;
   document.getElementById('profile-winstreak').innerText = p.winstreak;
 }
+
+async function loadCharacterSelect() {
+  const grid = document.getElementById('hero-select-grid');
+  grid.innerHTML = '<p>Loading heroes...</p>';
+
+  try {
+    const res = await fetch(`${API_URL}/info/heroes`);
+    const heroes = await res.json();
+
+    grid.innerHTML = heroes.map(h => {
+      const abilityClass = (h.special_ability || 'None').toLowerCase();
+      const cardCount = (h.cards && h.cards[0] && h.cards[0].name) ? h.cards.length : 0;
+      const isSelected = currentUser.heroId === h.hero_id;
+      return `
+        <div class="hero-tile${isSelected ? ' selected' : ''}" id="hero-tile-${h.hero_id}">
+          <div class="hero-tile-name">${h.alias}</div>
+          <div class="hero-tile-ability ${abilityClass}">${h.special_ability || 'None'}</div>
+          <div class="hero-tile-card-count">${cardCount} cards in deck</div>
+          <button class="hero-tile-select-btn" onclick="selectHero(${h.hero_id}, '${h.alias}')">
+            ${isSelected ? '✓ Selected' : 'Select'}
+          </button>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    grid.innerHTML = '<p>Failed to load heroes.</p>';
+  }
+}
+
+window.selectHero = async function(heroId, heroAlias) {
+  try {
+    await fetch(`${API_URL}/players/${currentUser.nickname}/hero`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ heroId })
+    });
+
+    currentUser.heroId = heroId;
+    currentUser.heroAlias = heroAlias;
+    localStorage.setItem('user', JSON.stringify(currentUser));
+
+    // Update tile visuals without full reload
+    document.querySelectorAll('.hero-tile').forEach(t => t.classList.remove('selected'));
+    document.querySelectorAll('.hero-tile-select-btn').forEach(b => b.textContent = 'Select');
+    const tile = document.getElementById(`hero-tile-${heroId}`);
+    if (tile) {
+      tile.classList.add('selected');
+      tile.querySelector('.hero-tile-select-btn').textContent = '✓ Selected';
+    }
+  } catch (err) {
+    alert('Failed to save hero selection. Please try again.');
+  }
+};
 
 async function loadInfo() {
   const res = await fetch(`${API_URL}/info/heroes`);
@@ -337,12 +403,7 @@ function setupSocketListeners() {
       document.getElementById('player-avatar').src = ``;
       document.getElementById('enemy-nickname').innerText = 'Opponent';
       document.getElementById('enemy-avatar').src = '';
-      playerHand = [
-        { id: 1, name: 'Unibeam',     category: 'Trade',  cost: 5, attack: 8, defense: 0, description: 'Concentrated beam.' },
-        { id: 2, name: 'Stark Tech Decoy', category: 'Summon', cost: 1, attack: 1, defense: 2, description: 'Holographic decoy.' },
-      ];
-      playerActiveCards = [];
-      enemyActiveCards = [];
+      playerHand = [];
       enemyHandCount = 0;
       playerAP = 3; playerMaxAP = 3;
       enemyAP = 3;  enemyMaxAP = 3;
@@ -361,7 +422,7 @@ function setupSocketListeners() {
     if (opponent) {
       document.getElementById('enemy-nickname').innerText = opponent.nickname;
       document.getElementById('enemy-avatar').src = ``;
-      enemyHandCount = playerHand.length; // mirror our own hand size
+      enemyHandCount = 0; // will be updated by deal-hand
       // Both start with 3 AP
       playerAP = 3; playerMaxAP = 3;
       enemyAP = 3;  enemyMaxAP = 3;
@@ -448,23 +509,39 @@ function setupSocketListeners() {
     }
   });
 
+  socket.on('deal-hand', (cards) => {
+    playerHand = cards;
+    enemyHandCount = cards.length; // server deals same size to both
+    renderBoard();
+  });
+
   socket.on('error', (msg) => alert(msg));
 }
 
 window.handleCreateRoom = function(e) {
   e.preventDefault();
+  if (!currentUser.heroId) {
+    alert('Please select a hero first!');
+    navigate('character-select');
+    return;
+  }
   const name = document.getElementById('create-room-name').value;
   const isPrivate = document.getElementById('create-room-private').checked;
   const password = document.getElementById('create-room-password').value;
-  socket.emit('create-room', { name, isPrivate, password, nickname: currentUser.nickname });
+  socket.emit('create-room', { name, isPrivate, password, nickname: currentUser.nickname, heroId: currentUser.heroId });
 }
 
 window.attemptJoinRoom = function(roomId, isPrivate) {
+  if (!currentUser.heroId) {
+    alert('Please select a hero first!');
+    navigate('character-select');
+    return;
+  }
   if (isPrivate) {
     document.getElementById('join-private-id').value = roomId;
     document.getElementById('join-private-modal').style.display = 'block';
   } else {
-    socket.emit('join-room', { roomId, nickname: currentUser.nickname });
+    socket.emit('join-room', { roomId, nickname: currentUser.nickname, heroId: currentUser.heroId });
   }
 }
 
@@ -472,7 +549,7 @@ window.submitJoinPrivate = function() {
   const roomId = document.getElementById('join-private-id').value;
   const password = document.getElementById('join-private-password').value;
   document.getElementById('join-private-modal').style.display = 'none';
-  socket.emit('join-room', { roomId, password, nickname: currentUser.nickname });
+  socket.emit('join-room', { roomId, password, nickname: currentUser.nickname, heroId: currentUser.heroId });
 }
 
 // ── Turn helpers ──────────────────────────────────────────────────────────────
@@ -525,13 +602,10 @@ function enterGame(roomId) {
   document.getElementById('player-nickname').innerText = currentUser.nickname;
   document.getElementById('player-avatar').src = ``;
   
-  playerHand = [
-    { id: 1, name: 'Unibeam', category: 'Trade', cost: 5, attack: 8, defense: 0, description: 'Concentrated beam.' },
-    { id: 2, name: 'Stark Tech Decoy', category: 'Summon', cost: 1, attack: 1, defense: 2, description: 'Holographic decoy.' },
-  ];
+  playerHand = [];
   playerActiveCards = [];
   enemyActiveCards = [];
-  enemyHandCount = 0;
+  enemyHandCount = 0; // will be set by deal-hand from server
   enemyCardsPlayedThisTurn = 0;
   isMyTurn = false;
   

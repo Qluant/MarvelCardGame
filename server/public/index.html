@@ -15,6 +15,7 @@
       <div class="header-logo">Great Battle</div>
       <nav class="header-nav">
         <a href="#" onclick="navigate('lobby')">Lobby</a>
+        <a href="#" onclick="navigate('character-select')" id="nav-hero-select">Hero</a>
         <a href="#" onclick="navigate('top10')">Top 10</a>
         <a href="#" onclick="navigate('info')">Info</a>
         <a href="#" id="nav-profile" style="display:none;" onclick="navigate('profile')">Profile</a>
@@ -110,6 +111,18 @@
               </div>
             </div>
 
+          </div>
+        </div>
+
+        <!-- CHARACTER SELECT VIEW -->
+        <div id="view-character-select" class="view page-container">
+          <div class="glass-panel character-select-panel">
+            <h2>Choose Your Hero</h2>
+            <p class="character-select-subtitle">Your deck will be built from your hero's cards</p>
+            <div id="hero-select-grid" class="hero-select-grid">
+              <p>Loading heroes...</p>
+            </div>
+            <button class="character-select-back-btn" onclick="navigate('lobby')">← Back to Lobby</button>
           </div>
         </div>
 

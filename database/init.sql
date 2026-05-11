@@ -13,7 +13,8 @@ CREATE TABLE Player (
   games_played INT DEFAULT 0,
   wins INT DEFAULT 0,
   loses INT DEFAULT 0,
-  winstreak INT DEFAULT 0
+  winstreak INT DEFAULT 0,
+  selected_hero_id INT DEFAULT NULL
 );
 
 CREATE TABLE Heroes (
