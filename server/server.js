@@ -1,4 +1,5 @@
 require('dotenv').config();
+const crypto = require('crypto');
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -35,9 +36,47 @@ app.get('/health', (req, res) => {
 });
 
 const rooms = {};
+const reconnectTimers = {}; // { [nickname]: { timeout, roomId, socketId, rejoinsUsed } }
 
 const getPublicRooms = () => {
   return Object.values(rooms).filter(r => r.players.length < 2 && !r.isPrivate).map(r => ({ id: r.id, name: r.name, isPrivate: false }));
+};
+
+const syncGameState = (roomId) => {
+  const room = rooms[roomId];
+  if (!room || room.players.length < 2) return;
+  
+  room.players.forEach((player) => {
+    const opponent = room.players.find(p => p.nickname !== player.nickname) || room.players[0];
+    
+    const state = {
+      isMyTurn: room.currentTurn === player.id,
+      player: {
+        nickname: player.nickname,
+        hp: player.hp,
+        ap: player.ap,
+        maxAp: player.maxAp,
+        hand: player.hand,
+        board: player.board,
+        stagedCards: player.stagedCards,
+        queuedAttacks: player.queuedAttacks
+      },
+      opponent: {
+        nickname: opponent.nickname,
+        hp: opponent.hp,
+        ap: opponent.ap,
+        maxAp: opponent.maxAp,
+        handCount: opponent.hand ? opponent.hand.length : 0,
+        board: opponent.board,
+        // Send face-down representation of staged cards (just length)
+        stagedCount: opponent.stagedCards ? opponent.stagedCards.length : 0
+      }
+    };
+    
+    if (!player.id.startsWith('__disconnected__')) {
+      io.to(player.id).emit('sync-game-state', state);
+    }
+  });
 };
 
 io.on('connection', (socket) => {
@@ -52,7 +91,18 @@ io.on('connection', (socket) => {
       name: roomData.name,
       isPrivate: roomData.isPrivate,
       password: roomData.password,
-      players: [ { id: socket.id, nickname: roomData.nickname, heroId: roomData.heroId } ],
+      players: [ { 
+        id: socket.id, 
+        nickname: roomData.nickname, 
+        heroId: roomData.heroId,
+        hp: 30,
+        ap: 3,
+        maxAp: 10,
+        hand: [],
+        board: [],
+        stagedCards: [],
+        queuedAttacks: []
+      } ],
     };
     rooms[roomId] = newRoom;
     socket.join(roomId);
@@ -70,7 +120,18 @@ io.on('connection', (socket) => {
     if (room.isPrivate && room.password !== password) return socket.emit('error', 'Invalid password');
     if (room.players.find(p => p.nickname === nickname)) return socket.emit('error', 'You are already in this room');
 
-    room.players.push({ id: socket.id, nickname, heroId });
+    room.players.push({ 
+      id: socket.id, 
+      nickname, 
+      heroId,
+      hp: 30,
+      ap: 3,
+      maxAp: 10,
+      hand: [],
+      board: [],
+      stagedCards: [],
+      queuedAttacks: []
+    });
     socket.join(roomId);
     
     io.emit('rooms-update', getPublicRooms());
@@ -80,34 +141,201 @@ io.on('connection', (socket) => {
     dealCards(room);
   });
 
-  socket.on('make-move', (moveData) => {
-    io.to(moveData.roomId).emit('move-made', {
-      playerId: socket.id,
-      move: moveData.move,
-      passTurn: !!moveData.passTurn,
-      timestamp: new Date(),
-    });
+  socket.on('pass-turn', (roomId) => {
+    const room = rooms[roomId];
+    if (!room || room.currentTurn !== socket.id) return;
+    
+    room.turnsPassed = (room.turnsPassed || 0) + 1;
+    
+    if (room.turnsPassed >= 2) {
+      resolveRound(room);
+    } else {
+      const opponent = room.players.find(p => p.id !== socket.id) || room.players[0];
+      room.currentTurn = opponent.id;
+      syncGameState(roomId);
+    }
   });
+
+  socket.on('play-card', ({ roomId, cardUid, targetUid }) => {
+    const room = rooms[roomId];
+    if (!room || room.currentTurn !== socket.id) return;
+    
+    const player = room.players.find(p => p.id === socket.id);
+    
+    const cardIndex = player.hand.findIndex(c => c.uid === cardUid);
+    if (cardIndex === -1) return;
+    
+    const card = player.hand[cardIndex];
+    if (player.ap < card.cost) return;
+    if (card.category === 'Summon' && player.board.length + player.stagedCards.filter(c => c.category === 'Summon').length >= 7) return;
+    
+    player.ap -= card.cost;
+    player.hand.splice(cardIndex, 1);
+    
+    // Stage the card with its intended target
+    player.stagedCards.push({ ...card, targetUid });
+    
+    syncGameState(roomId);
+  });
+
+  socket.on('board-attack', ({ roomId, attackerUid, targetUid }) => {
+    const room = rooms[roomId];
+    if (!room || room.currentTurn !== socket.id) return;
+    
+    const player = room.players.find(p => p.id === socket.id);
+    
+    const attackerIndex = player.board.findIndex(c => c.uid === attackerUid);
+    if (attackerIndex === -1) return;
+    
+    // Queue the attack intent
+    const existingIndex = player.queuedAttacks.findIndex(a => a.attackerUid === attackerUid);
+    if (existingIndex !== -1) {
+      player.queuedAttacks[existingIndex].targetUid = targetUid;
+    } else {
+      player.queuedAttacks.push({ attackerUid, targetUid });
+    }
+    
+    syncGameState(roomId);
+  });
+
+  async function resolveRound(room) {
+    room.currentTurn = null; // Lock UI during resolution
+    syncGameState(room.id);
+    
+    const p1 = room.players[0];
+    const p2 = room.players[1];
+    
+    // Calculate temporary armor from staged Hybrid cards
+    p1.armor = p1.stagedCards.filter(c => c.category === 'Hybrid').reduce((sum, c) => sum + c.defense, 0);
+    p2.armor = p2.stagedCards.filter(c => c.category === 'Hybrid').reduce((sum, c) => sum + c.defense, 0);
+    
+    // 1. Resolve Board Attacks
+    // Note: in a true simultaneous system, damage is tallied and then applied, 
+    // but for simplicity we will process p1's queued attacks, then p2's, 
+    // keeping track of what dies so we don't overkill. 
+    // If a card dies during resolution, its queued attack might still resolve (simultaneous strike).
+    // Helper to get first chronological alive summon, or null if none
+    const getAutoTarget = (opponent) => opponent.board.find(c => c.defense > 0);
+
+    const resolveAttacks = (attackerPlayer, defenderPlayer) => {
+      for (const attacker of attackerPlayer.board) {
+        if (attacker.defense <= 0) continue;
+        
+        let remainingDamage = attacker.attack;
+        while (remainingDamage > 0 && attacker.defense > 0) {
+          if (defenderPlayer.armor > 0) {
+            if (defenderPlayer.armor <= remainingDamage) {
+              remainingDamage -= defenderPlayer.armor;
+              defenderPlayer.armor = 0;
+            } else {
+              defenderPlayer.armor -= remainingDamage;
+              remainingDamage = 0;
+            }
+            continue;
+          }
+          
+          const autoTarget = getAutoTarget(defenderPlayer);
+          if (autoTarget) {
+            attacker.defense -= autoTarget.attack; // Retaliation
+            if (autoTarget.defense <= remainingDamage) {
+              remainingDamage -= autoTarget.defense;
+              autoTarget.defense = 0;
+            } else {
+              autoTarget.defense -= remainingDamage;
+              remainingDamage = 0;
+            }
+          } else {
+            defenderPlayer.hp -= remainingDamage;
+            remainingDamage = 0;
+          }
+        }
+      }
+    };
+    
+    resolveAttacks(p1, p2);
+    resolveAttacks(p2, p1);
+    
+    // 2. Resolve Staged Cards (Hybrid/Trade attacks, then Summons enter board)
+    const resolveStaged = (player, opponent) => {
+      for (const card of player.stagedCards) {
+        if (card.category === 'Trade' || card.category === 'Hybrid') {
+          let remainingDamage = card.attack;
+          while (remainingDamage > 0) {
+            if (opponent.armor > 0) {
+              if (opponent.armor <= remainingDamage) {
+                remainingDamage -= opponent.armor;
+                opponent.armor = 0;
+              } else {
+                opponent.armor -= remainingDamage;
+                remainingDamage = 0;
+              }
+              continue;
+            }
+            
+            const autoTarget = getAutoTarget(opponent);
+            if (autoTarget) {
+              if (autoTarget.defense <= remainingDamage) {
+                remainingDamage -= autoTarget.defense;
+                autoTarget.defense = 0;
+              } else {
+                autoTarget.defense -= remainingDamage;
+                remainingDamage = 0;
+              }
+            } else {
+              opponent.hp -= remainingDamage;
+              remainingDamage = 0;
+            }
+          }
+        } else if (card.category === 'Summon') {
+          player.board.push(card);
+        }
+      }
+    };
+    
+    resolveStaged(p1, p2);
+    resolveStaged(p2, p1);
+    
+    // Clear dead summons from board
+    p1.board = p1.board.filter(c => c.defense > 0);
+    p2.board = p2.board.filter(c => c.defense > 0);
+    
+    // 3. Clear Staged & Queued, Refill Hands, Prep Next Round
+    for (const player of room.players) {
+      player.stagedCards = [];
+      player.queuedAttacks = [];
+      
+      // AP Scaling (+2 per round, cumulative up to maxAp)
+      player.ap = Math.min(player.ap + 2, player.maxAp);
+      
+      // Draw cards up to HAND_SIZE
+      const cardsNeeded = HAND_SIZE - player.hand.length;
+      for (let i = 0; i < cardsNeeded; i++) {
+        const card = await drawCard(player.heroId);
+        if (card) player.hand.push(card);
+      }
+    }
+    
+    room.turnsPassed = 0;
+    room.currentTurn = room.players[0].id;
+    
+    syncGameState(room.id);
+    checkWinCondition(room);
+  }
 
   socket.on('get-rooms', () => {
     socket.emit('rooms-update', getPublicRooms());
   });
 
-  socket.on('check-game-state', ({ roomId, nickname }) => {
-    const room = rooms[roomId];
-    if (room) {
-      const playerIndex = room.players.findIndex(p => p.nickname === nickname);
-      if (playerIndex !== -1) {
-        room.players[playerIndex].id = socket.id;
-        socket.join(roomId);
-        if (room.players.length === 2) {
-          socket.emit('game-start', room);
-        }
-      }
-    }
-  });
 
   socket.on('leave-room', (roomId) => {
+    // Intentional leave (resign/cancel) — clear any pending reconnect timer
+    const user = Object.keys(reconnectTimers).find(
+      nick => reconnectTimers[nick].roomId === roomId && reconnectTimers[nick].socketId === socket.id
+    );
+    if (user) {
+      clearTimeout(reconnectTimers[user].timeout);
+      delete reconnectTimers[user];
+    }
     removePlayerFromRoom(socket.id, roomId);
     socket.leave(roomId);
   });
@@ -115,20 +343,102 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log(`Client disconnected: ${socket.id}`);
     for (const roomId in rooms) {
-      if (rooms[roomId].players.find(p => p.id === socket.id)) {
+      const room = rooms[roomId];
+      const player = room.players.find(p => p.id === socket.id);
+      if (!player) continue;
+
+      if (room.players.length === 2) {
+        // ── Active game: grant reconnect window ───────────────────────────
+        const prior = reconnectTimers[player.nickname];
+        const rejoinsUsed = prior ? prior.rejoinsUsed : 0;
+
+        if (rejoinsUsed >= 3) {
+          // 4th disconnect → immediate defeat, no more chances
+          console.log(`${player.nickname} exceeded reconnect limit — forfeiting`);
+          removePlayerFromRoom(socket.id, roomId);
+        } else {
+          // Mark player as disconnected (keep in room)
+          player.disconnected = true;
+          player.id = `__disconnected__${player.nickname}`;
+
+          // Notify the opponent
+          const opponent = room.players.find(p => p.nickname !== player.nickname);
+          if (opponent && opponent.id && !opponent.id.startsWith('__disconnected__')) {
+            io.to(opponent.id).emit('opponent-reconnecting', {
+              secondsLeft: 20,
+              rejoinsLeft: 2 - rejoinsUsed, // remaining after this one
+            });
+          }
+
+          const nickname = player.nickname; // capture for closure
+          const timeout = setTimeout(() => {
+            console.log(`Reconnect timer expired for ${nickname}`);
+            delete reconnectTimers[nickname];
+            removePlayerByNickname(nickname, roomId);
+          }, 20000);
+
+          // Cancel previous timer if any (edge case: rapid reconnects)
+          if (prior) clearTimeout(prior.timeout);
+
+          reconnectTimers[nickname] = { timeout, roomId, socketId: socket.id, rejoinsUsed: rejoinsUsed + 1 };
+        }
+      } else {
+        // Waiting room — immediate cleanup
         removePlayerFromRoom(socket.id, roomId);
-        break; // a socket can only be in one room
       }
+      break;
+    }
+  });
+
+  socket.on('check-game-state', ({ roomId, nickname }) => {
+    const room = rooms[roomId];
+
+    // Room is gone (game ended while we were away) — tell client to go to lobby
+    if (!room) {
+      socket.emit('room-gone');
+      return;
+    }
+
+    const playerIndex = room.players.findIndex(p => p.nickname === nickname);
+    if (playerIndex === -1) {
+      socket.emit('room-gone');
+      return;
+    }
+
+    // Cancel pending reconnect timer
+    if (reconnectTimers[nickname]) {
+      clearTimeout(reconnectTimers[nickname].timeout);
+      delete reconnectTimers[nickname];
+    }
+
+    // Restore player with new socket id
+    room.players[playerIndex].id = socket.id;
+    room.players[playerIndex].disconnected = false;
+    socket.join(roomId);
+
+    if (room.players.length === 2) {
+      // Active game — full resync
+      const opponent = room.players.find(p => p.nickname !== nickname);
+      if (opponent && opponent.id && !opponent.id.startsWith('__disconnected__')) {
+        io.to(opponent.id).emit('opponent-reconnected', { nickname });
+      }
+
+      socket.emit('game-start', room);
+      // Let the client update the base variables, then immediately overwrite with correct authoritative state
+      syncGameState(roomId);
+    } else {
+      // Still waiting for opponent — put them back in the waiting room
+      socket.emit('waiting-room-restore', { roomId });
     }
   });
 });
 
-// ── Room teardown helper ────────────────────────────────────────────────────
+// ── Room teardown helper (by socket id) ─────────────────────────────────────
 function removePlayerFromRoom(socketId, roomId) {
   const room = rooms[roomId];
   if (!room) return;
 
-  const wasGame = room.players.length === 2; // game was in progress
+  const wasGame = room.players.length === 2;
   const loser   = room.players.find(p => p.id === socketId);
   const winner  = room.players.find(p => p.id !== socketId);
 
@@ -138,50 +448,90 @@ function removePlayerFromRoom(socketId, roomId) {
     delete rooms[roomId];
 
     if (wasGame && loser && winner) {
-      // Notify each player individually with their outcome
       io.to(winner.id).emit('game-over', { outcome: 'win',  opponentNickname: loser.nickname  });
       io.to(loser.id).emit('game-over',  { outcome: 'loss', opponentNickname: winner.nickname });
-
-      // Persist stats to DB
       recordResult(winner.nickname, loser.nickname);
     }
   }
-  // If the creator is still alone in a waiting room — room stays open
 
   io.emit('rooms-update', getPublicRooms());
 }
 
-// ── Card dealing ─────────────────────────────────────────────────────────────
+// ── Room teardown helper (by nickname — used when timer fires) ───────────────
+function removePlayerByNickname(nickname, roomId) {
+  const room = rooms[roomId];
+  if (!room) return;
+
+  const wasGame = room.players.length === 2;
+  const loser   = room.players.find(p => p.nickname === nickname);
+  const winner  = room.players.find(p => p.nickname !== nickname);
+
+  if (!loser) return;
+
+  room.players = room.players.filter(p => p.nickname !== nickname);
+
+  if (wasGame) {
+    delete rooms[roomId];
+    if (winner && winner.id && !winner.id.startsWith('__disconnected__')) {
+      io.to(winner.id).emit('game-over', { outcome: 'win',  opponentNickname: loser.nickname  });
+    }
+    // Disconnected player has no live socket — nothing to emit to them
+    recordResult(winner.nickname, loser.nickname);
+  }
+
+  io.emit('rooms-update', getPublicRooms());
+}
+
+// ── Card dealing & Game Init ──────────────────────────────────────────────────
 const HAND_SIZE = 5;
 
+async function drawCard(heroId) {
+  if (!heroId) return null;
+  const [rows] = await db.query(
+    'SELECT card_id AS baseId, name, category, cost, attack, defense, description FROM Cards WHERE hero_id = ?',
+    [heroId]
+  );
+  if (rows.length === 0) return null;
+  
+  const card = rows[Math.floor(Math.random() * rows.length)];
+  // Attach a unique instance ID so multiple copies of the same card can be tracked
+  return { ...card, uid: crypto.randomUUID() };
+}
+
 async function dealCards(room) {
+  // Set starting state
+  room.currentTurn = room.players[0].id;
+  room.turnsPassed = 0;
+
   for (const player of room.players) {
     try {
-      const heroId = player.heroId;
-      if (!heroId) {
-        // No hero selected — send empty hand, client will handle it
-        io.to(player.id).emit('deal-hand', []);
-        continue;
+      player.hand = [];
+      for (let i = 0; i < HAND_SIZE; i++) {
+        const card = await drawCard(player.heroId);
+        if (card) player.hand.push(card);
       }
-
-      const [rows] = await db.query(
-        'SELECT card_id AS id, name, category, cost, attack, defense, description FROM Cards WHERE hero_id = ?',
-        [heroId]
-      );
-
-      // Fisher-Yates shuffle
-      const shuffled = [...rows];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-
-      const hand = shuffled.slice(0, HAND_SIZE);
-      io.to(player.id).emit('deal-hand', hand);
     } catch (err) {
       console.error(`Failed to deal cards to ${player.nickname}:`, err);
-      io.to(player.id).emit('deal-hand', []);
     }
+  }
+  
+  // Sync full initial state to everyone
+  syncGameState(room.id);
+}
+
+function checkWinCondition(room) {
+  if (!room || room.players.length !== 2) return;
+  const p1 = room.players[0];
+  const p2 = room.players[1];
+  
+  if (p1.hp <= 0 || p2.hp <= 0) {
+    const winner = p1.hp > 0 ? p1 : p2;
+    const loser = p1.hp <= 0 ? p1 : p2;
+    
+    io.to(room.id).emit('game-over', { outcome: 'win', opponentNickname: loser.nickname });
+    recordResult(winner.nickname, loser.nickname);
+    delete rooms[room.id];
+    io.emit('rooms-update', getPublicRooms());
   }
 }
 

@@ -1,3 +1,5 @@
+USE marvel_card_game;
+
 -- Iron Man is ID 1
 INSERT INTO Cards (hero_id, name, category, cost, attack, defense, description) VALUES
 (1, 'Unibeam', 'Trade', 5, 8, 0, 'A concentrated beam from the chest reactor. Maximum damage at the cost of leaving defenses completely open.'),

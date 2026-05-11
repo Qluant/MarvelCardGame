@@ -1,4 +1,4 @@
-CREATE DATABASE marvel_card_game;
+CREATE DATABASE IF NOT EXISTS marvel_card_game;
 USE marvel_card_game;
 
 DROP TABLE IF EXISTS Cards;

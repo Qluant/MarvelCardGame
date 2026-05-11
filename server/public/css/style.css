@@ -257,10 +257,10 @@ button[type="submit"]:active {
    ========================================================================== */
 .board {
   position: fixed;
-  top: 70px;
+  top: 0;
   left: 0;
   width: 100vw;
-  height: calc(100vh - 70px);
+  height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -271,7 +271,7 @@ button[type="submit"]:active {
 
 .board > .leave-btn {
   position: absolute;
-  top: 20px;
+  bottom: 20px;
   left: 20px;
   background: rgba(255,255,255,0.1);
   color: white;
@@ -283,7 +283,7 @@ button[type="submit"]:active {
 .timer {
   position: absolute;
   top: 20px;
-  right: 20px;
+  left: 20px;
   font-family: var(--font-comic);
   font-size: 2.5rem;
   color: var(--marvel-red);
@@ -396,8 +396,8 @@ button[type="submit"]:active {
 /* End Turn button */
 .end-turn-btn {
   position: absolute;
-  bottom: 220px;
-  right: 120px;
+  top: 80px;
+  left: 20px;
   background: linear-gradient(135deg, #2ecc71, #27ae60);
   color: white;
   font-family: var(--font-header);
@@ -549,25 +549,27 @@ button[type="submit"]:active {
   width: 100%;
   position: relative;
   z-index: 10;
-  height: 200px;
+  height: 180px;
   flex-shrink: 0;
 }
 
 .player-zone {
   justify-content: flex-start;
-  padding-top: 10px;
 }
 .player-zone .hero-portrait-container {
-  transform: translateY(-40px);
+  position: absolute;
+  bottom: 20px;
+  right: 150px; /* Next to the fanned cards */
   z-index: 40;
 }
 
 .enemy-zone {
   justify-content: flex-end;
-  padding-bottom: 10px;
 }
 .enemy-zone .hero-portrait-container {
-  transform: translateY(40px);
+  position: absolute;
+  top: 20px;
+  left: 150px; /* Next to the fanned cards */
   z-index: 40;
 }
 
@@ -1530,4 +1532,84 @@ button[type="submit"]:active {
   color: var(--marvel-red);
   text-shadow: 0 0 8px var(--marvel-red-glow);
   user-select: none;
+}
+
+/* ==========================================================================
+   Opponent Reconnecting Banner
+   ========================================================================== */
+.reconnect-banner {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid #e67e22;
+  border-radius: 10px;
+  padding: 10px 20px;
+  box-shadow: 0 0 20px rgba(230, 126, 34, 0.4);
+  animation: slideDown 0.3s ease;
+  white-space: nowrap;
+}
+
+.rb-icon { font-size: 1.2rem; }
+
+.rb-text {
+  font-family: var(--font-header);
+  font-size: 0.9rem;
+  color: #f39c12;
+  letter-spacing: 0.5px;
+}
+
+#rb-count {
+  font-weight: bold;
+  color: #e74c3c;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ==========================================================================
+   Staging Area & Ready Button
+   ========================================================================== */
+.staging-area {
+  height: 130px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  margin: 5px auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 90%;
+}
+
+#player-active-cards, #enemy-active-cards {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.staging-area ul {
+  display: flex;
+  gap: 15px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.end-turn-btn.ready {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+  border-color: #2ecc71;
+  box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
 }
