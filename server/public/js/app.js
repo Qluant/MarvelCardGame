@@ -10,6 +10,7 @@ let gameStarted = false;
 let gameTimerInterval = null;
 let gameTimeLeft = 60;
 let isMyTurn = false;
+let initialCoinTossDone = false;
 // Action Points
 let playerAP = 3;
 let playerMaxAP = 3;
@@ -342,7 +343,17 @@ function animateDealHand(cards) {
   const enemyRect  = enemyZone.getBoundingClientRect();
   const total = cards.length;
   let landed = 0;
-  const done = () => { if (++landed === total * 2) renderBoard(); };
+  const done = () => { 
+    if (++landed === total * 2) {
+      renderBoard();
+      if (!initialCoinTossDone) {
+        initialCoinTossDone = true;
+        if (window.startCoinFlipAnimation) {
+          window.startCoinFlipAnimation();
+        }
+      }
+    }
+  };
 
   for (let i = 0; i < total; i++) {
     spawnFlyingCard(
@@ -477,26 +488,67 @@ function setupSocketListeners() {
       enemyAP = 3;  enemyMaxAP = 3;
       renderBoard();
       
-      // Start Timer
-      if (gameTimerInterval) clearInterval(gameTimerInterval);
-      gameTimeLeft = 60;
-      document.querySelector('.timer').innerText = gameTimeLeft;
-      
-      const tickTimer = () => {
-        gameTimeLeft--;
-        if (gameTimeLeft >= 0) {
-          document.querySelector('.timer').innerText = gameTimeLeft;
-        } else {
-          // Timer reached 0, pass turn automatically
-          gameTimeLeft = 60;
-          document.querySelector('.timer').innerText = gameTimeLeft;
-          doPassTurn();
-        }
-      };
-      
-      gameTimerInterval = setInterval(tickTimer, 1000);
+      initialCoinTossDone = false;
+      // Note: We do not start the timer or coin flip here.
+      // deal-hand will be received next and will trigger the coin toss when finished.
     }
   });
+
+  window.startCoinFlipAnimation = function() {
+    // Start coin flip animation
+    const coinOverlay = document.getElementById('coin-overlay');
+    const startCoin = document.getElementById('start-coin');
+    if (coinOverlay && startCoin) {
+      coinOverlay.style.display = 'flex';
+      
+      // Reset state instantly without transition
+      startCoin.style.transition = 'none';
+      startCoin.style.transform = `rotateY(0deg) translateZ(0)`;
+      
+      // Double requestAnimationFrame ensures the browser paints the '0deg' state 
+      // before we apply the long transition, fixing any stuttering bugs.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          // Standard ease-out is significantly smoother than custom bezier which can cause jerky stops
+          startCoin.style.transition = 'transform 3s ease-out';
+          
+          const baseSpins = 1080; 
+          const finalRotation = isMyTurn ? baseSpins : baseSpins + 180;
+          
+          // Using translateZ(0) alongside rotateY forces GPU rendering to prevent stuttering
+          startCoin.style.transform = `rotateY(${finalRotation}deg) translateZ(0)`;
+        });
+      });
+      
+      // Wait for 3s spin + a small buffer to finish before hiding
+      setTimeout(() => {
+        coinOverlay.style.display = 'none';
+        window.startGameTimer();
+      }, 3500);
+    } else {
+      window.startGameTimer();
+    }
+  };
+
+  window.startGameTimer = function() {
+    if (gameTimerInterval) clearInterval(gameTimerInterval);
+    gameTimeLeft = 60;
+    document.querySelector('.timer').innerText = gameTimeLeft;
+    
+    const tickTimer = () => {
+      gameTimeLeft--;
+      if (gameTimeLeft >= 0) {
+        document.querySelector('.timer').innerText = gameTimeLeft;
+      } else {
+        // Timer reached 0, pass turn automatically
+        gameTimeLeft = 60;
+        document.querySelector('.timer').innerText = gameTimeLeft;
+        doPassTurn();
+      }
+    };
+    
+    gameTimerInterval = setInterval(tickTimer, 1000);
+  };
 
   socket.on('move-made', (data) => {
     if (data.passTurn) {
