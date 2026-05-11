@@ -513,17 +513,16 @@ function setupSocketListeners() {
       document.getElementById('enemy-avatar').src = ``;
 
       if (!isReconnect) {
-        // Fresh game — reset counts; they will be populated by deal-hand / opponent-hand-count
+        // Fresh game — reset counts; they will be populated by sync-game-state
         enemyHandCount = 0;
         playerAP = 3; playerMaxAP = 3;
         enemyAP = 3;  enemyMaxAP = 3;
+        initialCoinTossDone = false;
+      } else {
+        initialCoinTossDone = true;
       }
 
       renderBoard();
-      
-      initialCoinTossDone = false;
-      // Note: We do not start the timer or coin flip here.
-      // deal-hand will be received next and will trigger the coin toss when finished.
     }
   });
 
@@ -630,6 +629,14 @@ function setupSocketListeners() {
     document.getElementById('enemy-hp').innerText = enemyHP;
 
     renderBoard();
+
+    // Trigger initial coin toss if it hasn't happened yet
+    if (!initialCoinTossDone) {
+      initialCoinTossDone = true;
+      if (window.startCoinFlipAnimation) {
+        window.startCoinFlipAnimation();
+      }
+    }
   });
 
   socket.on('game-over', ({ outcome, opponentNickname }) => {
