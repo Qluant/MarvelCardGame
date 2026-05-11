@@ -15,9 +15,8 @@
       <div class="header-logo">Great Battle</div>
       <nav class="header-nav">
         <a href="#" onclick="navigate('lobby')">Lobby</a>
-        <a href="#" onclick="navigate('character-select')" id="nav-hero-select">Hero</a>
+        <a href="#" onclick="navigate('character-info')" id="nav-hero-select">Heroes</a>
         <a href="#" onclick="navigate('top10')">Top 10</a>
-        <a href="#" onclick="navigate('info')">Info</a>
         <a href="#" id="nav-profile" style="display:none;" onclick="navigate('profile')">Profile</a>
         <a href="#" id="nav-login" onclick="navigate('login')">Login</a>
         <button id="nav-logout" style="display:none;" class="logout-btn" onclick="handleLogout()">Logout</button>
@@ -114,19 +113,13 @@
           </div>
         </div>
 
-        <!-- CHARACTER SELECT VIEW -->
-        <div id="view-character-select" class="view page-container">
-          <div class="glass-panel character-select-panel">
-            <h2>Choose Your Hero</h2>
-            <p class="character-select-subtitle">Your deck will be built from your hero's cards</p>
-            <div id="hero-select-grid" class="hero-select-grid">
-              <p>Loading heroes...</p>
-            </div>
-            <button class="character-select-back-btn" onclick="navigate('lobby')">← Back to Lobby</button>
-          </div>
+        <!-- CHARACTER INFO VIEW -->
+        <div id="view-character-info" class="view page-container info-page">
+          <h2>Heroes &amp; Cards Compendium</h2>
+          <p class="character-select-subtitle" style="text-align:center;">Browse hero decks · Click <strong>Select</strong> to choose your fighter</p>
+          <div class="heroes-list" id="character-info-heroes-list"></div>
         </div>
 
-        <!-- WAITING VIEW -->
         <div id="view-waiting" class="view page-container">
           <div class="waiting-container glass-panel" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; text-align: center;">
             <h1 class="waiting-title" style="font-family: var(--font-comic); font-size: 4rem; color: var(--marvel-red); text-shadow: 2px 2px 0px #000; margin: 0; letter-spacing: 4px;">Waiting...</h1>
@@ -164,12 +157,6 @@
               <div class="stat-box"><span>Winstreak</span><strong id="profile-winstreak">0</strong></div>
             </div>
           </div>
-        </div>
-
-        <!-- INFO VIEW -->
-        <div id="view-info" class="view page-container info-page">
-          <h2>Heroes & Cards Compendium</h2>
-          <div class="heroes-list" id="info-heroes-list"></div>
         </div>
 
         <!-- GAME BOARD VIEW -->

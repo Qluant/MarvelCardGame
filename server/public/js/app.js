@@ -83,8 +83,7 @@ function navigate(viewName) {
   // View specific logic
   if (viewName === 'top10') loadTop10();
   if (viewName === 'profile' && currentUser) loadProfile();
-  if (viewName === 'info') loadInfo();
-  if (viewName === 'character-select') loadCharacterSelect();
+  if (viewName === 'character-info') loadCharacterInfo();
   if (viewName === 'lobby') {
     if (!currentUser) return navigate('login');
     socket.emit('get-rooms');
@@ -184,31 +183,51 @@ async function loadProfile() {
   document.getElementById('profile-winstreak').innerText = p.winstreak;
 }
 
-async function loadCharacterSelect() {
-  const grid = document.getElementById('hero-select-grid');
-  grid.innerHTML = '<p>Loading heroes...</p>';
+async function loadCharacterInfo() {
+  const list = document.getElementById('character-info-heroes-list');
+  list.innerHTML = '<p>Loading heroes...</p>';
 
   try {
     const res = await fetch(`${API_URL}/info/heroes`);
     const heroes = await res.json();
+    list.innerHTML = '';
 
-    grid.innerHTML = heroes.map(h => {
-      const abilityClass = (h.special_ability || 'None').toLowerCase();
-      const cardCount = (h.cards && h.cards[0] && h.cards[0].name) ? h.cards.length : 0;
-      const isSelected = currentUser.heroId === h.hero_id;
-      return `
-        <div class="hero-tile${isSelected ? ' selected' : ''}" id="hero-tile-${h.hero_id}">
-          <div class="hero-tile-name">${h.alias}</div>
-          <div class="hero-tile-ability ${abilityClass}">${h.special_ability || 'None'}</div>
-          <div class="hero-tile-card-count">${cardCount} cards in deck</div>
-          <button class="hero-tile-select-btn" onclick="selectHero(${h.hero_id}, '${h.alias}')">
-            ${isSelected ? '✓ Selected' : 'Select'}
-          </button>
+    heroes.forEach(hero => {
+      const isSelected = currentUser && currentUser.heroId === hero.hero_id;
+      const abilityClass = (hero.special_ability || 'None').toLowerCase();
+
+      let cardsHtml = '';
+      if (hero.cards && hero.cards.length && hero.cards[0] && hero.cards[0].name) {
+        hero.cards.forEach(c => {
+          const encoded = encodeURIComponent(JSON.stringify(c));
+          cardsHtml += `<div class="card-wrapper info-card-wrapper" data-card="${encoded}">${renderCard(c)}</div>`;
+        });
+      } else {
+        cardsHtml = '<p>No cards available.</p>';
+      }
+
+      list.innerHTML += `
+        <div class="hero-section glass-panel${isSelected ? ' hero-section-selected' : ''}" id="hero-section-${hero.hero_id}">
+          <div class="hero-section-header">
+            <div class="hero-section-meta">
+              <h3>${hero.alias}</h3>
+              <span class="hero-tile-ability ${abilityClass}">${hero.special_ability || 'None'}</span>
+            </div>
+            <button
+              class="hero-tile-select-btn${isSelected ? ' hero-tile-select-btn-active' : ''}"
+              id="hero-select-btn-${hero.hero_id}"
+              onclick="selectHero(${hero.hero_id}, '${hero.alias}')">
+              ${isSelected ? '✓ Your Hero' : 'Select'}
+            </button>
+          </div>
+          <div class="hero-cards">${cardsHtml}</div>
         </div>
       `;
-    }).join('');
+    });
+
+    initCardPreview();
   } catch (err) {
-    grid.innerHTML = '<p>Failed to load heroes.</p>';
+    list.innerHTML = '<p>Failed to load heroes.</p>';
   }
 }
 
@@ -224,48 +243,23 @@ window.selectHero = async function(heroId, heroAlias) {
     currentUser.heroAlias = heroAlias;
     localStorage.setItem('user', JSON.stringify(currentUser));
 
-    // Update tile visuals without full reload
-    document.querySelectorAll('.hero-tile').forEach(t => t.classList.remove('selected'));
-    document.querySelectorAll('.hero-tile-select-btn').forEach(b => b.textContent = 'Select');
-    const tile = document.getElementById(`hero-tile-${heroId}`);
-    if (tile) {
-      tile.classList.add('selected');
-      tile.querySelector('.hero-tile-select-btn').textContent = '✓ Selected';
-    }
+    // Update hero-section visuals without full reload
+    document.querySelectorAll('.hero-section').forEach(s => s.classList.remove('hero-section-selected'));
+    document.querySelectorAll('[id^="hero-select-btn-"]').forEach(b => {
+      b.textContent = 'Select';
+      b.classList.remove('hero-tile-select-btn-active');
+    });
+    const section = document.getElementById(`hero-section-${heroId}`);
+    if (section) section.classList.add('hero-section-selected');
+    const btn = document.getElementById(`hero-select-btn-${heroId}`);
+    if (btn) { btn.textContent = '✓ Your Hero'; btn.classList.add('hero-tile-select-btn-active'); }
   } catch (err) {
     alert('Failed to save hero selection. Please try again.');
   }
 };
 
-async function loadInfo() {
-  const res = await fetch(`${API_URL}/info/heroes`);
-  const data = await res.json();
-  const list = document.getElementById('info-heroes-list');
-  list.innerHTML = '';
-
-  data.forEach(hero => {
-    let cardsHtml = '';
-    if (hero.cards && hero.cards.length && hero.cards[0] && hero.cards[0].name) {
-      hero.cards.forEach(c => {
-        const encoded = encodeURIComponent(JSON.stringify(c));
-        cardsHtml += `<div class="card-wrapper info-card-wrapper" data-card="${encoded}">${renderCard(c)}</div>`;
-      });
-    } else {
-      cardsHtml = '<p>No cards available.</p>';
-    }
-    list.innerHTML += `
-      <div class="hero-section glass-panel">
-        <h3>${hero.alias}</h3>
-        <div class="hero-cards">${cardsHtml}</div>
-      </div>
-    `;
-  });
-
-  initCardPreview();
-}
 
 function initCardPreview() {
-  // Create singleton tooltip if not yet present
   let tooltip = document.getElementById('card-preview-tooltip');
   if (!tooltip) {
     tooltip = document.createElement('div');
@@ -274,8 +268,9 @@ function initCardPreview() {
     document.body.appendChild(tooltip);
   }
 
-  // Delegate events from the info list
-  const list = document.getElementById('info-heroes-list');
+  // Use the merged character-info list
+  const list = document.getElementById('character-info-heroes-list');
+  if (!list) return;
 
   list.addEventListener('mouseenter', (e) => {
     const wrapper = e.target.closest('.info-card-wrapper');
@@ -323,6 +318,60 @@ function positionTooltip(e, tooltip) {
   if (y + TH > window.innerHeight) y = e.clientY - TH - MARGIN;
   tooltip.style.left = x + 'px';
   tooltip.style.top  = y + 'px';
+}
+
+// ── Deal animation ────────────────────────────────────────────────────────────
+function animateDealHand(cards) {
+  const CARD_DELAY   = 120; // ms stagger between cards
+  const DEAL_DURATION = 400; // ms per card flight
+
+  const playerZone = document.getElementById('player-hand-list');
+  const enemyZone  = document.getElementById('enemy-hand-list');
+  if (!playerZone || !enemyZone) { renderBoard(); return; }
+
+  const deckPos = (() => {
+    const div = document.querySelector('.battlefield-divider');
+    if (div) {
+      const r = div.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    }
+    return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  })();
+
+  const playerRect = playerZone.getBoundingClientRect();
+  const enemyRect  = enemyZone.getBoundingClientRect();
+  const total = cards.length;
+  let landed = 0;
+  const done = () => { if (++landed === total * 2) renderBoard(); };
+
+  for (let i = 0; i < total; i++) {
+    spawnFlyingCard(
+      deckPos,
+      { x: playerRect.left + (playerRect.width / total) * i, y: playerRect.top + playerRect.height / 2 },
+      i * CARD_DELAY, DEAL_DURATION, done
+    );
+    spawnFlyingCard(
+      deckPos,
+      { x: enemyRect.left + (enemyRect.width / total) * i, y: enemyRect.top + enemyRect.height / 2 },
+      i * CARD_DELAY, DEAL_DURATION, done
+    );
+  }
+}
+
+function spawnFlyingCard(from, to, delay, duration, onDone) {
+  const el = document.createElement('div');
+  el.className = 'flying-card-token';
+  el.innerHTML = '<div class="flying-card-stamp">M</div>';
+  Object.assign(el.style, { left: from.x + 'px', top: from.y + 'px' });
+  document.body.appendChild(el);
+
+  setTimeout(() => {
+    el.style.transition = `left ${duration}ms cubic-bezier(.2,.8,.4,1), top ${duration}ms cubic-bezier(.2,.8,.4,1), opacity ${duration * 0.4}ms ease ${duration * 0.6}ms`;
+    el.style.left    = to.x + 'px';
+    el.style.top     = to.y + 'px';
+    el.style.opacity = '0';
+    setTimeout(() => { el.remove(); onDone(); }, duration + 200);
+  }, delay);
 }
 
 // Map a card name to its local image path (name -> snake_case filename)
@@ -511,8 +560,8 @@ function setupSocketListeners() {
 
   socket.on('deal-hand', (cards) => {
     playerHand = cards;
-    enemyHandCount = cards.length; // server deals same size to both
-    renderBoard();
+    enemyHandCount = cards.length;
+    animateDealHand(cards);
   });
 
   socket.on('error', (msg) => alert(msg));
@@ -522,7 +571,7 @@ window.handleCreateRoom = function(e) {
   e.preventDefault();
   if (!currentUser.heroId) {
     alert('Please select a hero first!');
-    navigate('character-select');
+    navigate('character-info');
     return;
   }
   const name = document.getElementById('create-room-name').value;
@@ -534,7 +583,7 @@ window.handleCreateRoom = function(e) {
 window.attemptJoinRoom = function(roomId, isPrivate) {
   if (!currentUser.heroId) {
     alert('Please select a hero first!');
-    navigate('character-select');
+    navigate('character-info');
     return;
   }
   if (isPrivate) {
