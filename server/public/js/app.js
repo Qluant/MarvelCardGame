@@ -646,6 +646,150 @@ function setupSocketListeners() {
     gameTimerInterval = setInterval(tickTimer, 1000);
   };
 
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+  const getHeroTheme = id => {
+    const themes = {1: 'theme-fire', 2: 'theme-tech', 3: 'theme-spider', 4: 'theme-magic'};
+    return themes[id] || 'theme-default';
+  };
+
+  socket.on('combat-animation', async (animData) => {
+    try {
+      if (typeof hideCardInfo === 'function') hideCardInfo();
+      
+      // Lock UI and pause timer
+      document.getElementById('turn-overlay').style.display = 'flex';
+      document.getElementById('turn-overlay').innerHTML = '<h1 style="font-family: var(--font-comic); font-size: 5rem; color: #f39c12; text-shadow: 0 0 20px #000; letter-spacing: 4px; animation: pulseTurn 1.5s infinite;">COMBAT!</h1>';
+      if (gameTimerInterval) clearInterval(gameTimerInterval);
+      
+      const { p1, p2 } = animData;
+      const isP1 = (currentUser && p1.id === socket.id);
+      
+      const myAnim = isP1 ? p1 : p2;
+      const enemyAnim = isP1 ? p2 : p1;
+
+      const myHalf = document.querySelector('.player-half');
+      const enemyHalf = document.querySelector('.enemy-half');
+      const myAvatar = document.getElementById('player-avatar');
+      const enemyAvatar = document.getElementById('enemy-avatar');
+
+      const spawnClot = (type, heroId, targetId, offsetX, offsetY) => {
+        const el = document.createElement('div');
+        el.className = `combat-clot clot-${type} ${getHeroTheme(heroId)}`;
+        const target = document.getElementById(targetId).parentElement;
+        const rect = target.getBoundingClientRect();
+        
+        el.style.position = 'fixed';
+        el.style.left = (rect.left + rect.width / 2 + offsetX) + 'px';
+        el.style.top = (rect.top + rect.height / 2 + offsetY) + 'px';
+        document.body.appendChild(el);
+        return el;
+      };
+
+      // Phase 1: Spawn Clots (Player above staging, Enemy below staging)
+      const myAtkClot = spawnClot('attack', myAnim.heroId, 'player-staged-cards', -30, -80);
+      const myDefClot = spawnClot('defense', myAnim.heroId, 'player-staged-cards', 30, -80);
+      
+      const enemyAtkClot = spawnClot('attack', enemyAnim.heroId, 'enemy-staged-cards', -30, 80);
+      const enemyDefClot = spawnClot('defense', enemyAnim.heroId, 'enemy-staged-cards', 30, 80);
+
+      await delay(100);
+      [myAtkClot, myDefClot, enemyAtkClot, enemyDefClot].forEach(c => c.style.transform = 'scale(1) translate(-50%, -50%)');
+      
+      await delay(1000);
+
+      const flightDuration = 800;
+      const flyTo = (el, targetElem) => {
+        const target = targetElem.getBoundingClientRect();
+        // Force reflow
+        el.offsetHeight; 
+        
+        el.style.transition = `all ${flightDuration}ms cubic-bezier(0.25, 0.8, 0.25, 1)`;
+        el.style.left = (target.left + target.width / 2) + 'px';
+        el.style.top = (target.top + target.height / 2) + 'px';
+      };
+
+      // Phase 2: Defense flies to heroes
+      flyTo(myDefClot, myAvatar);
+      flyTo(enemyDefClot, enemyAvatar);
+
+      await delay(flightDuration);
+
+      myDefClot.remove();
+      enemyDefClot.remove();
+      
+      const myShield = document.createElement('div');
+      myShield.className = `hero-shield-overlay ${getHeroTheme(myAnim.heroId)}`;
+      myAvatar.parentElement.appendChild(myShield);
+
+      const enemyShield = document.createElement('div');
+      enemyShield.className = `hero-shield-overlay ${getHeroTheme(enemyAnim.heroId)}`;
+      enemyAvatar.parentElement.appendChild(enemyShield);
+
+      await delay(500);
+
+      // Phase 3: Attacks fly across
+      flyTo(myAtkClot, enemyAvatar);
+      flyTo(enemyAtkClot, myAvatar);
+
+      await delay(flightDuration);
+
+      myAtkClot.remove();
+      enemyAtkClot.remove();
+
+      const spawnImpact = (targetElem, heroId) => {
+        const impact = document.createElement('div');
+        impact.className = `combat-impact ${getHeroTheme(heroId)}`;
+        targetElem.parentElement.appendChild(impact);
+        setTimeout(() => impact.remove(), 800);
+      };
+
+      spawnImpact(enemyAvatar, myAnim.heroId);
+      spawnImpact(myAvatar, enemyAnim.heroId);
+
+      const spawnDamageText = (targetElem, amount, color) => {
+        if (amount <= 0 || isNaN(amount)) return;
+        const txt = document.createElement('div');
+        txt.className = 'floating-dmg';
+        txt.style.color = color;
+        txt.textContent = '-' + amount;
+        targetElem.parentElement.appendChild(txt);
+        setTimeout(() => txt.remove(), 1200);
+      };
+
+      spawnDamageText(myAvatar, enemyAnim.shieldDamageTaken, '#3498db');
+      spawnDamageText(enemyAvatar, myAnim.shieldDamageTaken, '#3498db');
+
+      if (myAnim.shieldDamageTaken > 0) myShield.classList.add('shield-hit');
+      if (enemyAnim.shieldDamageTaken > 0) enemyShield.classList.add('shield-hit');
+
+      await delay(600);
+
+      // HP Damage
+      spawnDamageText(myAvatar, enemyAnim.hpDamageTaken, '#e03131');
+      spawnDamageText(enemyAvatar, myAnim.hpDamageTaken, '#e03131');
+
+      if (enemyAnim.hpDamageTaken > 0) myAvatar.parentElement.classList.add('hero-shake');
+      if (myAnim.hpDamageTaken > 0) enemyAvatar.parentElement.classList.add('hero-shake');
+
+      if (enemyAnim.hpDamageTaken > 0 && myAnim.startDef - enemyAnim.shieldDamageTaken <= 0) {
+        myShield.classList.add('shield-break');
+      }
+      if (myAnim.hpDamageTaken > 0 && enemyAnim.startDef - myAnim.shieldDamageTaken <= 0) {
+        enemyShield.classList.add('shield-break');
+      }
+
+      await delay(1000);
+      
+      myShield.remove();
+      enemyShield.remove();
+      myAvatar.parentElement.classList.remove('hero-shake');
+      enemyAvatar.parentElement.classList.remove('hero-shake');
+    } catch (error) {
+      alert("Animation Error: " + error.message);
+      console.error(error);
+    }
+  });
+
   socket.on('sync-game-state', (state) => {
     // Detect turn flip to show overlay
     if (isMyTurn !== undefined && isMyTurn !== state.isMyTurn) {

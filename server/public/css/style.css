@@ -1767,3 +1767,102 @@ button[type="submit"]:active {
   from { opacity: 1; }
   to { opacity: 0; }
 }
+
+/* ==========================================================================
+   Combat Animations
+   ========================================================================== */
+.combat-clot {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  transform: scale(0) translate(-50%, -50%);
+  transform-origin: center center;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 9999;
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
+}
+
+.clot-attack { animation: pulseClot 1s infinite alternate; }
+.clot-defense { border: 4px solid rgba(255,255,255,0.8); }
+
+@keyframes pulseClot {
+  from { filter: drop-shadow(0 0 5px currentColor); }
+  to { filter: drop-shadow(0 0 20px currentColor) brightness(1.5); }
+}
+
+/* Themes */
+.theme-fire { background: radial-gradient(circle, #f1c40f, #e67e22, #c0392b); color: #e67e22; }
+.theme-tech { background: radial-gradient(circle, #e0ffff, #00ffff, #008b8b); color: #00ffff; }
+.theme-spider { background: radial-gradient(circle, #ffffff, #bdc3c7, #2c3e50); color: #bdc3c7; }
+.theme-magic { background: radial-gradient(circle, #f39c12, #d35400, #8e44ad); color: #f39c12; }
+.theme-default { background: radial-gradient(circle, #ecf0f1, #95a5a6, #7f8c8d); color: #ecf0f1; }
+
+.hero-shield-overlay {
+  position: absolute;
+  top: -10px; left: -10px; right: -10px; bottom: -10px;
+  border-radius: 50%;
+  border: 4px solid currentColor;
+  box-shadow: 0 0 20px currentColor, inset 0 0 20px currentColor;
+  opacity: 0.8;
+  z-index: 10;
+  pointer-events: none;
+  transition: all 0.2s;
+}
+
+.shield-hit { animation: shieldHit 0.3s; }
+@keyframes shieldHit {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; filter: brightness(2); }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.shield-break { animation: shieldBreak 0.5s forwards; }
+@keyframes shieldBreak {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.5); opacity: 0; filter: brightness(3); }
+  100% { transform: scale(2); opacity: 0; display: none; }
+}
+
+.combat-impact {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 100px; height: 100px;
+  transform: translate(-50%, -50%) scale(0);
+  border-radius: 50%;
+  z-index: 9999;
+  pointer-events: none;
+  animation: impactExplosion 0.6s ease-out forwards;
+}
+
+@keyframes impactExplosion {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 1; filter: brightness(2); }
+  50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.8; }
+  100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+}
+
+.floating-dmg {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-comic);
+  font-size: 3rem;
+  text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+  z-index: 10000;
+  pointer-events: none;
+  animation: floatUp 1.2s ease-out forwards;
+}
+
+@keyframes floatUp {
+  0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
+  20% { transform: translate(-50%, -20px) scale(1.2); opacity: 1; }
+  100% { transform: translate(-50%, -80px) scale(1); opacity: 0; }
+}
+
+.hero-shake { animation: heroShake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes heroShake {
+  10%, 90% { transform: translate3d(-2px, 0, 0); filter: brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(3); }
+  20%, 80% { transform: translate3d(4px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+  40%, 60% { transform: translate3d(8px, 0, 0); }
+}
