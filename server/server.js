@@ -178,6 +178,24 @@ io.on('connection', (socket) => {
     syncGameState(roomId);
   });
 
+  socket.on('revoke-card', ({ roomId, cardUid }) => {
+    const room = rooms[roomId];
+    if (!room || room.currentTurn !== socket.id) return;
+    
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player) return;
+
+    const stagedIndex = player.stagedCards.findIndex(c => c.uid === cardUid);
+    if (stagedIndex === -1) return;
+    
+    const card = player.stagedCards[stagedIndex];
+    player.stagedCards.splice(stagedIndex, 1);
+    player.hand.push(card);
+    player.ap += card.cost;
+    
+    syncGameState(roomId);
+  });
+
   socket.on('board-attack', ({ roomId, attackerUid, targetUid }) => {
     const room = rooms[roomId];
     if (!room || room.currentTurn !== socket.id) return;

@@ -118,11 +118,69 @@ function navigate(viewName) {
 window.navigate = navigate; // expose to global scope for HTML onclick
 
 // Auth Logic
+function showFormError(elementId, message, isSuccess = false) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  el.textContent = message;
+  el.className = 'form-error' + (isSuccess ? ' success' : '');
+  el.style.display = 'block';
+}
+
+let currentCardInfoModal = null;
+
+window.showCardInfo = function(encodedCard, isStaged) {
+  if (currentCardInfoModal) currentCardInfoModal.remove();
+  const card = JSON.parse(decodeURIComponent(encodedCard));
+  
+  const modal = document.createElement('div');
+  modal.id = 'card-info-modal';
+  modal.className = 'confirm-modal card-info-modal';
+  
+  // Reuse renderCard function, but disable hover transform by using a wrapper
+  const cardHtml = renderCard(card, false, null, true);
+  
+  let revokeBtnHtml = '';
+  if (isStaged && isMyTurn) {
+    revokeBtnHtml = `<button class="confirm-no" onclick="revokeCard('${card.uid}')" style="background: #e03131; color: white; border: none; font-size: 1.2rem; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%;">Revoke Card</button>`;
+  }
+  
+  modal.innerHTML = `
+    <div class="confirm-box" style="display: flex; flex-direction: column; align-items: center; background: rgba(20,20,20,0.95); padding: 40px; border-radius: 16px; border: 2px solid var(--marvel-red); width: 350px;">
+      <div style="transform: scale(1.2); transform-origin: top center; margin-bottom: 70px; pointer-events: none; margin-top: 30px;">
+        ${cardHtml}
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 250px;">
+        ${revokeBtnHtml}
+        <button class="confirm-yes" onclick="hideCardInfo()" style="font-size: 1.2rem; padding: 12px; background: #2ecc71; border: none; border-radius: 8px; color: white; cursor: pointer; width: 100%;">Close</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.style.display = 'flex';
+  currentCardInfoModal = modal;
+};
+
+window.hideCardInfo = function() {
+  if (currentCardInfoModal) {
+    currentCardInfoModal.remove();
+    currentCardInfoModal = null;
+  }
+};
+
+window.revokeCard = function(cardUid) {
+  if (!gameStarted || !isMyTurn) return;
+  socket.emit('revoke-card', { roomId: currentRoomId, cardUid });
+  hideCardInfo();
+};
+
 window.handleLogin = async function(e) {
   e.preventDefault();
   const nickname = document.getElementById('login-nickname').value;
   const password = document.getElementById('login-password').value;
   
+  const errDiv = document.getElementById('login-error');
+  if (errDiv) errDiv.style.display = 'none';
+
   try {
     const res = await fetch(`${API_URL}/auth/login`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -148,9 +206,9 @@ window.handleLogin = async function(e) {
       updateHeaderAuth();
       navigate('lobby');
     } else {
-      alert(data.error);
+      showFormError('login-error', data.error);
     }
-  } catch (err) { alert('Login failed'); }
+  } catch (err) { showFormError('login-error', 'Login failed'); }
 }
 
 window.handleRegister = async function(e) {
@@ -159,8 +217,11 @@ window.handleRegister = async function(e) {
   const password = document.getElementById('reg-password').value;
   const confirmPassword = document.getElementById('reg-confirm-password').value;
 
+  const errDiv = document.getElementById('reg-error');
+  if (errDiv) errDiv.style.display = 'none';
+
   if (password !== confirmPassword) {
-    alert('Passwords do not match!');
+    showFormError('reg-error', 'Passwords do not match!');
     return;
   }
   
@@ -171,12 +232,12 @@ window.handleRegister = async function(e) {
     });
     const data = await res.json();
     if (res.ok) {
-      alert('Registered! Please login.');
+      showFormError('login-error', 'Registered! Please login.', true);
       navigate('login');
     } else {
-      alert(data.error);
+      showFormError('reg-error', data.error);
     }
-  } catch (err) { alert('Registration failed'); }
+  } catch (err) { showFormError('reg-error', 'Registration failed'); }
 }
 
 window.handleLogout = function() {
@@ -279,7 +340,7 @@ window.selectHero = async function(heroId, heroAlias) {
     const btn = document.getElementById(`hero-select-btn-${heroId}`);
     if (btn) { btn.textContent = '✓ Your Hero'; btn.classList.add('hero-tile-select-btn-active'); }
   } catch (err) {
-    alert('Failed to save hero selection. Please try again.');
+    showNotification('Failed to save hero selection. Please try again.');
   }
 };
 
@@ -416,12 +477,13 @@ function cardImageUrl(cardName) {
 }
 
 // Card Renderer (hand / info view)
-function renderCard(card, isHand = false, onClick = null) {
+function renderCard(card, isHand = false, onClick = null, canAfford = true) {
   const imgSrc = cardImageUrl(card.name);
   const onClickStr = onClick ? `onclick="${onClick}"` : '';
+  const affordableClass = canAfford ? '' : ' unaffordable';
   
   return `
-    <div class="marvel-card" ${onClickStr}>
+    <div class="marvel-card${affordableClass}" ${onClickStr}>
       <div class="card-cost">${card.cost}</div>
       <div class="card-image-container"><img src="${imgSrc}" alt="${card.name}" class="card-image"/></div>
       <div class="card-body">
@@ -437,12 +499,14 @@ function renderCard(card, isHand = false, onClick = null) {
   `;
 }
 
-// Compact board card renderer (Hearthstone-style: image + stat badges only)
-function renderBoardCard(card) {
+// Compact board card renderer (image + name + stat badges)
+function renderBoardCard(card, isStaged = false) {
   const imgSrc = cardImageUrl(card.name);
+  const encoded = encodeURIComponent(JSON.stringify(card));
   return `
-    <div class="board-minion" title="${card.name}: ${card.description}">
+    <div class="board-minion" onclick="showCardInfo('${encoded}', ${isStaged})">
       <img src="${imgSrc}" alt="${card.name}" class="board-minion-img"/>
+      <div class="board-minion-name">${card.name}</div>
       <div class="board-minion-atk">${card.attack}</div>
       <div class="board-minion-def">${card.defense}</div>
     </div>
@@ -585,6 +649,8 @@ function setupSocketListeners() {
   socket.on('sync-game-state', (state) => {
     // Detect turn flip to show overlay
     if (isMyTurn !== undefined && isMyTurn !== state.isMyTurn) {
+      if (typeof hideCardInfo === 'function') hideCardInfo();
+      
       if (state.isMyTurn === true) {
         showTurnOverlay('Enemy Turn is over', '#e03131', 'Your Turn!', '#4dabf7');
       } else if (state.isMyTurn === false) {
@@ -692,13 +758,13 @@ function setupSocketListeners() {
     startWaitingTips();
   });
 
-  socket.on('error', (msg) => alert(msg));
+  socket.on('error', (msg) => showNotification(msg));
 }
 
 window.handleCreateRoom = function(e) {
   e.preventDefault();
   if (!currentUser.heroId) {
-    alert('Please select a hero first!');
+    showNotification('Please select a hero first!');
     navigate('character-info');
     return;
   }
@@ -710,7 +776,7 @@ window.handleCreateRoom = function(e) {
 
 window.attemptJoinRoom = function(roomId, isPrivate) {
   if (!currentUser.heroId) {
-    alert('Please select a hero first!');
+    showNotification('Please select a hero first!');
     navigate('character-info');
     return;
   }
@@ -849,6 +915,16 @@ function exitRoom() {
   localStorage.removeItem('activeGame');
 }
 
+window.showNotification = function(message, type = 'error') {
+  const el = document.createElement('div');
+  el.className = `in-game-notification ${type}`;
+  el.innerText = message;
+  document.body.appendChild(el);
+  setTimeout(() => {
+    if (el.parentNode) el.remove();
+  }, 3000);
+};
+
 function showGameResult(title, subtitle, color) {
   // Ensure we unlock navigation first
   inRoom = false;
@@ -908,14 +984,14 @@ window.handleLeaveGame = function() {
 };
 
 window.playCard = function(cardUid) {
-  if (!gameStarted) return alert('Waiting for opponent!');
+  if (!gameStarted) return showNotification('Waiting for opponent!');
   if (!isMyTurn) return; // block if not your turn
 
   
   const cardIndex = playerHand.findIndex(c => c.uid === cardUid);
   if (cardIndex !== -1) {
     const card = playerHand[cardIndex];
-    if (playerAP < card.cost) return alert("Not enough AP!");
+    if (playerAP < card.cost) return showNotification("Not enough AP!");
     
     // Let the server validate and apply the move.
     // For now, Trade/Hybrid cards always attack the enemy Hero directly.
@@ -986,10 +1062,11 @@ function renderBoard() {
     const translateY = Math.abs(offset) * 12;
     const translateX = offset * 40;
     const onClickStr = isMyTurn ? `playCard('${card.uid}')` : null;
+    const canAfford = playerAP >= card.cost;
     
     pHandList.innerHTML += `
       <li class="hand-slot${isMyTurn ? '' : ' no-play'}" style="transform: translateX(${translateX}px) translateY(${translateY}px) rotate(${rotate}deg) scale(0.7)">
-        ${renderCard(card, true, onClickStr)}
+        ${renderCard(card, true, onClickStr, canAfford)}
       </li>
     `;
   });
@@ -1023,12 +1100,12 @@ function renderBoard() {
 
   // Render Active Cards
   const pActiveList = document.getElementById('player-active-cards');
-  pActiveList.innerHTML = playerActiveCards.map(c => `<li class="active-card-slot">${renderBoardCard(c)}</li>`).join('');
+  pActiveList.innerHTML = playerActiveCards.map(c => `<li class="active-card-slot">${renderBoardCard(c, false)}</li>`).join('');
   
   const eActiveList = document.getElementById('enemy-active-cards');
-  eActiveList.innerHTML = enemyActiveCards.map(c => `<li class="active-card-slot">${renderBoardCard(c)}</li>`).join('');
+  eActiveList.innerHTML = enemyActiveCards.map(c => `<li class="active-card-slot">${renderBoardCard(c, false)}</li>`).join('');
 
   // Render Player Staged
   const pStagedList = document.getElementById('player-staged-cards');
-  pStagedList.innerHTML = playerStagedCards.map(c => `<li style="transform: scale(0.6)">${renderCard(c, false)}</li>`).join('');
+  pStagedList.innerHTML = playerStagedCards.map(c => `<li class="active-card-slot" style="transform: scale(0.9)">${renderBoardCard(c, true)}</li>`).join('');
 }

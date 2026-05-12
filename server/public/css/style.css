@@ -136,6 +136,24 @@ input[type="text"]:focus, input[type="password"]:focus {
   outline: none;
 }
 
+.form-error {
+  color: #ff8787;
+  font-size: 0.9rem;
+  margin-top: -5px;
+  text-align: center;
+  font-weight: 500;
+  animation: formErrorFadeIn 0.2s ease-in-out;
+}
+
+.form-error.success {
+  color: #2ecc71;
+}
+
+@keyframes formErrorFadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 button[type="submit"] {
   background: var(--marvel-red);
   color: white;
@@ -468,7 +486,7 @@ button[type="submit"]:active {
   text-align: center;
   box-shadow: 0 20px 60px rgba(0,0,0,0.8);
 }
-.confirm-box p {
+.confirm-box > p {
   font-family: var(--font-header);
   font-size: 1.6rem;
   color: white;
@@ -661,6 +679,24 @@ button[type="submit"]:active {
   position: relative;
 }
 
+/* Invisible hit area to prevent hover jittering when mouse is at the edges of the original card position */
+.hand-fanned li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  background: transparent;
+}
+
+.hand-fanned li:hover::after {
+  bottom: -140px;
+  left: -60px;
+  right: -60px;
+}
+
 /* ==========================================================================
    Battlefield (Middle Area)
    ========================================================================== */
@@ -778,6 +814,11 @@ button[type="submit"]:active {
 .marvel-card:hover {
   box-shadow: 0 15px 30px rgba(0,0,0,0.7), 0 0 20px var(--marvel-red-glow);
   border-color: var(--marvel-red);
+}
+
+.marvel-card.unaffordable {
+  filter: brightness(0.4);
+  cursor: not-allowed;
 }
 
 .card-image-container {
@@ -929,16 +970,18 @@ button[type="submit"]:active {
 
 .board-minion-img {
   width: 100%;
-  height: 70px;
+  height: 100%;
   object-fit: cover;
-  border-radius: 6px 6px 0 0;
+  border-radius: 6px;
   display: block;
 }
+
+.board-minion-name { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.85); color: white; font-family: var(--font-header); font-size: 0.8rem; text-align: center; padding: 5px 2px; border-radius: 0 0 6px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .board-minion-atk,
 .board-minion-def {
   position: absolute;
-  bottom: -10px;
+  top: -10px;
   width: 26px;
   height: 26px;
   border-radius: 50%;
@@ -951,6 +994,7 @@ button[type="submit"]:active {
   color: white;
   border: 2px solid rgba(0,0,0,0.7);
   box-shadow: 0 2px 6px rgba(0,0,0,0.8);
+  z-index: 10;
 }
 
 .board-minion-atk {
@@ -960,7 +1004,7 @@ button[type="submit"]:active {
 
 .board-minion-def {
   right: -6px;
-  background: #1a6fbb;
+  background: #2ecc71;
 }
 
 /* ==========================================================================
@@ -1677,4 +1721,49 @@ button[type="submit"]:active {
   color: #2ecc71;
   border-color: #2ecc71;
   box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
+}
+
+/* ==========================================================================
+   In-Game Notifications
+   ========================================================================== */
+.in-game-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 2px solid var(--marvel-red);
+  color: white;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-family: var(--font-header);
+  font-size: 1.2rem;
+  z-index: 10000;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 15px var(--marvel-red-glow);
+  text-align: center;
+  pointer-events: none;
+  animation: notifySlideDown 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards, notifyFadeOut 0.3s ease 2.7s forwards;
+}
+
+.in-game-notification.error {
+  border-color: #e03131;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 15px rgba(224, 49, 49, 0.5);
+  color: #ff8787;
+}
+
+.in-game-notification.success {
+  border-color: #2ecc71;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 15px rgba(46, 204, 113, 0.5);
+  color: #a9dfbf;
+}
+
+@keyframes notifySlideDown {
+  from { top: -50px; opacity: 0; }
+  to { top: 20px; opacity: 1; }
+}
+
+@keyframes notifyFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
