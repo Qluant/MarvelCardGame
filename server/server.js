@@ -53,6 +53,7 @@ const syncGameState = (roomId) => {
       isMyTurn: room.currentTurn === player.id,
       player: {
         nickname: player.nickname,
+        avatar: player.avatar,
         hp: player.hp,
         ap: player.ap,
         maxAp: player.maxAp,
@@ -63,6 +64,7 @@ const syncGameState = (roomId) => {
       },
       opponent: {
         nickname: opponent.nickname,
+        avatar: opponent.avatar,
         hp: opponent.hp,
         ap: opponent.ap,
         maxAp: opponent.maxAp,
@@ -94,6 +96,7 @@ io.on('connection', (socket) => {
       players: [{
         id: socket.id,
         nickname: roomData.nickname,
+        avatar: roomData.avatar || null,
         heroId: roomData.heroId,
         hp: 30,
         ap: 3,
@@ -112,7 +115,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('join-room', (joinData) => {
-    const { roomId, password, nickname, heroId } = joinData;
+    const { roomId, password, nickname, heroId, avatar } = joinData;
     const room = rooms[roomId];
 
     if (!room) return socket.emit('error', 'Room not found');
@@ -123,6 +126,7 @@ io.on('connection', (socket) => {
     room.players.push({
       id: socket.id,
       nickname,
+      avatar: avatar || null,
       heroId,
       hp: 30,
       ap: 3,
@@ -570,11 +574,16 @@ function checkWinCondition(room) {
   const p1 = room.players[0];
   const p2 = room.players[1];
 
-  if (p1.hp <= 0 || p2.hp <= 0) {
+  if (p1.hp <= 0 && p2.hp <= 0) {
+    io.to(room.id).emit('game-over', { outcome: 'draw' });
+    recordDraw(p1.nickname, p2.nickname);
+    delete rooms[room.id];
+    io.emit('rooms-update', getPublicRooms());
+  } else if (p1.hp <= 0 || p2.hp <= 0) {
     const winner = p1.hp > 0 ? p1 : p2;
     const loser = p1.hp <= 0 ? p1 : p2;
 
-    io.to(room.id).emit('game-over', { outcome: 'win', opponentNickname: loser.nickname });
+    io.to(room.id).emit('game-over', { outcome: 'win', opponentNickname: loser.nickname, winnerNickname: winner.nickname });
     recordResult(winner.nickname, loser.nickname);
     delete rooms[room.id];
     io.emit('rooms-update', getPublicRooms());
@@ -603,6 +612,22 @@ async function recordResult(winnerNick, loserNick) {
     console.log(`Stats recorded: ${winnerNick} beat ${loserNick}`);
   } catch (err) {
     console.error('Failed to record result:', err);
+  }
+}
+
+async function recordDraw(p1Nick, p2Nick) {
+  try {
+    const query = `
+      UPDATE Player
+      SET draws = draws + 1,
+          games_played = games_played + 1,
+          winstreak = 0
+      WHERE nickname IN (?, ?)
+    `;
+    await db.query(query, [p1Nick, p2Nick]);
+    console.log(`Stats recorded: Draw between ${p1Nick} and ${p2Nick}`);
+  } catch (err) {
+    console.error('Failed to record draw:', err);
   }
 }
 

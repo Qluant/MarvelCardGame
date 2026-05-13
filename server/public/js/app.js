@@ -107,7 +107,10 @@ function navigate(viewName) {
 
   // View specific logic
   if (viewName === 'top10') loadTop10();
-  if (viewName === 'profile' && currentUser) loadProfile();
+  if (viewName === 'profile' && currentUser) {
+    loadProfile(window._targetProfileNickname || currentUser.nickname);
+    window._targetProfileNickname = null; // reset
+  }
   if (viewName === 'character-info') loadCharacterInfo();
   if (viewName === 'lobby') {
     if (!currentUser) return navigate('login');
@@ -134,29 +137,93 @@ window.showCardInfo = function(encodedCard, isStaged) {
   
   const modal = document.createElement('div');
   modal.id = 'card-info-modal';
-  modal.className = 'confirm-modal card-info-modal';
   
-  // Reuse renderCard function, but disable hover transform by using a wrapper
+  // Full screen overlay that closes modal on click
+  Object.assign(modal.style, {
+    position: 'fixed',
+    top: '0',
+    left: '0',
+    width: '100vw',
+    height: '100vh',
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    zIndex: '9999',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    backdropFilter: 'blur(5px)'
+  });
+  
+  modal.onclick = function() { hideCardInfo(); };
+  
   const cardHtml = renderCard(card, false, null, true);
   
   let revokeBtnHtml = '';
   if (isStaged && isMyTurn) {
-    revokeBtnHtml = `<button class="confirm-no" onclick="revokeCard('${card.uid}')" style="background: #e03131; color: white; border: none; font-size: 1.2rem; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%;">Revoke Card</button>`;
+    revokeBtnHtml = `
+      <button class="revoke-btn" onclick="revokeCard('${card.uid}'); event.stopPropagation();" title="Revoke Card" style="
+        margin-top: 120px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--marvel-red);
+        color: white;
+        border: 2px solid rgba(255,255,255,0.5);
+        font-size: 28px;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 0 20px rgba(224, 49, 49, 0.6);
+        transition: transform 0.2s, box-shadow 0.2s;
+      " onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 0 30px rgba(224, 49, 49, 0.9)';" 
+         onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 20px rgba(224, 49, 49, 0.6)';">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="4" x2="12" y2="20"></line>
+          <polyline points="19 13 12 20 5 13"></polyline>
+        </svg>
+      </button>
+    `;
   }
   
+  let closeBtnHtml = `
+    <button onclick="hideCardInfo(); event.stopPropagation();" style="
+      position: absolute;
+      top: 30px;
+      right: 30px;
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: 2px solid rgba(255,255,255,0.5);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      padding: 0;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.2s;
+      z-index: 10;
+    " onmouseover="this.style.background='rgba(224,49,49,0.8)'; this.style.transform='scale(1.1)';" 
+       onmouseout="this.style.background='rgba(0,0,0,0.5)'; this.style.transform='scale(1)';">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  `;
+  
   modal.innerHTML = `
-    <div class="confirm-box" style="display: flex; flex-direction: column; align-items: center; background: rgba(20,20,20,0.95); padding: 40px; border-radius: 16px; border: 2px solid var(--marvel-red); width: 350px;">
-      <div style="transform: scale(1.2); transform-origin: top center; margin-bottom: 70px; pointer-events: none; margin-top: 30px;">
+    ${closeBtnHtml}
+    <div onclick="event.stopPropagation()" style="display: flex; flex-direction: column; align-items: center;">
+      <div style="transform: scale(1.6); transform-origin: center; pointer-events: none;">
         ${cardHtml}
       </div>
-      <div style="display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 250px;">
-        ${revokeBtnHtml}
-        <button class="confirm-yes" onclick="hideCardInfo()" style="font-size: 1.2rem; padding: 12px; background: #2ecc71; border: none; border-radius: 8px; color: white; cursor: pointer; width: 100%;">Close</button>
-      </div>
+      ${revokeBtnHtml}
     </div>
   `;
+  
   document.body.appendChild(modal);
-  modal.style.display = 'flex';
   currentCardInfoModal = modal;
 };
 
@@ -255,18 +322,99 @@ async function loadTop10() {
   const tbody = document.getElementById('top10-tbody');
   tbody.innerHTML = '';
   data.forEach((p, idx) => {
-    tbody.innerHTML += `<tr><td>#${idx+1}</td><td>${p.nickname}</td><td>${p.wins}</td><td>${p.loses}</td><td>${p.winstreak}</td></tr>`;
+    const avatarImg = p.avatar || '/assets/images/default_avatar.png';
+    tbody.innerHTML += `<tr>
+      <td>#${idx+1}</td>
+      <td><img src="${avatarImg}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 1px solid var(--marvel-red);"></td>
+      <td><a href="#" onclick="viewUserProfile('${p.nickname}'); return false;" style="color: var(--marvel-red); font-weight: bold; text-decoration: none;">${p.nickname}</a></td>
+      <td>${p.wins}</td><td>${p.loses}</td><td>${p.draws}</td><td>${p.winstreak}</td>
+    </tr>`;
   });
 }
 
-async function loadProfile() {
-  const res = await fetch(`${API_URL}/players/${currentUser.nickname}`);
+window.viewUserProfile = function(nickname) {
+  window._targetProfileNickname = nickname;
+  navigate('profile');
+};
+
+async function loadProfile(targetNickname) {
+  const nicknameToLoad = targetNickname || currentUser.nickname;
+  const res = await fetch(`${API_URL}/players/${nicknameToLoad}`);
   const p = await res.json();
   document.getElementById('profile-title').innerText = `${p.nickname}'s Profile`;
   document.getElementById('profile-games').innerText = p.games_played;
   document.getElementById('profile-wins').innerText = p.wins;
   document.getElementById('profile-loses').innerText = p.loses;
+  document.getElementById('profile-draws').innerText = p.draws;
   document.getElementById('profile-winstreak').innerText = p.winstreak;
+  
+  const settingsContainer = document.getElementById('profile-settings-container');
+  if (nicknameToLoad === currentUser.nickname) {
+    if (settingsContainer) settingsContainer.style.display = 'block';
+    document.getElementById('setting-confirm-end').checked = p.confirm_end_turn;
+    document.getElementById('setting-confirm-resign').checked = p.confirm_resign;
+    document.getElementById('setting-avatar-url').value = p.avatar || '';
+  } else {
+    if (settingsContainer) settingsContainer.style.display = 'none';
+  }
+  
+  document.getElementById('profile-avatar-img').src = p.avatar || '/assets/images/default_avatar.png';
+}
+
+async function saveSettingsToDB() {
+  await fetch(`${API_URL}/players/${currentUser.nickname}/settings`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      confirm_end_turn: currentUser.confirm_end_turn,
+      confirm_resign: currentUser.confirm_resign,
+      avatar: currentUser.avatar
+    })
+  });
+}
+
+function checkImageValid(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
+}
+
+window.saveProfileSettings = async function() {
+  const confirmEnd = document.getElementById('setting-confirm-end').checked;
+  const confirmResign = document.getElementById('setting-confirm-resign').checked;
+  const avatarUrl = document.getElementById('setting-avatar-url').value.trim();
+  
+  const msgEl = document.getElementById('settings-msg');
+  msgEl.style.display = 'block';
+  msgEl.style.color = '#ccc';
+  msgEl.innerText = 'Validating...';
+
+  if (avatarUrl) {
+    const isValid = await checkImageValid(avatarUrl);
+    if (!isValid) {
+      msgEl.style.color = 'var(--marvel-red)';
+      msgEl.innerText = 'Invalid Image URL! Settings not saved.';
+      return;
+    }
+  }
+
+  currentUser.confirm_end_turn = confirmEnd ? 1 : 0;
+  currentUser.confirm_resign = confirmResign ? 1 : 0;
+  currentUser.avatar = avatarUrl || null;
+
+  try {
+    await saveSettingsToDB();
+    msgEl.style.color = '#2ecc71';
+    msgEl.innerText = 'Settings saved successfully!';
+    document.getElementById('profile-avatar-img').src = currentUser.avatar || '/assets/images/default_avatar.png';
+    localStorage.setItem('user', JSON.stringify(currentUser));
+  } catch(e) {
+    msgEl.style.color = 'var(--marvel-red)';
+    msgEl.innerText = 'Error saving settings.';
+  }
 }
 
 async function loadCharacterInfo() {
@@ -407,29 +555,38 @@ function positionTooltip(e, tooltip) {
 }
 
 // ── Deal animation ────────────────────────────────────────────────────────────
-function animateDealHand(cards) {
-  const CARD_DELAY   = 120; // ms stagger between cards
-  const DEAL_DURATION = 400; // ms per card flight
+function animateDrawCards(playerCount, enemyCount) {
+  const CARD_DELAY   = 200; // ms stagger between cards (increased)
+  const DEAL_DURATION = 750; // ms per card flight (increased)
 
   const playerZone = document.getElementById('player-hand-list');
   const enemyZone  = document.getElementById('enemy-hand-list');
   if (!playerZone || !enemyZone) { renderBoard(); return; }
 
-  const deckPos = (() => {
-    const div = document.querySelector('.battlefield-divider');
-    if (div) {
-      const r = div.getBoundingClientRect();
+  const getCenter = (elId) => {
+    const el = document.getElementById(elId);
+    if (el) {
+      const r = el.getBoundingClientRect();
       return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     }
     return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-  })();
+  };
+
+  const pDeckPos = getCenter('player-deck');
+  const eDeckPos = getCenter('enemy-deck');
 
   const playerRect = playerZone.getBoundingClientRect();
   const enemyRect  = enemyZone.getBoundingClientRect();
-  const total = cards.length;
+  let totalToLand = playerCount + enemyCount;
+  
+  if (totalToLand === 0) {
+    renderBoard();
+    return;
+  }
+  
   let landed = 0;
   const done = () => { 
-    if (++landed === total * 2) {
+    if (++landed === totalToLand) {
       renderBoard();
       if (!initialCoinTossDone) {
         initialCoinTossDone = true;
@@ -440,16 +597,19 @@ function animateDealHand(cards) {
     }
   };
 
-  for (let i = 0; i < total; i++) {
+  for (let i = 0; i < playerCount; i++) {
     spawnFlyingCard(
-      deckPos,
-      { x: playerRect.left + (playerRect.width / total) * i, y: playerRect.top + playerRect.height / 2 },
+      pDeckPos,
+      { x: playerRect.left + (playerRect.width / Math.max(playerCount, 1)) * i + 50, y: playerRect.top + playerRect.height / 2 },
       i * CARD_DELAY, DEAL_DURATION, done
     );
+  }
+  
+  for (let i = 0; i < enemyCount; i++) {
     spawnFlyingCard(
-      deckPos,
-      { x: enemyRect.left + (enemyRect.width / total) * i, y: enemyRect.top + enemyRect.height / 2 },
-      i * CARD_DELAY, DEAL_DURATION, done
+      eDeckPos,
+      { x: enemyRect.left + (enemyRect.width / Math.max(enemyCount, 1)) * i + 50, y: enemyRect.top + enemyRect.height / 2 },
+      (i + playerCount) * CARD_DELAY, DEAL_DURATION, done
     );
   }
 }
@@ -550,9 +710,9 @@ function setupSocketListeners() {
       inRoom = true;
       localStorage.setItem('activeGame', JSON.stringify({ roomId: room.id, nickname: currentUser.nickname }));
       gameStarted = false;
-      document.getElementById('player-avatar').src = ``;
+      document.getElementById('player-avatar').src = currentUser.avatar || '/assets/images/default_avatar.png';
       document.getElementById('enemy-nickname').innerText = 'Opponent';
-      document.getElementById('enemy-avatar').src = '';
+      document.getElementById('enemy-avatar').src = '/assets/images/default_avatar.png';
       playerHand = [];
       enemyHandCount = 0;
       playerAP = 3; playerMaxAP = 3;
@@ -574,7 +734,7 @@ function setupSocketListeners() {
     const opponent = room.players.find(p => p.id !== socket.id) || room.players[0];
     if (opponent) {
       document.getElementById('enemy-nickname').innerText = opponent.nickname;
-      document.getElementById('enemy-avatar').src = ``;
+      document.getElementById('enemy-avatar').src = opponent.avatar || '/assets/images/default_avatar.png';
 
       if (!isReconnect) {
         // Fresh game — reset counts; they will be populated by sync-game-state
@@ -647,9 +807,10 @@ function setupSocketListeners() {
   };
 
   const delay = ms => new Promise(r => setTimeout(r, ms));
-  const getHeroTheme = id => {
-    const themes = {1: 'theme-fire', 2: 'theme-tech', 3: 'theme-spider', 4: 'theme-magic'};
-    return themes[id] || 'theme-default';
+  // Hero name mapper for CSS classes
+  const getHeroName = id => {
+    const names = {1: 'ironman', 2: 'torch', 3: 'venom'};
+    return names[id] || 'default';
   };
 
   socket.on('combat-animation', async (animData) => {
@@ -672,79 +833,107 @@ function setupSocketListeners() {
       const myAvatar = document.getElementById('player-avatar');
       const enemyAvatar = document.getElementById('enemy-avatar');
 
-      const spawnClot = (type, heroId, targetId, offsetX, offsetY) => {
+      const myHeroName = getHeroName(myAnim.heroId);
+      const enemyHeroName = getHeroName(enemyAnim.heroId);
+
+      const hasMyAtk = myAnim.totalAtk > 0;
+      const hasMyDef = myAnim.totalDef > 0;
+      const hasEnemyAtk = enemyAnim.totalAtk > 0;
+      const hasEnemyDef = enemyAnim.totalDef > 0;
+
+      // Spawn a hero-specific projectile at a fixed position
+      const spawnProjectile = (heroName, type, targetId, offsetX, offsetY) => {
         const el = document.createElement('div');
-        el.className = `combat-clot clot-${type} ${getHeroTheme(heroId)}`;
+        el.className = `combat-projectile proj-${heroName}-${type}`;
         const target = document.getElementById(targetId).parentElement;
         const rect = target.getBoundingClientRect();
         
-        el.style.position = 'fixed';
         el.style.left = (rect.left + rect.width / 2 + offsetX) + 'px';
         el.style.top = (rect.top + rect.height / 2 + offsetY) + 'px';
         document.body.appendChild(el);
         return el;
       };
 
-      // Phase 1: Spawn Clots (Player above staging, Enemy below staging)
-      const myAtkClot = spawnClot('attack', myAnim.heroId, 'player-staged-cards', -30, -80);
-      const myDefClot = spawnClot('defense', myAnim.heroId, 'player-staged-cards', 30, -80);
-      
-      const enemyAtkClot = spawnClot('attack', enemyAnim.heroId, 'enemy-staged-cards', -30, 80);
-      const enemyDefClot = spawnClot('defense', enemyAnim.heroId, 'enemy-staged-cards', 30, 80);
+      // Phase 1: Spawn projectiles (only if they have atk/def)
+      let myAtkProj = null, myDefProj = null, enemyAtkProj = null, enemyDefProj = null;
+
+      if (hasMyAtk) {
+        myAtkProj = spawnProjectile(myHeroName, 'atk', 'player-staged-cards', -40, -80);
+      }
+      if (hasMyDef) {
+        myDefProj = spawnProjectile(myHeroName, 'def', 'player-staged-cards', 40, -80);
+      }
+      if (hasEnemyAtk) {
+        enemyAtkProj = spawnProjectile(enemyHeroName, 'atk', 'enemy-staged-cards', -40, 80);
+      }
+      if (hasEnemyDef) {
+        enemyDefProj = spawnProjectile(enemyHeroName, 'def', 'enemy-staged-cards', 40, 80);
+      }
 
       await delay(100);
-      [myAtkClot, myDefClot, enemyAtkClot, enemyDefClot].forEach(c => c.style.transform = 'scale(1) translate(-50%, -50%)');
-      
-      await delay(1000);
 
-      const flightDuration = 800;
+      // Make visible (triggers CSS scale transition)
+      [myAtkProj, myDefProj, enemyAtkProj, enemyDefProj]
+        .filter(Boolean)
+        .forEach(c => c.classList.add('visible'));
+      
+      await delay(1200);
+
+      const flightDuration = 900;
       const flyTo = (el, targetElem) => {
+        if (!el) return;
         const target = targetElem.getBoundingClientRect();
-        // Force reflow
-        el.offsetHeight; 
-        
-        el.style.transition = `all ${flightDuration}ms cubic-bezier(0.25, 0.8, 0.25, 1)`;
+        el.offsetHeight; // force reflow
+        el.style.transition = `left ${flightDuration}ms cubic-bezier(0.25, 0.8, 0.25, 1), top ${flightDuration}ms cubic-bezier(0.25, 0.8, 0.25, 1)`;
         el.style.left = (target.left + target.width / 2) + 'px';
         el.style.top = (target.top + target.height / 2) + 'px';
       };
 
-      // Phase 2: Defense flies to heroes
-      flyTo(myDefClot, myAvatar);
-      flyTo(enemyDefClot, enemyAvatar);
+      // Phase 2: Defense flies to own hero (shield up)
+      if (myDefProj) flyTo(myDefProj, myAvatar);
+      if (enemyDefProj) flyTo(enemyDefProj, enemyAvatar);
 
       await delay(flightDuration);
 
-      myDefClot.remove();
-      enemyDefClot.remove();
+      if (myDefProj) myDefProj.remove();
+      if (enemyDefProj) enemyDefProj.remove();
       
-      const myShield = document.createElement('div');
-      myShield.className = `hero-shield-overlay ${getHeroTheme(myAnim.heroId)}`;
-      myAvatar.parentElement.appendChild(myShield);
+      // Create shield overlays only if defense exists
+      let myShield = null, enemyShield = null;
 
-      const enemyShield = document.createElement('div');
-      enemyShield.className = `hero-shield-overlay ${getHeroTheme(enemyAnim.heroId)}`;
-      enemyAvatar.parentElement.appendChild(enemyShield);
+      if (hasMyDef) {
+        myShield = document.createElement('div');
+        myShield.className = `hero-shield-overlay shield-${myHeroName}`;
+        myAvatar.parentElement.appendChild(myShield);
+      }
+
+      if (hasEnemyDef) {
+        enemyShield = document.createElement('div');
+        enemyShield.className = `hero-shield-overlay shield-${enemyHeroName}`;
+        enemyAvatar.parentElement.appendChild(enemyShield);
+      }
 
       await delay(500);
 
-      // Phase 3: Attacks fly across
-      flyTo(myAtkClot, enemyAvatar);
-      flyTo(enemyAtkClot, myAvatar);
+      // Phase 3: Attacks fly across to opponent
+      if (myAtkProj) flyTo(myAtkProj, enemyAvatar);
+      if (enemyAtkProj) flyTo(enemyAtkProj, myAvatar);
 
       await delay(flightDuration);
 
-      myAtkClot.remove();
-      enemyAtkClot.remove();
+      if (myAtkProj) myAtkProj.remove();
+      if (enemyAtkProj) enemyAtkProj.remove();
 
-      const spawnImpact = (targetElem, heroId) => {
+      // Impact explosions
+      const spawnImpact = (targetElem, heroName) => {
         const impact = document.createElement('div');
-        impact.className = `combat-impact ${getHeroTheme(heroId)}`;
+        impact.className = `combat-impact impact-${heroName}`;
         targetElem.parentElement.appendChild(impact);
         setTimeout(() => impact.remove(), 800);
       };
 
-      spawnImpact(enemyAvatar, myAnim.heroId);
-      spawnImpact(myAvatar, enemyAnim.heroId);
+      if (hasMyAtk) spawnImpact(enemyAvatar, myHeroName);
+      if (hasEnemyAtk) spawnImpact(myAvatar, enemyHeroName);
 
       const spawnDamageText = (targetElem, amount, color) => {
         if (amount <= 0 || isNaN(amount)) return;
@@ -756,32 +945,33 @@ function setupSocketListeners() {
         setTimeout(() => txt.remove(), 1200);
       };
 
-      spawnDamageText(myAvatar, enemyAnim.shieldDamageTaken, '#3498db');
-      spawnDamageText(enemyAvatar, myAnim.shieldDamageTaken, '#3498db');
+      // Shield damage — show on the avatar that RECEIVED the damage
+      spawnDamageText(myAvatar, myAnim.shieldDamageTaken, '#3498db');
+      spawnDamageText(enemyAvatar, enemyAnim.shieldDamageTaken, '#3498db');
 
-      if (myAnim.shieldDamageTaken > 0) myShield.classList.add('shield-hit');
-      if (enemyAnim.shieldDamageTaken > 0) enemyShield.classList.add('shield-hit');
+      if (myShield && myAnim.shieldDamageTaken > 0) myShield.classList.add('shield-hit');
+      if (enemyShield && enemyAnim.shieldDamageTaken > 0) enemyShield.classList.add('shield-hit');
 
       await delay(600);
 
-      // HP Damage
-      spawnDamageText(myAvatar, enemyAnim.hpDamageTaken, '#e03131');
-      spawnDamageText(enemyAvatar, myAnim.hpDamageTaken, '#e03131');
+      // HP Damage — show on the avatar that RECEIVED the damage
+      spawnDamageText(myAvatar, myAnim.hpDamageTaken, '#e03131');
+      spawnDamageText(enemyAvatar, enemyAnim.hpDamageTaken, '#e03131');
 
-      if (enemyAnim.hpDamageTaken > 0) myAvatar.parentElement.classList.add('hero-shake');
-      if (myAnim.hpDamageTaken > 0) enemyAvatar.parentElement.classList.add('hero-shake');
+      if (myAnim.hpDamageTaken > 0) myAvatar.parentElement.classList.add('hero-shake');
+      if (enemyAnim.hpDamageTaken > 0) enemyAvatar.parentElement.classList.add('hero-shake');
 
-      if (enemyAnim.hpDamageTaken > 0 && myAnim.startDef - enemyAnim.shieldDamageTaken <= 0) {
+      if (myShield && myAnim.hpDamageTaken > 0 && myAnim.startDef - myAnim.shieldDamageTaken <= 0) {
         myShield.classList.add('shield-break');
       }
-      if (myAnim.hpDamageTaken > 0 && enemyAnim.startDef - myAnim.shieldDamageTaken <= 0) {
+      if (enemyShield && enemyAnim.hpDamageTaken > 0 && enemyAnim.startDef - enemyAnim.shieldDamageTaken <= 0) {
         enemyShield.classList.add('shield-break');
       }
 
       await delay(1000);
       
-      myShield.remove();
-      enemyShield.remove();
+      if (myShield) myShield.remove();
+      if (enemyShield) enemyShield.remove();
       myAvatar.parentElement.classList.remove('hero-shake');
       enemyAvatar.parentElement.classList.remove('hero-shake');
     } catch (error) {
@@ -791,6 +981,9 @@ function setupSocketListeners() {
   });
 
   socket.on('sync-game-state', (state) => {
+    const oldPlayerHandCount = playerHand ? playerHand.length : 0;
+    const oldEnemyHandCount = enemyHandCount || 0;
+
     // Detect turn flip to show overlay
     if (isMyTurn !== undefined && isMyTurn !== state.isMyTurn) {
       if (typeof hideCardInfo === 'function') hideCardInfo();
@@ -838,23 +1031,53 @@ function setupSocketListeners() {
     enemyStagedCount = state.opponent.stagedCount || 0;
     document.getElementById('enemy-hp').innerText = enemyHP;
 
-    renderBoard();
+    if (state.player && state.player.avatar) {
+      document.getElementById('player-avatar').src = state.player.avatar;
+    } else {
+      document.getElementById('player-avatar').src = '/assets/images/default_avatar.png';
+    }
 
-    // Trigger initial coin toss if it hasn't happened yet
-    if (!initialCoinTossDone) {
-      initialCoinTossDone = true;
-      if (window.startCoinFlipAnimation) {
-        window.startCoinFlipAnimation();
+    if (state.opponent && state.opponent.avatar) {
+      document.getElementById('enemy-avatar').src = state.opponent.avatar;
+    } else {
+      document.getElementById('enemy-avatar').src = '/assets/images/default_avatar.png';
+    }
+
+    const newPlayerDraws = Math.max(0, playerHand.length - oldPlayerHandCount);
+    const newEnemyDraws = Math.max(0, enemyHandCount - oldEnemyHandCount);
+
+    if (newPlayerDraws > 0 || newEnemyDraws > 0) {
+      animateDrawCards(newPlayerDraws, newEnemyDraws);
+    } else {
+      renderBoard();
+      // Trigger initial coin toss if it hasn't happened yet and no cards were drawn
+      if (!initialCoinTossDone) {
+        initialCoinTossDone = true;
+        if (window.startCoinFlipAnimation) {
+          window.startCoinFlipAnimation();
+        }
       }
     }
   });
 
-  socket.on('game-over', ({ outcome, opponentNickname }) => {
+  socket.on('game-over', ({ outcome, opponentNickname, winnerNickname }) => {
     exitRoom();
     const banner = document.getElementById('reconnect-banner');
     if (banner) banner.remove();
-    if (outcome === 'win') {
-      showGameResult('VICTORY', `${opponentNickname} disconnected or HP reached 0.`, '#2ecc71');
+    
+    if (outcome === 'draw') {
+      showGameResult('DRAW', 'Both heroes fell in battle!', '#f39c12');
+    } else if (winnerNickname === currentUser.nickname || outcome === 'win') {
+      // If outcome === 'win' from old format or winnerNickname matches us
+      // Actually, outcome is always 'win' when not draw, and winnerNickname is provided.
+      // But if opponent disconnected, checkWinCondition wasn't called, wait!
+      // 'opponent disconnected' game-over might still use the old format.
+      // Wait, let's just check if we are the winner.
+      if (winnerNickname === currentUser.nickname || !winnerNickname) {
+         showGameResult('VICTORY', `${opponentNickname} disconnected or HP reached 0.`, '#2ecc71');
+      } else {
+         showGameResult('DEFEAT', 'You resigned, ran out of time, or HP reached 0.', '#e03131');
+      }
     } else {
       showGameResult('DEFEAT', 'You resigned, ran out of time, or HP reached 0.', '#e03131');
     }
@@ -915,7 +1138,7 @@ window.handleCreateRoom = function(e) {
   const name = document.getElementById('create-room-name').value;
   const isPrivate = document.getElementById('create-room-private').checked;
   const password = document.getElementById('create-room-password').value;
-  socket.emit('create-room', { name, isPrivate, password, nickname: currentUser.nickname, heroId: currentUser.heroId });
+  socket.emit('create-room', { name, isPrivate, password, nickname: currentUser.nickname, heroId: currentUser.heroId, avatar: currentUser.avatar });
 }
 
 window.attemptJoinRoom = function(roomId, isPrivate) {
@@ -928,7 +1151,7 @@ window.attemptJoinRoom = function(roomId, isPrivate) {
     document.getElementById('join-private-id').value = roomId;
     document.getElementById('join-private-modal').style.display = 'block';
   } else {
-    socket.emit('join-room', { roomId, nickname: currentUser.nickname, heroId: currentUser.heroId });
+    socket.emit('join-room', { roomId, nickname: currentUser.nickname, heroId: currentUser.heroId, avatar: currentUser.avatar });
   }
 }
 
@@ -936,7 +1159,7 @@ window.submitJoinPrivate = function() {
   const roomId = document.getElementById('join-private-id').value;
   const password = document.getElementById('join-private-password').value;
   document.getElementById('join-private-modal').style.display = 'none';
-  socket.emit('join-room', { roomId, password, nickname: currentUser.nickname, heroId: currentUser.heroId });
+  socket.emit('join-room', { roomId, password, nickname: currentUser.nickname, heroId: currentUser.heroId, avatar: currentUser.avatar });
 }
 
 // ── Turn helpers ──────────────────────────────────────────────────────────────
@@ -971,11 +1194,21 @@ function showTurnOverlay(firstText, firstColor, secondText, secondColor) {
 
 window.handleEndTurn = function() {
   if (!isMyTurn) return;
-  document.getElementById('end-turn-modal').style.display = 'flex';
+  if (currentUser.confirm_end_turn === 0 || currentUser.confirm_end_turn === false) {
+    doPassTurn();
+  } else {
+    document.getElementById('end-turn-modal').style.display = 'flex';
+  }
 }
 
 window.confirmEndTurn = function() {
   document.getElementById('end-turn-modal').style.display = 'none';
+  const dontAsk = document.getElementById('dont-ask-end-turn').checked;
+  if (dontAsk) {
+    currentUser.confirm_end_turn = 0;
+    saveSettingsToDB();
+    localStorage.setItem('user', JSON.stringify(currentUser));
+  }
   doPassTurn();
 }
 
@@ -989,9 +1222,9 @@ function enterGame(roomId) {
   
   gameStarted = false;
   document.getElementById('enemy-nickname').innerText = 'Waiting...';
-  document.getElementById('enemy-avatar').src = '';
+  document.getElementById('enemy-avatar').src = '/assets/images/default_avatar.png';
   document.getElementById('player-nickname').innerText = currentUser.nickname;
-  document.getElementById('player-avatar').src = ``;
+  document.getElementById('player-avatar').src = currentUser.avatar || '/assets/images/default_avatar.png';
   
   playerHand = [];
   playerActiveCards = [];
@@ -1104,8 +1337,24 @@ function showGameResult(title, subtitle, color) {
 }
 
 // Called from Resign button inside active game
+// Called from Resign button inside active game
 window.handleResign = function() {
   if (!currentRoomId) return;
+  if (currentUser.confirm_resign === 0 || currentUser.confirm_resign === false) {
+    window.confirmResign();
+  } else {
+    document.getElementById('resign-modal').style.display = 'flex';
+  }
+};
+
+window.confirmResign = function() {
+  document.getElementById('resign-modal').style.display = 'none';
+  const dontAsk = document.getElementById('dont-ask-resign').checked;
+  if (dontAsk) {
+    currentUser.confirm_resign = 0;
+    saveSettingsToDB();
+    localStorage.setItem('user', JSON.stringify(currentUser));
+  }
   socket.emit('leave-room', currentRoomId);
   // Don't navigate here; wait for 'game-over' from server to show results
 };

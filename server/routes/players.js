@@ -7,7 +7,7 @@ const db = require('../db/connection');
 router.get('/top', async (req, res) => {
   try {
     const query = `
-      SELECT player_id, nickname, wins, loses, winstreak 
+      SELECT player_id, nickname, avatar, wins, loses, draws, winstreak 
       FROM Player 
       ORDER BY wins DESC, winstreak DESC 
       LIMIT 10
@@ -24,7 +24,7 @@ router.get('/top', async (req, res) => {
 router.get('/:nickname', async (req, res) => {
   try {
     const [rows] = await db.query(
-      'SELECT player_id, nickname, wins, loses, winstreak, games_played, selected_hero_id FROM Player WHERE nickname = ?',
+      'SELECT player_id, nickname, avatar, wins, loses, draws, winstreak, games_played, selected_hero_id, confirm_end_turn, confirm_resign FROM Player WHERE nickname = ?',
       [req.params.nickname]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Player not found' });
@@ -56,3 +56,30 @@ router.put('/:nickname/hero', async (req, res) => {
 });
 
 module.exports = router;
+
+// PUT /api/players/:nickname/settings
+// Update user avatar and confirmation settings
+router.put('/:nickname/settings', async (req, res) => {
+  try {
+    const { avatar, confirm_end_turn, confirm_resign } = req.body;
+    
+    // Simple validation
+    if (confirm_end_turn === undefined || confirm_resign === undefined) {
+      return res.status(400).json({ error: 'Missing setting fields' });
+    }
+
+    const [result] = await db.query(
+      'UPDATE Player SET avatar = ?, confirm_end_turn = ?, confirm_resign = ? WHERE nickname = ?',
+      [avatar || null, confirm_end_turn ? 1 : 0, confirm_resign ? 1 : 0, req.params.nickname]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Player not found' });
+    }
+
+    res.json({ message: 'Settings updated successfully' });
+  } catch (error) {
+    console.error('Error saving settings:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});

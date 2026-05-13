@@ -13,7 +13,10 @@ CREATE TABLE Player (
   games_played INT DEFAULT 0,
   wins INT DEFAULT 0,
   loses INT DEFAULT 0,
+  draws INT DEFAULT 0,
   winstreak INT DEFAULT 0,
+  confirm_end_turn BOOLEAN DEFAULT 1,
+  confirm_resign BOOLEAN DEFAULT 1,
   selected_hero_id INT DEFAULT NULL
 );
 

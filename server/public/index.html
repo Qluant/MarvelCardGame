@@ -142,7 +142,7 @@
           <div class="glass-panel leaderboard-panel">
             <h2>Top 10 Performers</h2>
             <table class="leaderboard">
-              <thead><tr><th>Rank</th><th>Nickname</th><th>Wins</th><th>Loses</th><th>Winstreak</th></tr></thead>
+              <thead><tr><th>Rank</th><th>Avatar</th><th>Nickname</th><th>Wins</th><th>Loses</th><th>Draws</th><th>Winstreak</th></tr></thead>
               <tbody id="top10-tbody"></tbody>
             </table>
           </div>
@@ -151,12 +151,38 @@
         <!-- PROFILE VIEW -->
         <div id="view-profile" class="view page-container">
           <div class="glass-panel profile-panel">
-            <h2 id="profile-title">Profile</h2>
+            <div style="display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+              <img id="profile-avatar-img" src="/assets/images/default_avatar.png" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--marvel-red); box-shadow: 0 0 15px rgba(224, 49, 49, 0.4);">
+              <h2 id="profile-title" style="margin: 0;">Profile</h2>
+            </div>
             <div class="profile-stats">
               <div class="stat-box"><span>Games Played</span><strong id="profile-games">0</strong></div>
               <div class="stat-box"><span>Wins</span><strong id="profile-wins">0</strong></div>
               <div class="stat-box"><span>Loses</span><strong id="profile-loses">0</strong></div>
+              <div class="stat-box"><span>Draws</span><strong id="profile-draws">0</strong></div>
               <div class="stat-box"><span>Winstreak</span><strong id="profile-winstreak">0</strong></div>
+            </div>
+            
+            <div class="profile-settings" id="profile-settings-container" style="margin-top: 30px; text-align: left; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px;">
+              <h3 style="color: var(--marvel-red); font-family: var(--font-comic); margin-bottom: 15px;">Settings</h3>
+              <div style="margin-bottom: 15px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                  <input type="checkbox" id="setting-confirm-end" style="width: 18px; height: 18px;">
+                  Confirm before ending turn
+                </label>
+              </div>
+              <div style="margin-bottom: 15px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                  <input type="checkbox" id="setting-confirm-resign" style="width: 18px; height: 18px;">
+                  Confirm before resigning
+                </label>
+              </div>
+              <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Avatar URL:</label>
+                <input type="text" id="setting-avatar-url" placeholder="https://example.com/image.jpg" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: white;">
+              </div>
+              <button onclick="saveProfileSettings()" style="background: var(--marvel-red); color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%;">Save Settings</button>
+              <div id="settings-msg" style="margin-top: 10px; font-size: 0.9rem; text-align: center; display: none;"></div>
             </div>
           </div>
         </div>
@@ -185,6 +211,9 @@
           <div class="confirm-modal" id="end-turn-modal" style="display:none;">
             <div class="confirm-box">
               <p>End your turn?</p>
+              <label style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; color: #ccc; margin: 10px 0 20px; cursor: pointer;">
+                <input type="checkbox" id="dont-ask-end-turn" style="width: 16px; height: 16px;"> Don't ask again
+              </label>
               <div class="confirm-actions">
                 <button class="confirm-yes" onclick="confirmEndTurn()">Yes</button>
                 <button class="confirm-no" onclick="document.getElementById('end-turn-modal').style.display='none'">Cancel</button>
@@ -192,8 +221,23 @@
             </div>
           </div>
 
+          <!-- RESIGN CONFIRMATION -->
+          <div class="confirm-modal" id="resign-modal" style="display:none;">
+            <div class="confirm-box">
+              <p>Are you sure you want to resign?</p>
+              <label style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; color: #ccc; margin: 10px 0 20px; cursor: pointer;">
+                <input type="checkbox" id="dont-ask-resign" style="width: 16px; height: 16px;"> Don't ask again
+              </label>
+              <div class="confirm-actions">
+                <button class="confirm-yes" onclick="confirmResign()">Yes, Resign</button>
+                <button class="confirm-no" onclick="document.getElementById('resign-modal').style.display='none'">Cancel</button>
+              </div>
+            </div>
+          </div>
+
           <!-- ENEMY ZONE -->
           <div class="enemy-zone">
+            <div id="enemy-deck" class="deck-visual"></div>
             <div class="hero-portrait-container">
               <img id="enemy-avatar" src="" alt="Enemy Hero" class="hero-avatar" />
               <div class="hero-hp" id="enemy-hp">30</div>
@@ -221,6 +265,7 @@
 
           <!-- PLAYER ZONE -->
           <div class="player-zone">
+            <div id="player-deck" class="deck-visual"></div>
             <div class="player-hand">
               <ul class="hand-fanned" id="player-hand-list"></ul>
             </div>

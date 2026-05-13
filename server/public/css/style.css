@@ -567,7 +567,7 @@ button[type="submit"]:active {
   width: 100%;
   position: relative;
   z-index: 10;
-  height: 180px;
+  height: 150px;
   flex-shrink: 0;
 }
 
@@ -576,8 +576,8 @@ button[type="submit"]:active {
 }
 .player-zone .hero-portrait-container {
   position: absolute;
-  bottom: 20px;
-  right: 150px; /* Next to the fanned cards */
+  bottom: 10px;
+  right: 120px;
   z-index: 40;
 }
 
@@ -586,9 +586,55 @@ button[type="submit"]:active {
 }
 .enemy-zone .hero-portrait-container {
   position: absolute;
-  top: 20px;
-  left: 150px; /* Next to the fanned cards */
+  top: 10px;
+  left: 120px;
   z-index: 40;
+}
+
+.deck-visual {
+  position: absolute;
+  width: 60px;
+  height: 85px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border: 2px solid var(--marvel-red);
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+}
+
+.deck-visual::after {
+  content: 'M';
+  font-family: var(--font-comic);
+  font-size: 2.2rem;
+  color: rgba(255, 255, 255, 0.1);
+  font-style: italic;
+  font-weight: 900;
+}
+
+#player-deck {
+  bottom: 10px;
+  left: 120px;
+  box-shadow: 
+    -2px -2px 0 #111,
+    -4px -4px 0 var(--marvel-red),
+    -6px -6px 0 #111,
+    -8px -8px 0 var(--marvel-red),
+    -10px -10px 0 #111,
+    -15px -15px 15px rgba(0,0,0,0.8);
+}
+
+#enemy-deck {
+  top: 10px;
+  right: 120px;
+  box-shadow: 
+    2px 2px 0 #111,
+    4px 4px 0 var(--marvel-red),
+    6px 6px 0 #111,
+    8px 8px 0 var(--marvel-red),
+    10px 10px 0 #111,
+    15px 15px 15px rgba(0,0,0,0.8);
 }
 
 .hero-portrait-container {
@@ -600,8 +646,8 @@ button[type="submit"]:active {
 }
 
 .hero-avatar {
-  width: 90px;
-  height: 90px;
+  width: 75px;
+  height: 75px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid var(--marvel-darker);
@@ -705,8 +751,9 @@ button[type="submit"]:active {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 20px 40px;
+  padding: 10px 40px;
   position: relative;
+  min-height: 0;
 }
 
 .battlefield-half {
@@ -723,13 +770,14 @@ button[type="submit"]:active {
 }
 
 .battlefield-divider {
-  height: 40px;
+  height: 30px;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  margin: 4px 0;
+  margin: 2px 0;
+  flex-shrink: 0;
 }
 
 .battlefield-divider::before {
@@ -1687,7 +1735,7 @@ button[type="submit"]:active {
    Staging Area & Ready Button
    ========================================================================== */
 .staging-area {
-  height: 130px;
+  height: 150px;
   background: rgba(0, 0, 0, 0.2);
   border: 1px dashed rgba(255, 255, 255, 0.1);
   border-radius: 8px;
@@ -1769,78 +1817,320 @@ button[type="submit"]:active {
 }
 
 /* ==========================================================================
-   Combat Animations
+   Combat Animations – Hero-specific
    ========================================================================== */
-.combat-clot {
-  position: absolute;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  transform: scale(0) translate(-50%, -50%);
+
+/* ── BASE COMBAT PROJECTILE ───────────────────────────────────────────────── */
+.combat-projectile {
+  position: fixed;
+  width: 70px;
+  height: 70px;
+  transform: translate(-50%, -50%) scale(0);
   transform-origin: center center;
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 9999;
-  filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
+  pointer-events: none;
 }
 
-.clot-attack { animation: pulseClot 1s infinite alternate; }
-.clot-defense { border: 4px solid rgba(255,255,255,0.8); }
-
-@keyframes pulseClot {
-  from { filter: drop-shadow(0 0 5px currentColor); }
-  to { filter: drop-shadow(0 0 20px currentColor) brightness(1.5); }
+.combat-projectile.visible {
+  transform: translate(-50%, -50%) scale(1);
 }
 
-/* Themes */
-.theme-fire { background: radial-gradient(circle, #f1c40f, #e67e22, #c0392b); color: #e67e22; }
-.theme-tech { background: radial-gradient(circle, #e0ffff, #00ffff, #008b8b); color: #00ffff; }
-.theme-spider { background: radial-gradient(circle, #ffffff, #bdc3c7, #2c3e50); color: #bdc3c7; }
-.theme-magic { background: radial-gradient(circle, #f39c12, #d35400, #8e44ad); color: #f39c12; }
-.theme-default { background: radial-gradient(circle, #ecf0f1, #95a5a6, #7f8c8d); color: #ecf0f1; }
+/* ── IRON MAN (hero 1) ────────────────────────────────────────────────────── */
 
+/* Attack: circulating blue energy ball */
+.proj-ironman-atk {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #e0f7ff, #4fc3f7 30%, #0288d1 60%, #01579b);
+  box-shadow: 0 0 25px #4fc3f7, 0 0 50px #0288d1, 0 0 80px rgba(79,195,247,0.4);
+  animation: ironmanAtkSpin 0.6s linear infinite, ironmanAtkPulse 1s ease-in-out infinite alternate;
+}
+@keyframes ironmanAtkSpin {
+  0%   { box-shadow: 0 0 25px #4fc3f7, 10px 0 15px #81d4fa, 0 0 50px #0288d1; }
+  25%  { box-shadow: 0 0 25px #4fc3f7, 0 10px 15px #81d4fa, 0 0 50px #0288d1; }
+  50%  { box-shadow: 0 0 25px #4fc3f7, -10px 0 15px #81d4fa, 0 0 50px #0288d1; }
+  75%  { box-shadow: 0 0 25px #4fc3f7, 0 -10px 15px #81d4fa, 0 0 50px #0288d1; }
+  100% { box-shadow: 0 0 25px #4fc3f7, 10px 0 15px #81d4fa, 0 0 50px #0288d1; }
+}
+@keyframes ironmanAtkPulse {
+  from { filter: brightness(1); }
+  to   { filter: brightness(1.6) drop-shadow(0 0 15px #4fc3f7); }
+}
+
+/* Defense: energy shield hex-grid */
+.proj-ironman-def {
+  border-radius: 50%;
+  border: 3px solid rgba(79,195,247,0.8);
+  background: radial-gradient(circle, rgba(79,195,247,0.15), rgba(2,136,209,0.05));
+  box-shadow: 0 0 20px rgba(79,195,247,0.6), inset 0 0 20px rgba(79,195,247,0.3);
+  animation: ironmanShieldPulse 1.2s ease-in-out infinite alternate;
+}
+.proj-ironman-def::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 2px dashed rgba(129,212,250,0.5);
+  animation: ironmanShieldRotate 3s linear infinite;
+}
+@keyframes ironmanShieldPulse {
+  from { box-shadow: 0 0 20px rgba(79,195,247,0.5), inset 0 0 20px rgba(79,195,247,0.2); }
+  to   { box-shadow: 0 0 35px rgba(79,195,247,0.9), inset 0 0 35px rgba(79,195,247,0.5); }
+}
+@keyframes ironmanShieldRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── HUMAN TORCH (hero 2) ─────────────────────────────────────────────────── */
+
+/* Attack: beautiful fireball */
+.proj-torch-atk {
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #fff9c4, #ffeb3b 20%, #ff9800 45%, #f44336 70%, #b71c1c);
+  box-shadow: 0 0 30px #ff9800, 0 0 60px #f44336, 0 0 90px rgba(244,67,54,0.4);
+  animation: fireballFlicker 0.15s ease-in-out infinite alternate;
+}
+.proj-torch-atk::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 40%, rgba(255,152,0,0.3) 70%, transparent);
+  animation: fireballOuter 0.3s ease-in-out infinite alternate;
+}
+@keyframes fireballFlicker {
+  0%   { transform: scale(1) translate(0, 0); filter: brightness(1); }
+  50%  { transform: scale(1.05) translate(1px, -1px); filter: brightness(1.3); }
+  100% { transform: scale(0.97) translate(-1px, 1px); filter: brightness(1.1); }
+}
+@keyframes fireballOuter {
+  from { opacity: 0.4; transform: scale(1); }
+  to   { opacity: 0.8; transform: scale(1.15); }
+}
+
+/* Defense: fire wall */
+.proj-torch-def {
+  border-radius: 8px;
+  width: 80px;
+  height: 70px;
+  background: linear-gradient(0deg,
+    rgba(183,28,28,0.9) 0%,
+    rgba(244,67,54,0.7) 25%,
+    rgba(255,152,0,0.5) 50%,
+    rgba(255,235,59,0.3) 75%,
+    transparent 100%);
+  box-shadow: 0 0 25px rgba(255,152,0,0.6), 0 0 50px rgba(244,67,54,0.3);
+  animation: firewallWaver 0.4s ease-in-out infinite alternate;
+}
+.proj-torch-def::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 10%;
+  width: 80%; height: 60%;
+  background: linear-gradient(0deg,
+    rgba(255,235,59,0.6) 0%,
+    rgba(255,152,0,0.4) 40%,
+    transparent 100%);
+  border-radius: 50% 50% 0 0;
+  animation: firewallInner 0.3s ease-in-out infinite alternate-reverse;
+}
+@keyframes firewallWaver {
+  from { transform: scaleX(1) scaleY(1); }
+  to   { transform: scaleX(1.05) scaleY(1.08); }
+}
+@keyframes firewallInner {
+  from { opacity: 0.5; transform: scaleY(0.9); }
+  to   { opacity: 1; transform: scaleY(1.1); }
+}
+
+/* ── VENOM (hero 3) ───────────────────────────────────────────────────────── */
+
+/* Attack: big symbiote fist */
+.proj-venom-atk {
+  width: 75px;
+  height: 75px;
+  border-radius: 30% 70% 50% 50% / 40% 60% 50% 50%;
+  background: radial-gradient(ellipse at 40% 40%, #424242, #212121 50%, #000);
+  box-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 40px rgba(100,100,100,0.3);
+  animation: venomFistPulse 0.5s ease-in-out infinite alternate;
+}
+.proj-venom-atk::before {
+  content: '';
+  position: absolute;
+  top: 15%; left: 20%;
+  width: 60%; height: 35%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.15), transparent);
+  border-radius: 50%;
+}
+.proj-venom-atk::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  background: transparent;
+  border: 2px solid rgba(100,100,100,0.3);
+  animation: venomTendrils 0.4s ease-in-out infinite alternate;
+}
+@keyframes venomFistPulse {
+  from { transform: scale(1) rotate(-5deg); filter: brightness(0.8); }
+  to   { transform: scale(1.08) rotate(2deg); filter: brightness(1.1); }
+}
+@keyframes venomTendrils {
+  from { border-radius: 30% 70% 50% 50% / 40% 60% 50% 50%; }
+  to   { border-radius: 50% 50% 60% 40% / 50% 70% 30% 50%; }
+}
+
+/* Defense: absorbing black mass */
+.proj-venom-def {
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, #616161, #212121 50%, #000 80%);
+  box-shadow: 0 0 25px rgba(0,0,0,0.9), 0 0 50px rgba(50,50,50,0.5);
+  animation: venomMassAbsorb 0.8s ease-in-out infinite alternate;
+}
+.proj-venom-def::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  border: 2px solid rgba(150,150,150,0.2);
+  animation: venomMassInner 1s linear infinite;
+}
+.proj-venom-def::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.4));
+  animation: venomMassPull 0.6s ease-in-out infinite alternate;
+}
+@keyframes venomMassAbsorb {
+  from { transform: scale(1); filter: brightness(0.6); }
+  to   { transform: scale(1.12); filter: brightness(1); }
+}
+@keyframes venomMassInner {
+  from { transform: rotate(0deg); border-color: rgba(150,150,150,0.2); }
+  to   { transform: rotate(360deg); border-color: rgba(150,150,150,0.4); }
+}
+@keyframes venomMassPull {
+  from { inset: -5px; opacity: 0.3; }
+  to   { inset: -15px; opacity: 0.7; }
+}
+
+/* ── DEFAULT / FALLBACK ───────────────────────────────────────────────────── */
+.proj-default-atk {
+  border-radius: 50%;
+  background: radial-gradient(circle, #ecf0f1, #95a5a6);
+  box-shadow: 0 0 20px rgba(149,165,166,0.6);
+  animation: defaultPulse 0.8s ease-in-out infinite alternate;
+}
+.proj-default-def {
+  border-radius: 50%;
+  border: 3px solid rgba(149,165,166,0.7);
+  background: radial-gradient(circle, rgba(149,165,166,0.1), transparent);
+  box-shadow: 0 0 15px rgba(149,165,166,0.4), inset 0 0 15px rgba(149,165,166,0.2);
+  animation: defaultPulse 0.8s ease-in-out infinite alternate;
+}
+@keyframes defaultPulse {
+  from { filter: brightness(0.9); }
+  to   { filter: brightness(1.3); }
+}
+
+/* ── SHIELD OVERLAY (wraps around avatar) ─────────────────────────────────── */
 .hero-shield-overlay {
   position: absolute;
   top: -10px; left: -10px; right: -10px; bottom: -10px;
   border-radius: 50%;
-  border: 4px solid currentColor;
-  box-shadow: 0 0 20px currentColor, inset 0 0 20px currentColor;
-  opacity: 0.8;
   z-index: 10;
   pointer-events: none;
   transition: all 0.2s;
+  opacity: 0.85;
+}
+
+/* Iron Man shield: blue energy hex */
+.shield-ironman {
+  border: 3px solid rgba(79,195,247,0.9);
+  box-shadow: 0 0 25px rgba(79,195,247,0.7), inset 0 0 25px rgba(79,195,247,0.3);
+  animation: ironmanShieldPulse 1.2s ease-in-out infinite alternate;
+}
+
+/* Torch shield: ring of fire */
+.shield-torch {
+  border: 3px solid rgba(255,152,0,0.8);
+  box-shadow: 0 0 25px rgba(255,152,0,0.6), 0 0 50px rgba(244,67,54,0.3), inset 0 0 20px rgba(255,235,59,0.2);
+  animation: torchShieldPulse 0.8s ease-in-out infinite alternate;
+}
+@keyframes torchShieldPulse {
+  from { box-shadow: 0 0 25px rgba(255,152,0,0.5), inset 0 0 15px rgba(255,235,59,0.1); }
+  to   { box-shadow: 0 0 40px rgba(255,152,0,0.9), 0 0 60px rgba(244,67,54,0.4), inset 0 0 30px rgba(255,235,59,0.4); }
+}
+
+/* Venom shield: dark absorbing mass */
+.shield-venom {
+  border: 3px solid rgba(100,100,100,0.6);
+  background: radial-gradient(circle, transparent 60%, rgba(0,0,0,0.3));
+  box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(50,50,50,0.5);
+  animation: venomShieldPulse 1s ease-in-out infinite alternate;
+}
+@keyframes venomShieldPulse {
+  from { box-shadow: 0 0 25px rgba(0,0,0,0.6), inset 0 0 15px rgba(50,50,50,0.3); }
+  to   { box-shadow: 0 0 40px rgba(0,0,0,0.9), inset 0 0 30px rgba(50,50,50,0.6); }
+}
+
+.shield-default {
+  border: 3px solid rgba(149,165,166,0.7);
+  box-shadow: 0 0 20px rgba(149,165,166,0.5), inset 0 0 15px rgba(149,165,166,0.2);
 }
 
 .shield-hit { animation: shieldHit 0.3s; }
 @keyframes shieldHit {
-  0% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.1); opacity: 1; filter: brightness(2); }
-  100% { transform: scale(1); opacity: 0.8; }
+  0% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.15); opacity: 1; filter: brightness(2); }
+  100% { transform: scale(1); opacity: 0.85; }
 }
 
-.shield-break { animation: shieldBreak 0.5s forwards; }
+.shield-break { animation: shieldBreak 0.6s forwards; }
 @keyframes shieldBreak {
-  0% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.5); opacity: 0; filter: brightness(3); }
-  100% { transform: scale(2); opacity: 0; display: none; }
+  0% { transform: scale(1); opacity: 0.85; }
+  40% { transform: scale(1.3); opacity: 1; filter: brightness(3); }
+  100% { transform: scale(2); opacity: 0; }
 }
 
+/* ── IMPACT EXPLOSIONS (hero-specific) ────────────────────────────────────── */
 .combat-impact {
   position: absolute;
   top: 50%; left: 50%;
-  width: 100px; height: 100px;
+  width: 110px; height: 110px;
   transform: translate(-50%, -50%) scale(0);
   border-radius: 50%;
   z-index: 9999;
   pointer-events: none;
-  animation: impactExplosion 0.6s ease-out forwards;
 }
 
-@keyframes impactExplosion {
-  0% { transform: translate(-50%, -50%) scale(0); opacity: 1; filter: brightness(2); }
-  50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.8; }
-  100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+.impact-ironman {
+  background: radial-gradient(circle, rgba(79,195,247,0.8), rgba(2,136,209,0.4), transparent);
+  animation: impactBlast 0.7s ease-out forwards;
+}
+.impact-torch {
+  background: radial-gradient(circle, rgba(255,235,59,0.9), rgba(255,152,0,0.5), rgba(244,67,54,0.3), transparent);
+  animation: impactBlast 0.7s ease-out forwards;
+}
+.impact-venom {
+  background: radial-gradient(circle, rgba(100,100,100,0.7), rgba(33,33,33,0.5), transparent);
+  animation: impactBlast 0.7s ease-out forwards;
+}
+.impact-default {
+  background: radial-gradient(circle, rgba(236,240,241,0.8), rgba(149,165,166,0.4), transparent);
+  animation: impactBlast 0.7s ease-out forwards;
 }
 
+@keyframes impactBlast {
+  0%  { transform: translate(-50%, -50%) scale(0); opacity: 1; filter: brightness(2.5); }
+  40% { transform: translate(-50%, -50%) scale(1.6); opacity: 0.7; }
+  100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+}
+
+/* ── FLOATING DAMAGE TEXT ─────────────────────────────────────────────────── */
 .floating-dmg {
   position: absolute;
   top: 0; left: 50%;
