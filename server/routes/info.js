@@ -7,7 +7,7 @@ const db = require('../db/connection');
 router.get('/heroes', async (req, res) => {
   try {
     const query = `
-      SELECT h.hero_id, h.alias, 
+      SELECT h.hero_id, h.alias, h.special_ability,
              JSON_ARRAYAGG(JSON_OBJECT('name', c.name, 'category', c.category, 'attack', c.attack, 'defense', c.defense, 'cost', c.cost, 'description', c.description)) as cards
       FROM Heroes h
       LEFT JOIN Cards c ON h.hero_id = c.hero_id

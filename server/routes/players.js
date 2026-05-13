@@ -28,7 +28,16 @@ router.get('/:nickname', async (req, res) => {
       [req.params.nickname]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Player not found' });
-    res.json(rows[0]);
+    
+    const player = rows[0];
+    
+    const [heroStats] = await db.query(
+      'SELECT hs.*, h.alias FROM PlayerHeroStats hs JOIN Heroes h ON hs.hero_id = h.hero_id WHERE hs.player_id = ?',
+      [player.player_id]
+    );
+    player.heroStats = heroStats;
+    
+    res.json(player);
   } catch (error) {
     console.error('Error fetching player profile:', error);
     res.status(500).json({ error: 'Internal server error' });

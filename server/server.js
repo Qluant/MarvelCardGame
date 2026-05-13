@@ -105,7 +105,8 @@ io.on('connection', (socket) => {
         hand: [],
         board: [],
         stagedCards: [],
-        queuedAttacks: []
+        queuedAttacks: [],
+        stats: { dmgDealt: 0, dmgDefended: 0, cardsPlayed: 0 }
       }],
     };
     rooms[roomId] = newRoom;
@@ -135,7 +136,8 @@ io.on('connection', (socket) => {
       hand: [],
       board: [],
       stagedCards: [],
-      queuedAttacks: []
+      queuedAttacks: [],
+      stats: { dmgDealt: 0, dmgDefended: 0, cardsPlayed: 0 }
     });
     socket.join(roomId);
 
@@ -176,6 +178,7 @@ io.on('connection', (socket) => {
 
     player.ap -= card.cost;
     player.hand.splice(cardIndex, 1);
+    player.stats.cardsPlayed += 1;
 
     // Stage the card with its intended target
     player.stagedCards.push({ ...card, targetUid });
@@ -228,6 +231,54 @@ io.on('connection', (socket) => {
     const p1 = room.players[0];
     const p2 = room.players[1];
     
+    function applyPassives(player) {
+      const messages = [];
+      if (player.heroId === 1) { // Iron Man
+        const activeSummons = player.board.filter(c => c.category === 'Summon').length;
+        if (activeSummons >= 2) {
+          let triggered = false;
+          player.stagedCards.forEach(c => {
+            if (c.category === 'Hybrid') {
+              c.attack += c.defense;
+              c.defense = 0;
+              triggered = true;
+            }
+          });
+          if (triggered) messages.push(`${player.nickname}'s Iron Man passive triggered: Hybrid cards convert defense to attack!`);
+        }
+      } else if (player.heroId === 3) { // Venom
+        const hybridCards = player.stagedCards.filter(c => c.category === 'Hybrid');
+        if (hybridCards.length >= 2) {
+          let firstFound = false;
+          let triggered = false;
+          player.stagedCards.forEach(c => {
+            if (c.category === 'Hybrid') {
+              if (!firstFound) {
+                firstFound = true;
+              } else {
+                c.attack += c.defense;
+                c.defense = 0;
+                triggered = true;
+              }
+            }
+          });
+          if (triggered) messages.push(`${player.nickname}'s Venom passive triggered: Successive Hybrid cards convert defense to attack!`);
+        }
+      } else if (player.heroId === 2) { // Human Torch
+        const tradeCards = player.stagedCards.filter(c => c.category === 'Trade');
+        if (tradeCards.length >= 2) {
+          player.board.forEach(c => c.attack = Math.floor(c.attack * 1.5));
+          player.stagedCards.forEach(c => c.attack = Math.floor(c.attack * 1.5));
+          messages.push(`${player.nickname}'s Human Torch passive triggered: +50% Damage output!`);
+        }
+      }
+      return messages;
+    }
+
+    const passives1 = applyPassives(p1);
+    const passives2 = applyPassives(p2);
+    const allPassiveMessages = [...passives1, ...passives2];
+    
     // Animation Snapshot BEFORE resolution
     const p1Anim = {
       id: p1.id, heroId: p1.heroId,
@@ -262,9 +313,13 @@ io.on('connection', (socket) => {
         while (remainingDamage > 0 && attacker.defense > 0) {
           if (defenderPlayer.armor > 0) {
             if (defenderPlayer.armor <= remainingDamage) {
+              attackerPlayer.stats.dmgDealt += defenderPlayer.armor;
+              defenderPlayer.stats.dmgDefended += defenderPlayer.armor;
               remainingDamage -= defenderPlayer.armor;
               defenderPlayer.armor = 0;
             } else {
+              attackerPlayer.stats.dmgDealt += remainingDamage;
+              defenderPlayer.stats.dmgDefended += remainingDamage;
               defenderPlayer.armor -= remainingDamage;
               remainingDamage = 0;
             }
@@ -274,14 +329,22 @@ io.on('connection', (socket) => {
           const autoTarget = getAutoTarget(defenderPlayer);
           if (autoTarget) {
             attacker.defense -= autoTarget.attack; // Retaliation
+            defenderPlayer.stats.dmgDealt += autoTarget.attack;
+            attackerPlayer.stats.dmgDefended += autoTarget.attack;
+            
             if (autoTarget.defense <= remainingDamage) {
+              attackerPlayer.stats.dmgDealt += autoTarget.defense;
+              defenderPlayer.stats.dmgDefended += autoTarget.defense;
               remainingDamage -= autoTarget.defense;
               autoTarget.defense = 0;
             } else {
+              attackerPlayer.stats.dmgDealt += remainingDamage;
+              defenderPlayer.stats.dmgDefended += remainingDamage;
               autoTarget.defense -= remainingDamage;
               remainingDamage = 0;
             }
           } else {
+            attackerPlayer.stats.dmgDealt += remainingDamage;
             defenderPlayer.hp -= remainingDamage;
             remainingDamage = 0;
           }
@@ -300,9 +363,13 @@ io.on('connection', (socket) => {
           while (remainingDamage > 0) {
             if (opponent.armor > 0) {
               if (opponent.armor <= remainingDamage) {
+                player.stats.dmgDealt += opponent.armor;
+                opponent.stats.dmgDefended += opponent.armor;
                 remainingDamage -= opponent.armor;
                 opponent.armor = 0;
               } else {
+                player.stats.dmgDealt += remainingDamage;
+                opponent.stats.dmgDefended += remainingDamage;
                 opponent.armor -= remainingDamage;
                 remainingDamage = 0;
               }
@@ -312,13 +379,18 @@ io.on('connection', (socket) => {
             const autoTarget = getAutoTarget(opponent);
             if (autoTarget) {
               if (autoTarget.defense <= remainingDamage) {
+                player.stats.dmgDealt += autoTarget.defense;
+                opponent.stats.dmgDefended += autoTarget.defense;
                 remainingDamage -= autoTarget.defense;
                 autoTarget.defense = 0;
               } else {
+                player.stats.dmgDealt += remainingDamage;
+                opponent.stats.dmgDefended += remainingDamage;
                 autoTarget.defense -= remainingDamage;
                 remainingDamage = 0;
               }
             } else {
+              player.stats.dmgDealt += remainingDamage;
               opponent.hp -= remainingDamage;
               remainingDamage = 0;
             }
@@ -345,7 +417,7 @@ io.on('connection', (socket) => {
     const p2EndDef = p2.board.reduce((s, c) => s + c.defense, 0) + p2.armor;
     p2Anim.shieldDamageTaken = Math.max(0, p2Anim.startDef - p2EndDef);
 
-    io.to(room.id).emit('combat-animation', { p1: p1Anim, p2: p2Anim });
+    io.to(room.id).emit('combat-animation', { p1: p1Anim, p2: p2Anim, passiveMessages: allPassiveMessages });
     
     // Pause server processing while clients animate
     await new Promise(resolve => setTimeout(resolve, 4500));
@@ -506,7 +578,7 @@ function removePlayerFromRoom(socketId, roomId) {
     if (wasGame && loser && winner) {
       io.to(winner.id).emit('game-over', { outcome: 'win', opponentNickname: loser.nickname });
       io.to(loser.id).emit('game-over', { outcome: 'loss', opponentNickname: winner.nickname });
-      recordResult(winner.nickname, loser.nickname);
+      recordResult(winner, loser);
     }
   }
 
@@ -532,7 +604,7 @@ function removePlayerByNickname(nickname, roomId) {
       io.to(winner.id).emit('game-over', { outcome: 'win', opponentNickname: loser.nickname });
     }
     // Disconnected player has no live socket — nothing to emit to them
-    recordResult(winner.nickname, loser.nickname);
+    recordResult(winner, loser);
   }
 
   io.emit('rooms-update', getPublicRooms());
@@ -608,7 +680,7 @@ function checkWinCondition(room) {
 
   if (p1.hp <= 0 && p2.hp <= 0) {
     io.to(room.id).emit('game-over', { outcome: 'draw' });
-    recordDraw(p1.nickname, p2.nickname);
+    recordDraw(p1, p2);
     delete rooms[room.id];
     io.emit('rooms-update', getPublicRooms());
   } else if (p1.hp <= 0 || p2.hp <= 0) {
@@ -616,15 +688,18 @@ function checkWinCondition(room) {
     const loser = p1.hp <= 0 ? p1 : p2;
 
     io.to(room.id).emit('game-over', { outcome: 'win', opponentNickname: loser.nickname, winnerNickname: winner.nickname });
-    recordResult(winner.nickname, loser.nickname);
+    recordResult(winner, loser);
     delete rooms[room.id];
     io.emit('rooms-update', getPublicRooms());
   }
 }
 
 // ── Stats persistence ───────────────────────────────────────────────────────
-async function recordResult(winnerNick, loserNick) {
+async function recordResult(winner, loser) {
   try {
+    const winnerNick = winner.nickname;
+    const loserNick = loser.nickname;
+
     await db.query(`
       UPDATE Player
       SET wins = wins + 1,
@@ -641,14 +716,43 @@ async function recordResult(winnerNick, loserNick) {
       WHERE nickname = ?
     `, [loserNick]);
 
+    const updateHeroStats = async (p, isWin, isDraw) => {
+      const [rows] = await db.query(`SELECT player_id FROM Player WHERE nickname = ?`, [p.nickname]);
+      if (rows.length === 0) return;
+      const pid = rows[0].player_id;
+      
+      const winAdd = isWin && !isDraw ? 1 : 0;
+      const lossAdd = !isWin && !isDraw ? 1 : 0;
+      const drawAdd = isDraw ? 1 : 0;
+
+      await db.query(`
+        INSERT INTO PlayerHeroStats (player_id, hero_id, games_played, wins, loses, draws, dmg_defended, dmg_dealt, cards_played)
+        VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE 
+          games_played = games_played + 1,
+          wins = wins + VALUES(wins),
+          loses = loses + VALUES(loses),
+          draws = draws + VALUES(draws),
+          dmg_defended = dmg_defended + VALUES(dmg_defended),
+          dmg_dealt = dmg_dealt + VALUES(dmg_dealt),
+          cards_played = cards_played + VALUES(cards_played)
+      `, [pid, p.heroId, winAdd, lossAdd, drawAdd, p.stats.dmgDefended, p.stats.dmgDealt, p.stats.cardsPlayed]);
+    };
+
+    await updateHeroStats(winner, true, false);
+    await updateHeroStats(loser, false, false);
+
     console.log(`Stats recorded: ${winnerNick} beat ${loserNick}`);
   } catch (err) {
     console.error('Failed to record result:', err);
   }
 }
 
-async function recordDraw(p1Nick, p2Nick) {
+async function recordDraw(p1, p2) {
   try {
+    const p1Nick = p1.nickname;
+    const p2Nick = p2.nickname;
+
     const query = `
       UPDATE Player
       SET draws = draws + 1,
@@ -657,6 +761,27 @@ async function recordDraw(p1Nick, p2Nick) {
       WHERE nickname IN (?, ?)
     `;
     await db.query(query, [p1Nick, p2Nick]);
+
+    const updateHeroStats = async (p) => {
+      const [rows] = await db.query(`SELECT player_id FROM Player WHERE nickname = ?`, [p.nickname]);
+      if (rows.length === 0) return;
+      const pid = rows[0].player_id;
+      
+      await db.query(`
+        INSERT INTO PlayerHeroStats (player_id, hero_id, games_played, wins, loses, draws, dmg_defended, dmg_dealt, cards_played)
+        VALUES (?, ?, 1, 0, 0, 1, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE 
+          games_played = games_played + 1,
+          draws = draws + VALUES(draws),
+          dmg_defended = dmg_defended + VALUES(dmg_defended),
+          dmg_dealt = dmg_dealt + VALUES(dmg_dealt),
+          cards_played = cards_played + VALUES(cards_played)
+      `, [pid, p.heroId, p.stats.dmgDefended, p.stats.dmgDealt, p.stats.cardsPlayed]);
+    };
+
+    await updateHeroStats(p1);
+    await updateHeroStats(p2);
+
     console.log(`Stats recorded: Draw between ${p1Nick} and ${p2Nick}`);
   } catch (err) {
     console.error('Failed to record draw:', err);

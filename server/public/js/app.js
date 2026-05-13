@@ -349,6 +349,37 @@ async function loadProfile(targetNickname) {
   document.getElementById('profile-draws').innerText = p.draws;
   document.getElementById('profile-winstreak').innerText = p.winstreak;
   
+  const heroGrid = document.getElementById('hero-stats-grid');
+  if (heroGrid) {
+    heroGrid.innerHTML = '';
+    if (p.heroStats && p.heroStats.length > 0) {
+      p.heroStats.forEach(hs => {
+        let bgStyle = '';
+        if (hs.hero_id === 1) bgStyle = 'background: linear-gradient(135deg, rgba(30,144,255,0.2), rgba(255,215,0,0.1)); border-left: 4px solid #1E90FF;';
+        if (hs.hero_id === 2) bgStyle = 'background: linear-gradient(135deg, rgba(255,69,0,0.2), rgba(255,140,0,0.1)); border-left: 4px solid #FF4500;';
+        if (hs.hero_id === 3) bgStyle = 'background: linear-gradient(135deg, rgba(0,0,0,0.5), rgba(128,0,128,0.2)); border-left: 4px solid #800080;';
+
+        const winRate = hs.games_played > 0 ? Math.round((hs.wins / hs.games_played) * 100) : 0;
+
+        heroGrid.innerHTML += `
+          <div style="${bgStyle} padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+            <h4 style="margin: 0 0 10px 0; font-family: var(--font-header); font-size: 1.3rem; letter-spacing: 1px;">${hs.alias}</h4>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 0.9rem;">
+              <div><strong>Games:</strong> ${hs.games_played}</div>
+              <div><strong>Wins:</strong> ${hs.wins} (${winRate}%)</div>
+              <div><strong>Losses/Draws:</strong> ${hs.loses}/${hs.draws}</div>
+              <div><strong>Dmg Dealt:</strong> ${hs.dmg_dealt}</div>
+              <div><strong>Dmg Defended:</strong> ${hs.dmg_defended}</div>
+              <div><strong>Cards Played:</strong> ${hs.cards_played}</div>
+            </div>
+          </div>
+        `;
+      });
+    } else {
+      heroGrid.innerHTML = '<p style="text-align: center; color: #aaa;">No hero statistics available yet.</p>';
+    }
+  }
+  
   const settingsContainer = document.getElementById('profile-settings-container');
   if (nicknameToLoad === currentUser.nickname) {
     if (settingsContainer) settingsContainer.style.display = 'block';
@@ -444,9 +475,11 @@ async function loadCharacterInfo() {
       list.innerHTML += `
         <div class="hero-section glass-panel${isSelected ? ' hero-section-selected' : ''}" id="hero-section-${hero.hero_id}">
           <div class="hero-section-header">
-            <div class="hero-section-meta">
-              <h3>${hero.alias}</h3>
-              <span class="hero-tile-ability ${abilityClass}">${hero.special_ability || 'None'}</span>
+            <div class="hero-section-meta" style="flex: 1;">
+              <h3 style="margin: 0 0 5px 0;">${hero.alias}</h3>
+              <p class="hero-passive-desc" style="margin: 0; font-size: 0.95rem; color: #d0d0d0; line-height: 1.4; max-width: 80%;">
+                <strong style="color: var(--marvel-red);">Passive:</strong> ${hero.special_ability || 'None'}
+              </p>
             </div>
             <button
               class="hero-tile-select-btn${isSelected ? ' hero-tile-select-btn-active' : ''}"
@@ -859,6 +892,48 @@ function setupSocketListeners() {
     return names[id] || 'default';
   };
 
+  function showNotification(msg) {
+    const toast = document.createElement('div');
+    toast.textContent = msg;
+    toast.style.cssText = `
+      position: fixed;
+      top: 15%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: var(--marvel-red);
+      font-family: var(--font-header);
+      padding: 15px 30px;
+      border: 2px solid var(--marvel-red);
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(224,49,49,0.5);
+      z-index: 9999;
+      font-size: 1.5rem;
+      letter-spacing: 1px;
+      animation: fadeInOut 2.5s forwards;
+      pointer-events: none;
+    `;
+    document.body.appendChild(toast);
+    
+    if (!document.getElementById('toast-style')) {
+      const style = document.createElement('style');
+      style.id = 'toast-style';
+      style.innerHTML = `
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: translate(-50%, -20px); }
+          15% { opacity: 1; transform: translate(-50%, 0); }
+          85% { opacity: 1; transform: translate(-50%, 0); }
+          100% { opacity: 0; transform: translate(-50%, -20px); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    setTimeout(() => {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 2500);
+  }
+
   socket.on('combat-animation', async (animData) => {
     try {
       if (typeof hideCardInfo === 'function') hideCardInfo();
@@ -867,6 +942,12 @@ function setupSocketListeners() {
       document.getElementById('turn-overlay').style.display = 'flex';
       document.getElementById('turn-overlay').innerHTML = '<h1 style="font-family: var(--font-comic); font-size: 5rem; color: #f39c12; text-shadow: 0 0 20px #000; letter-spacing: 4px; animation: pulseTurn 1.5s infinite;">COMBAT!</h1>';
       if (gameTimerInterval) clearInterval(gameTimerInterval);
+      
+      if (animData.passiveMessages && animData.passiveMessages.length > 0) {
+        animData.passiveMessages.forEach((msg, idx) => {
+          setTimeout(() => showNotification(msg), idx * 2500);
+        });
+      }
       
       const { p1, p2 } = animData;
       const isP1 = (currentUser && p1.id === socket.id);
