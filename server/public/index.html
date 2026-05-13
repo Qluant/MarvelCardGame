@@ -189,10 +189,14 @@
 
         <!-- GAME BOARD VIEW -->
         <div id="view-game" class="view board" style="padding:0; width:100vw;">
+          <!-- Hero theme overlays (full-screen halves behind content) -->
+          <div id="hero-bg-enemy" class="hero-bg-overlay hero-bg-top"></div>
+          <div id="hero-bg-player" class="hero-bg-overlay hero-bg-bottom"></div>
           <button class="leave-btn" onclick="handleResign()">Resign</button>
           <button class="end-turn-btn" id="end-turn-btn" onclick="handleEndTurn()">End Turn</button>
 
           <div class="timer">60</div>
+          <div id="round-counter" class="round-counter">Round 1</div>
 
           <!-- TURN OVERLAY -->
           <div class="turn-overlay" id="turn-overlay" style="display:none;"></div>
@@ -279,14 +283,12 @@
           <!-- AP BARS (Middle Right) -->
           <div class="ap-side-container">
             <div class="ap-section enemy-ap-section">
-              <div class="ap-label">ENEMY AP</div>
               <div class="ap-display">
                 <div id="enemy-ap-bubbles" class="ap-bubbles"></div>
                 <div id="enemy-ap-text" class="ap-text">3/3</div>
               </div>
             </div>
             <div class="ap-section player-ap-section">
-              <div class="ap-label">YOUR AP</div>
               <div class="ap-display">
                 <div id="player-ap-bubbles" class="ap-bubbles"></div>
                 <div id="player-ap-text" class="ap-text">3/3</div>

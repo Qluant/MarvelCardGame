@@ -50,6 +50,7 @@ const syncGameState = (roomId) => {
     const opponent = room.players.find(p => p.nickname !== player.nickname) || room.players[0];
 
     const state = {
+      roundCount: room.roundCount || 1,
       isMyTurn: room.currentTurn === player.id,
       player: {
         nickname: player.nickname,
@@ -99,8 +100,8 @@ io.on('connection', (socket) => {
         avatar: roomData.avatar || null,
         heroId: roomData.heroId,
         hp: 30,
-        ap: 3,
-        maxAp: 10,
+        ap: 6,
+        maxAp: 15,
         hand: [],
         board: [],
         stagedCards: [],
@@ -129,8 +130,8 @@ io.on('connection', (socket) => {
       avatar: avatar || null,
       heroId,
       hp: 30,
-      ap: 3,
-      maxAp: 10,
+      ap: 6,
+      maxAp: 15,
       hand: [],
       board: [],
       stagedCards: [],
@@ -354,18 +355,23 @@ io.on('connection', (socket) => {
       player.stagedCards = [];
       player.queuedAttacks = [];
 
-      // AP Scaling (+2 per round, cumulative up to maxAp)
-      player.ap = Math.min(player.ap + 2, player.maxAp);
+      // AP Scaling (+3 per round, cumulative up to maxAp)
+      player.ap = Math.min(player.ap + 3, player.maxAp);
+      
+      if (room.roundCount % 5 === 0) {
+        player.ap = Math.min(player.ap + 3, player.maxAp);
+      }
 
       // Draw cards up to HAND_SIZE
       const cardsNeeded = HAND_SIZE - player.hand.length;
       for (let i = 0; i < cardsNeeded; i++) {
-        const card = await drawCard(player.heroId);
+        const card = await drawCard(player.heroId, player.hand);
         if (card) player.hand.push(card);
       }
     }
 
     room.turnsPassed = 0;
+    room.roundCount = (room.roundCount || 1) + 1;
     room.currentTurn = room.players[0].id;
 
     syncGameState(room.id);
@@ -535,7 +541,7 @@ function removePlayerByNickname(nickname, roomId) {
 // ── Card dealing & Game Init ──────────────────────────────────────────────────
 const HAND_SIZE = 5;
 
-async function drawCard(heroId) {
+async function drawCard(heroId, currentHand = []) {
   if (!heroId) return null;
   const [rows] = await db.query(
     'SELECT card_id AS baseId, name, category, cost, attack, defense, description FROM Cards WHERE hero_id = ?',
@@ -543,7 +549,32 @@ async function drawCard(heroId) {
   );
   if (rows.length === 0) return null;
 
-  const card = rows[Math.floor(Math.random() * rows.length)];
+  // Limit to max 2 copies of any given card in hand
+  const counts = {};
+  for (const c of currentHand) {
+    counts[c.baseId] = (counts[c.baseId] || 0) + 1;
+  }
+  const allowedCards = rows.filter(r => (counts[r.baseId] || 0) < 2);
+  
+  if (allowedCards.length === 0) return null;
+
+  // Weighted random: lower cost cards have higher probability
+  let totalWeight = 0;
+  for (const c of allowedCards) {
+    c.weight = 100 / (c.cost + 1);
+    totalWeight += c.weight;
+  }
+  
+  let randomVal = Math.random() * totalWeight;
+  let card = allowedCards[0];
+  for (const c of allowedCards) {
+    if (randomVal < c.weight) {
+      card = c;
+      break;
+    }
+    randomVal -= c.weight;
+  }
+
   // Attach a unique instance ID so multiple copies of the same card can be tracked
   return { ...card, uid: crypto.randomUUID() };
 }
@@ -552,12 +583,13 @@ async function dealCards(room) {
   // Set starting state
   room.currentTurn = room.players[0].id;
   room.turnsPassed = 0;
+  room.roundCount = 1;
 
   for (const player of room.players) {
     try {
       player.hand = [];
       for (let i = 0; i < HAND_SIZE; i++) {
-        const card = await drawCard(player.heroId);
+        const card = await drawCard(player.heroId, player.hand);
         if (card) player.hand.push(card);
       }
     } catch (err) {

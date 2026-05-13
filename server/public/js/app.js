@@ -14,11 +14,12 @@ let initialCoinTossDone = false;
 let playerStagedCards = [];
 let enemyStagedCount = 0;
 // Action Points
-let playerAP = 3;
-let playerMaxAP = 10;
-let enemyAP = 3;
-let enemyMaxAP = 10;
-const AP_CAP = 10;
+let playerAP = 6;
+let playerMaxAP = 15;
+let enemyAP = 6;
+let enemyMaxAP = 15;
+const AP_CAP = 15;
+let currentRoundCount = 1;
 
 const API_URL = '/api';
 
@@ -715,8 +716,9 @@ function setupSocketListeners() {
       document.getElementById('enemy-avatar').src = '/assets/images/default_avatar.png';
       playerHand = [];
       enemyHandCount = 0;
-      playerAP = 3; playerMaxAP = 3;
-      enemyAP = 3;  enemyMaxAP = 3;
+      currentRoundCount = 1;
+      playerAP = 6; playerMaxAP = 15;
+      enemyAP = 6;  enemyMaxAP = 15;
     }
 
     // Unlock temporarily so navigate to 'game' is allowed from 'waiting' or 'lobby'
@@ -731,6 +733,7 @@ function setupSocketListeners() {
     gameStarted = true;
     isMyTurn = room.players[0].id === socket.id;
     updateEndTurnButton();
+    const me = room.players.find(p => p.id === socket.id) || room.players[0];
     const opponent = room.players.find(p => p.id !== socket.id) || room.players[0];
     if (opponent) {
       document.getElementById('enemy-nickname').innerText = opponent.nickname;
@@ -739,12 +742,55 @@ function setupSocketListeners() {
       if (!isReconnect) {
         // Fresh game — reset counts; they will be populated by sync-game-state
         enemyHandCount = 0;
-        playerAP = 3; playerMaxAP = 3;
-        enemyAP = 3;  enemyMaxAP = 3;
+        currentRoundCount = 1;
+        playerAP = 6; playerMaxAP = 15;
+        enemyAP = 6;  enemyMaxAP = 15;
         initialCoinTossDone = false;
       } else {
         initialCoinTossDone = true;
       }
+
+      // Apply hero-themed full-screen background overlays
+      const heroHalfClass = id => ({1: 'half-ironman', 2: 'half-torch', 3: 'half-venom'}[id] || '');
+      const playerBg = document.getElementById('hero-bg-player');
+      const enemyBg = document.getElementById('hero-bg-enemy');
+      
+      const applyHeroBg = (bgElem, heroId) => {
+        if (!bgElem) return;
+        bgElem.className = bgElem.className.replace(/half-\w+/g, '').trim();
+        bgElem.innerHTML = ''; // Clear old particles
+        const cls = heroHalfClass(heroId);
+        if (cls) bgElem.classList.add(cls);
+        
+        if (heroId === 2) {
+          // Spawn Torch sparks with individual paths
+          for (let i = 0; i < 40; i++) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'torch-spark-wrapper';
+            wrapper.style.left = (Math.random() * 100) + '%';
+            
+            const durY = Math.random() * 2.5 + 2; // 2s to 4.5s
+            const durX = Math.random() * 1.5 + 1; // 1s to 2.5s
+            const delay = Math.random() * 3; // 0s to 3s
+            const endX = (Math.random() < 0.5 ? -1 : 1) * (Math.random() * 40 + 20) + 'px';
+            
+            wrapper.style.setProperty('--dur-y', durY + 's');
+            wrapper.style.setProperty('--delay', delay + 's');
+            
+            const spark = document.createElement('div');
+            spark.className = 'torch-spark-particle';
+            spark.style.setProperty('--dur-x', durX + 's');
+            spark.style.setProperty('--end-x', endX);
+            spark.style.background = Math.random() > 0.5 ? '#ffeb3b' : '#ff9800';
+            
+            wrapper.appendChild(spark);
+            bgElem.appendChild(wrapper);
+          }
+        }
+      };
+
+      applyHeroBg(playerBg, me.heroId);
+      applyHeroBg(enemyBg, opponent.heroId);
 
       renderBoard();
     }
@@ -1015,6 +1061,17 @@ function setupSocketListeners() {
     isMyTurn = state.isMyTurn;
     updateEndTurnButton();
 
+    if (state.roundCount) {
+      if (state.roundCount > currentRoundCount) {
+        if (state.roundCount % 5 === 1 && state.roundCount > 1) {
+          showNotification('5 Rounds Passed: +3 Bonus AP!');
+        }
+        currentRoundCount = state.roundCount;
+      }
+      const roundEl = document.getElementById('round-counter');
+      if (roundEl) roundEl.innerText = 'Round ' + state.roundCount;
+    }
+
     playerHP = state.player.hp;
     playerAP = state.player.ap;
     playerMaxAP = state.player.maxAp;
@@ -1234,10 +1291,11 @@ function enterGame(roomId) {
   isMyTurn = false;
   
   // Initialize AP
-  playerAP = 3;
-  playerMaxAP = 3;
-  enemyAP = 3;
-  enemyMaxAP = 3;
+  playerAP = 6;
+  playerMaxAP = 15;
+  enemyAP = 6;
+  enemyMaxAP = 15;
+  currentRoundCount = 1;
   
   if (gameTimerInterval) clearInterval(gameTimerInterval);
   document.querySelector('.timer').innerText = '60';
@@ -1419,10 +1477,9 @@ function renderBoard() {
   const eApBubbles = document.getElementById('enemy-ap-bubbles');
 
   if (pApText && pApBubbles) {
-    pApText.textContent = `${playerAP}/10`;
+    pApText.textContent = `${playerAP}/${AP_CAP}`;
     pApBubbles.innerHTML = '';
-    // Always show 10 bubbles
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < AP_CAP; i++) {
       let state = 'locked';
       if (i < playerMaxAP) {
         state = i < playerAP ? 'filled' : 'empty';
@@ -1432,10 +1489,9 @@ function renderBoard() {
   }
 
   if (eApText && eApBubbles) {
-    eApText.textContent = `${enemyAP}/10`;
+    eApText.textContent = `${enemyAP}/${AP_CAP}`;
     eApBubbles.innerHTML = '';
-    // Always show 10 bubbles
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < AP_CAP; i++) {
       let state = 'locked';
       if (i < enemyMaxAP) {
         state = i < enemyAP ? 'filled' : 'empty';
