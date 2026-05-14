@@ -56,6 +56,6 @@ CREATE TABLE Cards (
 );
 
 INSERT INTO Heroes (alias, special_ability) VALUES 
-('Iron Man', 'When you have at least two active Summon cards on the board, your Hybrid cards transfer their defense to damage (attack = base attack + defense, defense becomes 0).'), 
-('Human Torch', 'When you place at least two Trade cards in the same turn, your total damage output for that round increases by +50%.'), 
-('Venom', 'When you place two or more Hybrid cards in the same turn, all Hybrid cards placed this turn transfer their defense into attack, except for the first one placed.');
+('Iron Man', 'When you have at least three active Summon cards on the board, you gain an extra +1 AP each round.'), 
+('Human Torch', 'When you place at least two Trade cards in the same turn, your total damage output for that round mathematically increases by +35%.'), 
+('Venom', 'When you play Hybrid cards, each Trade card played in the same turn gains +2 damage, and each Summon card played in the same turn gains +2 defense per Hybrid card played.');
