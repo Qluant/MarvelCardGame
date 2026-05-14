@@ -235,41 +235,34 @@ io.on('connection', (socket) => {
       const messages = [];
       if (player.heroId === 1) { // Iron Man
         const activeSummons = player.board.filter(c => c.category === 'Summon').length;
-        if (activeSummons >= 2) {
-          let triggered = false;
-          player.stagedCards.forEach(c => {
-            if (c.category === 'Hybrid') {
-              c.attack += c.defense;
-              c.defense = 0;
-              triggered = true;
-            }
-          });
-          if (triggered) messages.push(`${player.nickname}'s Iron Man passive triggered: Hybrid cards convert defense to attack!`);
+        if (activeSummons >= 3) {
+          player.ap = Math.min(player.ap + 1, player.maxAp);
+          messages.push(`${player.nickname}'s Iron Man passive triggered: +1 AP from active Summons!`);
         }
       } else if (player.heroId === 3) { // Venom
-        const hybridCards = player.stagedCards.filter(c => c.category === 'Hybrid');
-        if (hybridCards.length >= 2) {
-          let firstFound = false;
-          let triggered = false;
+        const hybridCount = player.stagedCards.filter(c => c.category === 'Hybrid').length;
+        if (hybridCount > 0) {
+          let triggeredTrade = false;
+          let triggeredSummon = false;
           player.stagedCards.forEach(c => {
-            if (c.category === 'Hybrid') {
-              if (!firstFound) {
-                firstFound = true;
-              } else {
-                c.attack += c.defense;
-                c.defense = 0;
-                triggered = true;
-              }
+            if (c.category === 'Trade') {
+              c.attack += 2 * hybridCount;
+              triggeredTrade = true;
+            } else if (c.category === 'Summon') {
+              c.defense += 2 * hybridCount;
+              triggeredSummon = true;
             }
           });
-          if (triggered) messages.push(`${player.nickname}'s Venom passive triggered: Successive Hybrid cards convert defense to attack!`);
+          if (triggeredTrade || triggeredSummon) {
+            messages.push(`${player.nickname}'s Venom passive triggered: +${2 * hybridCount} stats from Hybrid synergy!`);
+          }
         }
       } else if (player.heroId === 2) { // Human Torch
         const tradeCards = player.stagedCards.filter(c => c.category === 'Trade');
         if (tradeCards.length >= 2) {
-          player.board.forEach(c => c.attack = Math.floor(c.attack * 1.5));
-          player.stagedCards.forEach(c => c.attack = Math.floor(c.attack * 1.5));
-          messages.push(`${player.nickname}'s Human Torch passive triggered: +50% Damage output!`);
+          player.board.forEach(c => c.attack = Math.round(c.attack * 1.35));
+          player.stagedCards.forEach(c => c.attack = Math.round(c.attack * 1.35));
+          messages.push(`${player.nickname}'s Human Torch passive triggered: +35% Damage output!`);
         }
       }
       return messages;
@@ -356,7 +349,10 @@ io.on('connection', (socket) => {
     resolveAttacks(p2, p1);
 
     // 2. Resolve Staged Cards (Hybrid/Trade attacks, then Summons enter board)
-    const resolveStaged = (player, opponent) => {
+    const p1NewSummons = [];
+    const p2NewSummons = [];
+    
+    const resolveStaged = (player, opponent, newSummonsList) => {
       for (const card of player.stagedCards) {
         if (card.category === 'Trade' || card.category === 'Hybrid') {
           let remainingDamage = card.attack;
@@ -396,13 +392,17 @@ io.on('connection', (socket) => {
             }
           }
         } else if (card.category === 'Summon') {
-          player.board.push(card);
+          newSummonsList.push(card);
         }
       }
     };
 
-    resolveStaged(p1, p2);
-    resolveStaged(p2, p1);
+    resolveStaged(p1, p2, p1NewSummons);
+    resolveStaged(p2, p1, p2NewSummons);
+    
+    // Summons enter the board only after all attacks have resolved
+    p1.board.push(...p1NewSummons);
+    p2.board.push(...p2NewSummons);
 
     // Clear dead summons from board
     p1.board = p1.board.filter(c => c.defense > 0);
