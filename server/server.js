@@ -39,7 +39,7 @@ const rooms = {};
 const reconnectTimers = {}; // { [nickname]: { timeout, roomId, socketId, rejoinsUsed } }
 
 const getPublicRooms = () => {
-  return Object.values(rooms).filter(r => r.players.length < 2 && !r.isPrivate).map(r => ({ id: r.id, name: r.name, isPrivate: false }));
+  return Object.values(rooms).filter(r => r.players.length < 2).map(r => ({ id: r.id, name: r.name, isPrivate: r.isPrivate || false }));
 };
 
 const syncGameState = (roomId) => {
@@ -321,10 +321,6 @@ io.on('connection', (socket) => {
 
           const autoTarget = getAutoTarget(defenderPlayer);
           if (autoTarget) {
-            attacker.defense -= autoTarget.attack; // Retaliation
-            defenderPlayer.stats.dmgDealt += autoTarget.attack;
-            attackerPlayer.stats.dmgDefended += autoTarget.attack;
-            
             if (autoTarget.defense <= remainingDamage) {
               attackerPlayer.stats.dmgDealt += autoTarget.defense;
               defenderPlayer.stats.dmgDefended += autoTarget.defense;
@@ -444,7 +440,16 @@ io.on('connection', (socket) => {
 
     room.turnsPassed = 0;
     room.roundCount = (room.roundCount || 1) + 1;
-    room.currentTurn = room.players[0].id;
+    
+    // Alternate who goes first each round
+    room.firstPlayerIndex = 1 - (room.firstPlayerIndex ?? 0);
+    room.currentTurn = room.players[room.firstPlayerIndex].id;
+    
+    // Notify clients of the order change for animation
+    io.to(room.id).emit('turn-order-change', {
+      firstPlayerId: room.players[room.firstPlayerIndex].id,
+      firstPlayerNickname: room.players[room.firstPlayerIndex].nickname
+    });
 
     syncGameState(room.id);
     checkWinCondition(room);
@@ -652,10 +657,18 @@ async function drawCard(heroId, currentHand = []) {
 }
 
 async function dealCards(room) {
-  // Set starting state
-  room.currentTurn = room.players[0].id;
+  // Randomly pick who goes first — coin flip!
+  const firstPlayerIndex = Math.floor(Math.random() * 2);
+  room.firstPlayerIndex = firstPlayerIndex;
+  room.currentTurn = room.players[firstPlayerIndex].id;
   room.turnsPassed = 0;
   room.roundCount = 1;
+
+  // Tell both clients who won the coin flip
+  io.to(room.id).emit('coin-flip', {
+    winnerId: room.players[firstPlayerIndex].id,
+    winnerNickname: room.players[firstPlayerIndex].nickname
+  });
 
   for (const player of room.players) {
     try {

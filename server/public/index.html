@@ -106,9 +106,9 @@
                 <label>Password</label>
                 <input type="password" id="join-private-password" />
               </div>
-              <div style="margin-top:10px;">
-                <button onclick="submitJoinPrivate()">Join</button>
-                <button onclick="document.getElementById('join-private-modal').style.display='none'" style="background: transparent; border: 1px solid var(--marvel-grey);">Cancel</button>
+              <div style="margin-top:15px; display: flex; gap: 10px;">
+                <button onclick="submitJoinPrivate()" style="background: var(--marvel-red); color: white; border: none; padding: 10px 20px; font-family: var(--font-header); font-size: 1.2rem; cursor: pointer; border-radius: 4px;">Join Room</button>
+                <button onclick="document.getElementById('join-private-modal').style.display='none'" style="background: transparent; border: 2px solid var(--marvel-grey); color: white; padding: 10px 20px; font-family: var(--font-header); font-size: 1.2rem; cursor: pointer; border-radius: 4px;">Cancel</button>
               </div>
             </div>
 
@@ -216,7 +216,14 @@
                 <div class="coin-face coin-front">YOUR<br>TURN</div>
                 <div class="coin-face coin-back">ENEMY<br>TURN</div>
               </div>
+              <div id="coin-winner-label" style="margin-top:20px; font-family:var(--font-header); font-size:1.8rem; color:#f39c12; text-shadow:0 0 10px rgba(243,156,18,0.8); letter-spacing:2px; opacity:0; transition:opacity 0.5s;"></div>
             </div>
+          </div>
+
+          <!-- TURN ORDER CHANGE BANNER -->
+          <div id="turn-order-banner" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:8000; align-items:center; justify-content:center; flex-direction:column; gap:15px;">
+            <div id="turn-order-text" style="font-family:var(--font-header); font-size:3rem; color:#f39c12; text-shadow:0 0 20px rgba(243,156,18,0.9); letter-spacing:4px; animation:pulseTurn 0.8s infinite;"></div>
+            <div id="turn-order-sub" style="font-family:var(--font-comic); font-size:1.2rem; color:#ccc; letter-spacing:1px;">goes first this round</div>
           </div>
 
           <!-- END TURN CONFIRMATION -->

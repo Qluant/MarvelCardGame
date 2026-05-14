@@ -24,10 +24,23 @@ let currentRoundCount = 1;
 const API_URL = '/api';
 
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const savedUser = localStorage.getItem('user');
   if (savedUser) {
     currentUser = JSON.parse(savedUser);
+
+    // Silently re-fetch profile from DB to refresh avatar/heroId after server restarts
+    try {
+      const profileRes = await fetch(`${API_URL}/players/${currentUser.nickname}`);
+      if (profileRes.ok) {
+        const profile = await profileRes.json();
+        if (profile.avatar) currentUser.avatar = profile.avatar;
+        if (profile.selected_hero_id) currentUser.heroId = profile.selected_hero_id;
+        if (profile.confirm_end_turn !== undefined) currentUser.confirm_end_turn = profile.confirm_end_turn;
+        if (profile.confirm_resign !== undefined) currentUser.confirm_resign = profile.confirm_resign;
+        localStorage.setItem('user', JSON.stringify(currentUser));
+      }
+    } catch (_) { /* offline or server not ready — use cached data */ }
   }
   
   // Connect socket
@@ -266,6 +279,9 @@ window.handleLogin = async function(e) {
           const profile = await profileRes.json();
           if (profile.selected_hero_id) {
             currentUser.heroId = profile.selected_hero_id;
+          }
+          if (profile.avatar) {
+            currentUser.avatar = profile.avatar;
           }
         }
       } catch (_) {}
@@ -622,12 +638,6 @@ function animateDrawCards(playerCount, enemyCount) {
   const done = () => { 
     if (++landed === totalToLand) {
       renderBoard();
-      if (!initialCoinTossDone) {
-        initialCoinTossDone = true;
-        if (window.startCoinFlipAnimation) {
-          window.startCoinFlipAnimation();
-        }
-      }
     }
   };
 
@@ -829,41 +839,81 @@ function setupSocketListeners() {
     }
   });
 
-  window.startCoinFlipAnimation = function() {
-    // Start coin flip animation
+  window.startCoinFlipAnimation = function(winnerNickname) {
     const coinOverlay = document.getElementById('coin-overlay');
     const startCoin = document.getElementById('start-coin');
+    const winnerLabel = document.getElementById('coin-winner-label');
     if (coinOverlay && startCoin) {
       coinOverlay.style.display = 'flex';
+      if (winnerLabel) { winnerLabel.style.opacity = '0'; winnerLabel.textContent = ''; }
       
       // Reset state instantly without transition
       startCoin.style.transition = 'none';
       startCoin.style.transform = `rotateY(0deg) translateZ(0)`;
       
-      // Double requestAnimationFrame ensures the browser paints the '0deg' state 
-      // before we apply the long transition, fixing any stuttering bugs.
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          // Standard ease-out is significantly smoother than custom bezier which can cause jerky stops
           startCoin.style.transition = 'transform 3s ease-out';
-          
           const baseSpins = 1080; 
           const finalRotation = isMyTurn ? baseSpins : baseSpins + 180;
-          
-          // Using translateZ(0) alongside rotateY forces GPU rendering to prevent stuttering
           startCoin.style.transform = `rotateY(${finalRotation}deg) translateZ(0)`;
         });
       });
       
-      // Wait for 3s spin + a small buffer to finish before hiding
+      // After spin, reveal who won
+      setTimeout(() => {
+        if (winnerLabel && winnerNickname) {
+          const youWon = isMyTurn;
+          winnerLabel.textContent = youWon
+            ? `🏆 YOU go first!`
+            : `⚔️ ${winnerNickname} goes first!`;
+          winnerLabel.style.color = youWon ? '#2ecc71' : '#e74c3c';
+          winnerLabel.style.textShadow = youWon
+            ? '0 0 10px rgba(46,204,113,0.8)'
+            : '0 0 10px rgba(231,76,60,0.8)';
+          winnerLabel.style.opacity = '1';
+        }
+      }, 3000);
+      
+      // Hide after label has been shown
       setTimeout(() => {
         coinOverlay.style.display = 'none';
         window.startGameTimer();
-      }, 3500);
+      }, 4500);
     } else {
       window.startGameTimer();
     }
   };
+
+  // Server randomized who goes first - trigger the coin animation with that info
+  socket.on('coin-flip', ({ winnerId, winnerNickname }) => {
+    // isMyTurn is already updated from sync-game-state before this fires,
+    // but we need to be sure — set it explicitly from the winnerId
+    isMyTurn = (winnerId === socket.id);
+    if (!initialCoinTossDone) {
+      initialCoinTossDone = true;
+      window.startCoinFlipAnimation(winnerNickname);
+    }
+  });
+
+  // After each round the server alternates who goes first — show a quick banner
+  socket.on('turn-order-change', ({ firstPlayerId, firstPlayerNickname }) => {
+    const banner = document.getElementById('turn-order-banner');
+    const textEl = document.getElementById('turn-order-text');
+    const subEl = document.getElementById('turn-order-sub');
+    if (!banner || !textEl) return;
+
+    const isMe = firstPlayerId === socket.id;
+    textEl.textContent = isMe ? '⚡ YOUR TURN FIRST' : `⚔️ ${firstPlayerNickname.toUpperCase()} FIRST`;
+    textEl.style.color = isMe ? '#2ecc71' : '#e74c3c';
+    textEl.style.textShadow = isMe
+      ? '0 0 20px rgba(46,204,113,0.9)'
+      : '0 0 20px rgba(231,76,60,0.9)';
+    if (subEl) subEl.textContent = isMe ? 'You go first this round!' : 'Opponent goes first this round!';
+
+    banner.style.display = 'flex';
+    setTimeout(() => { banner.style.display = 'none'; }, 2000);
+  });
 
   window.startGameTimer = function() {
     if (gameTimerInterval) clearInterval(gameTimerInterval);
@@ -1188,13 +1238,6 @@ function setupSocketListeners() {
       animateDrawCards(newPlayerDraws, newEnemyDraws);
     } else {
       renderBoard();
-      // Trigger initial coin toss if it hasn't happened yet and no cards were drawn
-      if (!initialCoinTossDone) {
-        initialCoinTossDone = true;
-        if (window.startCoinFlipAnimation) {
-          window.startCoinFlipAnimation();
-        }
-      }
     }
   });
 
@@ -1427,7 +1470,22 @@ function exitRoom() {
   if (window.waitingTipsInterval) clearInterval(window.waitingTipsInterval);
   currentRoomId = null;
   gameStarted = false;
-  // Clear reconnect session so refresh doesn't attempt to re-enter a dead room
+  
+  // Clear persistent UI state
+  playerHand = [];
+  playerActiveCards = [];
+  playerStagedCards = [];
+  enemyActiveCards = [];
+  enemyHandCount = 0;
+  enemyStagedCount = 0;
+  
+  // Clear backgrounds
+  const playerBg = document.getElementById('hero-bg-player');
+  const enemyBg = document.getElementById('hero-bg-enemy');
+  if (playerBg) { playerBg.className = 'hero-bg-overlay hero-bg-bottom'; playerBg.innerHTML = ''; }
+  if (enemyBg) { enemyBg.className = 'hero-bg-overlay hero-bg-top'; enemyBg.innerHTML = ''; }
+  
+  // Clear reconnect session
   localStorage.removeItem('activeGame');
 }
 

@@ -5,8 +5,8 @@ INSERT INTO Cards (hero_id, name, category, cost, attack, defense, description) 
 (1, 'Unibeam', 'Trade', 5, 8, 0, 'A concentrated beam from the chest reactor. Maximum damage at the cost of leaving defenses completely open.'),
 (1, 'Repulsor Shield-Bash', 'Hybrid', 3, 3, 3, 'A strike combined with projecting an energy shield. Allows you to deal damage and absorb incoming attacks.'),
 (1, 'Energy Barrier Strike', 'Hybrid', 4, 4, 4, 'Channels power into a dense kinetic barrier while ramming the target.'),
-(1, 'Stark Tech Decoy', 'Summon', 1, 1, 2, 'A cheap holographic decoy with a physical hard-light shell to distract the enemy.'),
-(1, 'Iron Legion Drone', 'Summon', 2, 1, 4, 'Summons an autonomous Iron Legion drone. It draws enemy fire and shoots back with light weaponry.'),
+(1, 'Stark Tech Decoy', 'Summon', 1, 0, 1, 'A cheap holographic decoy with a physical hard-light shell to distract the enemy.'),
+(1, 'Iron Legion Drone', 'Summon', 2, 1, 3, 'Summons an autonomous Iron Legion drone. It draws enemy fire and shoots back with light weaponry.'),
 (1, 'Hulkbuster Auto-Sentry', 'Summon', 5, 2, 8, 'Deploys a heavy stationary Hulkbuster turret. Massive armor pool and automatic retaliation to attacks.'),
 (1, 'Veronica Satellite Drop', 'Summon', 6, 3, 9, 'Calls down a piece of the Veronica orbital station. A massive, heavily armored structure that rains suppressing fire.');
 
