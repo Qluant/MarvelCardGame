@@ -6,7 +6,7 @@ async function loadTop10() {
     const tbody = document.getElementById('top10-tbody');
     tbody.innerHTML = '';
     data.forEach((p, idx) => {
-      const avatarImg = p.avatar || '/assets/images/default_avatar.png';
+      const avatarImg = p.avatar || '/assets/images/avatar.jpg';
       tbody.innerHTML += `<tr>
         <td>#${idx + 1}</td>
         <td><img src="${avatarImg}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid var(--marvel-red);"></td>

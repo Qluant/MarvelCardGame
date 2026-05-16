@@ -174,7 +174,7 @@ function renderBoard() {
   const eStagedList = document.getElementById('enemy-staged-cards');
   eStagedList.innerHTML = '';
   for (let i = 0; i < AppState.enemyStagedCount; i++) {
-    eStagedList.innerHTML += `<li class="card-back" style="transform:scale(0.6)"><div class="card-back-stamp">?</div></li>`;
+    eStagedList.innerHTML += `<li class="card-back" style="transform:scale(0.6)"><div class="card-back-stamp">M</div></li>`;
   }
 
   // Active cards

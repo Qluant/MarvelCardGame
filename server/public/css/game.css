@@ -206,8 +206,8 @@
   position: absolute;
   width: 60px;
   height: 85px;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  border: 2px solid var(--marvel-red);
+  background: repeating-linear-gradient(45deg, var(--marvel-darker), var(--marvel-darker) 5px, var(--marvel-red) 5px, var(--marvel-red) 10px);
+  border: 2px solid var(--marvel-darker);
   border-radius: 6px;
   display: flex;
   justify-content: center;
@@ -217,10 +217,17 @@
 .deck-visual::after {
   content: 'M';
   font-family: var(--font-comic);
-  font-size: 2.2rem;
-  color: rgba(255,255,255,0.1);
-  font-style: italic;
-  font-weight: 900;
+  font-size: 2rem;
+  color: var(--marvel-darker);
+  background: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-style: normal;
+  font-weight: normal;
 }
 #player-deck {
   bottom: 10px;

@@ -677,8 +677,8 @@
   position: fixed;
   width: 52px;
   height: 72px;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  border: 2px solid var(--marvel-red);
+  background: repeating-linear-gradient(45deg, var(--marvel-darker), var(--marvel-darker) 5px, var(--marvel-red) 5px, var(--marvel-red) 10px);
+  border: 2px solid var(--marvel-darker);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -686,12 +686,18 @@
   pointer-events: none;
   z-index: 9999;
   transform: translate(-50%, -50%);
-  box-shadow: 0 4px 20px rgba(230,36,41,0.5);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
 .flying-card-stamp {
   font-family: var(--font-comic);
   font-size: 1.6rem;
-  color: var(--marvel-red);
-  text-shadow: 0 0 8px var(--marvel-red-glow);
+  color: var(--marvel-darker);
+  background: white;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   user-select: none;
 }

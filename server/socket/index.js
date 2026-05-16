@@ -1,7 +1,7 @@
 /**
  * socket/index.js
  * Socket.IO initialization: creates io, attaches JWT auth middleware,
- * declares shared state (rooms, reconnectTimers), registers all handlers.
+ * declares shared state (rooms), registers all handlers.
  *
  * Exported as a factory function: (server) => void
  */
@@ -23,6 +23,7 @@ module.exports = (server) => {
 
   // ── Shared in-memory state ─────────────────────────────────────────────────
   const rooms = {};
+  const activeSockets = {}; // { [nickname]: socketId }
   const reconnectTimers = {}; // { [nickname]: { timeout, roomId, socketId, rejoinsUsed } }
 
   // ── Socket.IO Auth Middleware ──────────────────────────────────────────────
@@ -45,10 +46,27 @@ module.exports = (server) => {
   io.on('connection', (socket) => {
     console.log(`New client connected: ${socket.id}`);
 
+    const nickname = socket.user.username;
+    
+    // Tab duplication detection
+    if (activeSockets[nickname]) {
+      const oldSocketId = activeSockets[nickname];
+      io.to(oldSocketId).emit('duplicate-tab');
+      const oldSocket = io.sockets.sockets.get(oldSocketId);
+      if (oldSocket) oldSocket.disconnect(true);
+    }
+    activeSockets[nickname] = socket.id;
+
+    socket.on('disconnect', () => {
+      if (activeSockets[nickname] === socket.id) {
+        delete activeSockets[nickname];
+      }
+    });
+
     // Send current lobby state to the new client immediately
     socket.emit('rooms-update', getPublicRooms(rooms));
 
-    // Register event handlers — each file gets (io, socket, rooms, reconnectTimers)
+    // Register event handlers — each file gets (io, socket, rooms)
     require('./lobbyHandlers')(io, socket, rooms, reconnectTimers);
     require('./gameHandlers')(io, socket, rooms);
     require('./reconnectHandlers')(io, socket, rooms, reconnectTimers);

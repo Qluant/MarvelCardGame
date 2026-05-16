@@ -29,9 +29,9 @@ function setupSocketListeners() {
       AppState.inRoom = true;
       localStorage.setItem('activeGame', JSON.stringify({ roomId: room.id, nickname: AppState.currentUser.nickname }));
       AppState.gameStarted = false;
-      document.getElementById('player-avatar').src = AppState.currentUser.avatar || '/assets/images/default_avatar.png';
+      document.getElementById('player-avatar').src = AppState.currentUser.avatar || '/assets/images/avatar.jpg';
       document.getElementById('enemy-nickname').innerText = 'Opponent';
-      document.getElementById('enemy-avatar').src = '/assets/images/default_avatar.png';
+      document.getElementById('enemy-avatar').src = '/assets/images/avatar.jpg';
       AppState.playerHand = [];
       AppState.enemyHandCount = 0;
       AppState.currentRoundCount = 1;
@@ -49,7 +49,7 @@ function setupSocketListeners() {
     const opponent = room.players.find((p) => p.id !== socket.id) || room.players[0];
     if (opponent) {
       document.getElementById('enemy-nickname').innerText = opponent.nickname;
-      document.getElementById('enemy-avatar').src = opponent.avatar || '/assets/images/default_avatar.png';
+      document.getElementById('enemy-avatar').src = opponent.avatar || '/assets/images/avatar.jpg';
       if (!isReconnect) {
         AppState.enemyHandCount = 0; AppState.currentRoundCount = 1;
         AppState.playerAP = 6; AppState.playerMaxAP = 15;
@@ -94,17 +94,7 @@ function setupSocketListeners() {
   });
 
   socket.on('turn-order-change', ({ firstPlayerId, firstPlayerNickname }) => {
-    const banner = document.getElementById('turn-order-banner');
-    const textEl  = document.getElementById('turn-order-text');
-    const subEl   = document.getElementById('turn-order-sub');
-    if (!banner || !textEl) return;
-    const isMe = firstPlayerId === socket.id;
-    textEl.textContent = isMe ? '⚡ YOUR TURN FIRST' : `⚔️ ${firstPlayerNickname.toUpperCase()} FIRST`;
-    textEl.style.color = isMe ? '#2ecc71' : '#e74c3c';
-    textEl.style.textShadow = isMe ? '0 0 20px rgba(46,204,113,0.9)' : '0 0 20px rgba(231,76,60,0.9)';
-    if (subEl) subEl.textContent = isMe ? 'You go first this round!' : 'Opponent goes first this round!';
-    banner.style.display = 'flex';
-    setTimeout(() => { banner.style.display = 'none'; }, 2000);
+    // Intentionally left blank. The user requested to only keep the blue/red turn text.
   });
 
   socket.on('combat-animation', async (animData) => {
@@ -114,16 +104,18 @@ function setupSocketListeners() {
   socket.on('sync-game-state', (state) => {
     const oldPlayerHandCount = AppState.playerHand ? AppState.playerHand.length : 0;
     const oldEnemyHandCount  = AppState.enemyHandCount || 0;
+    const oldPlayerStagedCount = AppState.playerStagedCards ? AppState.playerStagedCards.length : 0;
 
     if (AppState.isMyTurn !== undefined && AppState.isMyTurn !== state.isMyTurn) {
       if (typeof hideCardInfo === 'function') hideCardInfo();
       if (state.isMyTurn === true) {
-        showTurnOverlay('Enemy Turn is over', '#e03131', 'Your Turn!', '#4dabf7');
-      } else if (state.isMyTurn === false) {
-        showTurnOverlay('Your turn is over', '#4dabf7', 'Enemy Turn', '#e03131');
-      } else {
-        showTurnOverlay('Round Ending...', '#e67e22', 'Resolving Combat', '#e67e22');
+        const preText = AppState.isMyTurn === null ? 'Next Round' : 'Enemy Turn is over';
+        showTurnOverlay(preText, '#e03131', 'Your Turn!', '#4dabf7');
+      } else if (state.isMyTurn === false && state.isMyTurn !== null) {
+        const preText = AppState.isMyTurn === null ? 'Next Round' : 'Your turn is over';
+        showTurnOverlay(preText, '#4dabf7', 'Enemy Turn', '#e03131');
       }
+      
       // Reset timer on turn change
       if (AppState.gameTimerInterval) clearInterval(AppState.gameTimerInterval);
       AppState.gameTimeLeft = 60;
@@ -168,12 +160,13 @@ function setupSocketListeners() {
     AppState.enemyStagedCount   = state.opponent.stagedCount || 0;
     document.getElementById('enemy-hp').innerText = AppState.enemyHP;
 
-    document.getElementById('player-avatar').src = (state.player.avatar) || '/assets/images/default_avatar.png';
-    document.getElementById('enemy-avatar').src  = (state.opponent.avatar) || '/assets/images/default_avatar.png';
+    document.getElementById('player-avatar').src = (state.player.avatar) || '/assets/images/avatar.jpg';
+    document.getElementById('enemy-avatar').src  = (state.opponent.avatar) || '/assets/images/avatar.jpg';
 
     const newPlayerDraws = Math.max(0, AppState.playerHand.length - oldPlayerHandCount);
     const newEnemyDraws  = Math.max(0, AppState.enemyHandCount - oldEnemyHandCount);
-    if (newPlayerDraws > 0 || newEnemyDraws > 0) {
+    const stagedDecreased = AppState.playerStagedCards.length < oldPlayerStagedCount;
+    if ((newPlayerDraws > 0 || newEnemyDraws > 0) && !stagedDecreased) {
       animateDrawCards(newPlayerDraws, newEnemyDraws);
     } else {
       renderBoard();
@@ -215,6 +208,11 @@ function setupSocketListeners() {
     AppState.inRoom = true;
     navigate('waiting');
     startWaitingTips();
+  });
+
+  socket.on('duplicate-tab', () => {
+    alert('Session duplicated in another tab. This tab will be logged out.');
+    handleLogout();
   });
 
   socket.on('error', (msg) => showNotification(msg));

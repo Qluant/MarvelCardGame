@@ -71,7 +71,7 @@ window.startCoinFlipAnimation = function (winnerNickname) {
     setTimeout(() => {
       if (winnerLabel && winnerNickname) {
         const youWon = AppState.isMyTurn;
-        winnerLabel.textContent = youWon ? '🏆 YOU go first!' : `⚔️ ${winnerNickname} goes first!`;
+        winnerLabel.textContent = '';
         winnerLabel.style.color = youWon ? '#2ecc71' : '#e74c3c';
         winnerLabel.style.textShadow = youWon ? '0 0 10px rgba(46,204,113,0.8)' : '0 0 10px rgba(231,76,60,0.8)';
         winnerLabel.style.opacity = '1';
@@ -96,8 +96,6 @@ function showTurnOverlay(firstText, firstColor, secondText, secondColor) {
 async function runCombatAnimation(animData) {
   try {
     if (typeof hideCardInfo === 'function') hideCardInfo();
-    document.getElementById('turn-overlay').style.display = 'flex';
-    document.getElementById('turn-overlay').innerHTML = '<h1 style="font-family:var(--font-comic);font-size:5rem;color:#f39c12;text-shadow:0 0 20px #000;letter-spacing:4px;animation:pulseTurn 1.5s infinite;">COMBAT!</h1>';
     if (AppState.gameTimerInterval) clearInterval(AppState.gameTimerInterval);
 
     if (animData.passiveMessages && animData.passiveMessages.length > 0) {

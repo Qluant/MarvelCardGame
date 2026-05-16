@@ -44,7 +44,7 @@ function syncGameState(io, roomId, rooms) {
 
     const state = {
       roundCount: room.roundCount || 1,
-      isMyTurn: room.currentTurn === player.id,
+      isMyTurn: room.currentTurn === null ? null : room.currentTurn === player.id,
       player: {
         nickname: player.nickname,
         avatar: player.avatar,

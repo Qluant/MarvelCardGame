@@ -9,9 +9,9 @@ function enterGame(roomId) {
 
   AppState.gameStarted = false;
   document.getElementById('enemy-nickname').innerText = 'Waiting...';
-  document.getElementById('enemy-avatar').src = '/assets/images/default_avatar.png';
+  document.getElementById('enemy-avatar').src = '/assets/images/avatar.jpg';
   document.getElementById('player-nickname').innerText = AppState.currentUser.nickname;
-  document.getElementById('player-avatar').src = AppState.currentUser.avatar || '/assets/images/default_avatar.png';
+  document.getElementById('player-avatar').src = AppState.currentUser.avatar || '/assets/images/avatar.jpg';
 
   AppState.playerHand = [];
   AppState.playerActiveCards = [];

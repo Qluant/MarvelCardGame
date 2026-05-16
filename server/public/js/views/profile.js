@@ -49,7 +49,7 @@ async function loadProfile(targetNickname) {
     if (settingsContainer) settingsContainer.style.display = 'none';
   }
 
-  document.getElementById('profile-avatar-img').src = p.avatar || '/assets/images/default_avatar.png';
+  document.getElementById('profile-avatar-img').src = p.avatar || '/assets/images/avatar.jpg';
 }
 
 async function saveSettingsToDB() {
@@ -98,7 +98,7 @@ window.saveProfileSettings = async function () {
     msgEl.style.color = '#2ecc71';
     msgEl.innerText = 'Settings saved successfully!';
     document.getElementById('profile-avatar-img').src =
-      AppState.currentUser.avatar || '/assets/images/default_avatar.png';
+      AppState.currentUser.avatar || '/assets/images/avatar.jpg';
     localStorage.setItem('user', JSON.stringify(AppState.currentUser));
   } catch (e) {
     msgEl.style.color = 'var(--marvel-red)';
