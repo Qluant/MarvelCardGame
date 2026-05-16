@@ -1,5 +1,7 @@
 USE marvel_card_game;
 
+TRUNCATE TABLE Cards;
+
 -- Iron Man is ID 1
 INSERT INTO Cards (hero_id, name, category, cost, attack, defense, description) VALUES
 (1, 'Unibeam', 'Trade', 5, 8, 0, 'A concentrated beam from the chest reactor. Maximum damage at the cost of leaving defenses completely open.'),
@@ -22,10 +24,10 @@ INSERT INTO Cards (hero_id, name, category, cost, attack, defense, description) 
 
 -- Venom is ID 3
 INSERT INTO Cards (hero_id, name, category, cost, attack, defense, description) VALUES
-(3, 'Lethal Bite', 'Trade', 3, 5, 0, 'A deadly bite with razor-sharp teeth. Pierces through almost any armor.'),
+(3, 'Lethal Bite', 'Trade', 2, 4, 0, 'A deadly bite with razor-sharp teeth. Pierces through almost any armor.'),
 (3, 'Symbiote Rage', 'Trade', 5, 7, 0, 'The symbiote goes out of control, turning into pure attacking mass.'),
 (3, 'Biomass Absorption', 'Hybrid', 2, 2, 2, 'A quick strike that morphs the symbiote to absorb the immediate kinetic feedback.'),
 (3, 'Feral Leap', 'Hybrid', 3, 3, 3, 'A heavy leaping pounce. The symbiote acts as a shock absorber during the collision.'),
 (3, 'Tendril Whip', 'Hybrid', 4, 4, 4, 'Striking with thick tendrils from a mid-range, keeping the enemy at bay while dealing damage.'),
-(3, 'Parasitic Counter', 'Hybrid', 5, 5, 5, 'A massive armored strike. The symbiote hardens perfectly just before impact.'),
-(3, 'Symbiote Clone', 'Summon', 4, 2, 7, 'Creates a full clone from excess biomass. The clone takes heavy hits and bites back aggressively.');
+(3, 'Parasitic Counter', 'Hybrid', 3, 2, 4, 'A massive armored strike. The symbiote hardens perfectly just before impact.'),
+(3, 'Symbiote Clone', 'Summon', 3, 1, 6, 'Creates a full clone from excess biomass. The clone takes heavy hits and bites back aggressively.');
