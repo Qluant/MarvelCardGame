@@ -1,0 +1,697 @@
+/* ==========================================================================
+   components.css — Reusable UI components:
+   Room list, Marvel card, Board minion, AP bubbles, Confirm modal,
+   Card preview tooltip, Hero tile/section, Notifications, Flying card token
+   ========================================================================== */
+
+/* === Lobby Room List ======================================================= */
+.room-list {
+  width: 100%;
+  max-width: 800px;
+  display: flex; 
+  flex-direction: column; 
+  gap: 20px; 
+}
+.room-list h2 {
+  font-family: var(--font-comic); 
+  font-size: 3rem; 
+  color: var(--marvel-red); 
+  text-shadow: 2px 2px 0px #000;
+ }
+.room-list > p {
+  font-size: 1.2rem;
+  font-weight: 600;
+ }
+.room-list > button {
+  align-self: flex-start;
+  padding: 8px 16px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border-radius: 4px;
+}
+.room-list > button:hover {
+  background: rgba(255,255,255,0.2);
+}
+.room-list ul {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill,
+  minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.room-item {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.room-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+  border-color: rgba(255,255,255,0.3);
+}
+.room-item span {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+.room-item button {
+  background: var(--marvel-red);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+.room-item button:hover {
+  background: #ff2a31;
+  box-shadow: 0 0 10px var(--marvel-red-glow);
+}
+
+/* === Marvel Card Component ================================================= */
+.marvel-card {
+  width: 160px;
+  height: 240px;
+  background: linear-gradient(135deg, rgba(40,40,40,1) 0%, rgba(20,20,20,1) 100%);
+  border: 2px solid var(--glass-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+.marvel-card:hover {
+  box-shadow: 0 15px 30px rgba(0,0,0,0.7), 0 0 20px var(--marvel-red-glow);
+  border-color: var(--marvel-red);
+}
+.marvel-card.unaffordable {
+  filter: brightness(0.4);
+  cursor: not-allowed;
+}
+
+.card-image-container {
+  width: 100%;
+  height: 100px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-bottom: 2px solid var(--marvel-red);
+  background: #000;
+}
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.card-cost {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  background: var(--color-summon);
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-header);
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: 2px solid var(--marvel-dark);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.8);
+  z-index: 5;
+}
+
+.card-body {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+.card-body h4 {
+  font-family: var(--font-comic);
+  font-size: 1.1rem;
+  color: var(--marvel-light);
+  text-align: center;
+  margin-bottom: 2px;
+  line-height: 1.1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.2em;
+}
+.card-category {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--marvel-grey);
+  margin-bottom: 4px;
+}
+.card-desc {
+  font-size: 0.7rem;
+  color: #ccc;
+  text-align: center;
+  line-height: 1.2;
+  font-style: italic;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-stats {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(0,0,0,0.6);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: var(--font-header);
+  font-size: 1rem;
+}
+
+/* Card back (face-down) */
+.card-back {
+  width: 140px;
+  height: 200px;
+  background: repeating-linear-gradient(45deg, var(--marvel-darker), var(--marvel-darker) 10px, var(--marvel-red) 10px, var(--marvel-red) 20px);
+  border: 2px solid var(--marvel-darker);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+.card-back-stamp {
+  font-family: var(--font-comic);
+  font-size: 4rem;
+  color: var(--marvel-darker);
+  background: white;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.active-card-slot {
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* === Board Minion (compact) ================================================ */
+.board-minion {
+  position: relative;
+  width: 72px;
+  height: 100px;
+  border-radius: 8px;
+  overflow: visible;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: #1a1a2e;
+  border: 2px solid #c8a44a;
+  box-shadow: 0 0 10px rgba(0,0,0,0.8), 0 0 5px rgba(200,164,74,0.4);
+}
+.board-minion:hover {
+  transform: scale(1.12) translateY(-8px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.8), 0 0 12px rgba(200,164,74,0.7);
+  z-index: 50;
+}
+.board-minion-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+}
+.board-minion-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.85);
+  color: white;
+  font-family: var(--font-header);
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 5px 2px;
+  border-radius: 0 0 6px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.board-minion-atk, .board-minion-def {
+  position: absolute;
+  top: -10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-header);
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: white;
+  border: 2px solid rgba(0,0,0,0.7);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.8);
+  z-index: 10;
+}
+.board-minion-atk {
+  left: -6px;
+  background: #e05a00;
+}
+.board-minion-def {
+  right: -6px;
+  background: #2ecc71;
+}
+
+/* === AP Bubbles ============================================================ */
+.ap-side-container {
+  position: absolute;
+  right: 25px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  z-index: 100;
+  pointer-events: none;
+  background: rgba(0,0,0,0.3);
+  padding: 20px 10px;
+  border-radius: 30px;
+  border: 1px solid rgba(255,255,255,0.05);
+  backdrop-filter: blur(5px);
+}
+.ap-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.ap-label {
+  font-family: var(--font-header);
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 1px;
+  font-weight: bold;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  margin-bottom: 5px;
+}
+.ap-display {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 12px;
+}
+.ap-bubbles {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+}
+.ap-bubble {
+  width: 12px;
+  height: 12px;
+  background: rgba(20,20,20,0.8);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 2px;
+  transform: rotate(45deg);
+  box-shadow: inset 0 0 4px rgba(0,0,0,1);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.ap-bubble.locked {
+  opacity: 0.2;
+  background: transparent;
+  border-color: rgba(255,255,255,0.05);
+}
+.ap-bubble.empty  {
+  background: rgba(40,40,40,0.6);
+  border-color: rgba(255,255,255,0.2);
+}
+.ap-bubble.filled {
+  background: #3498db;
+  border-color: #5dade2;
+  box-shadow: 0 0 10px rgba(52,152,219,0.8), inset 0 0 4px rgba(255,255,255,0.4);
+}
+.enemy-ap-section .ap-bubble.filled {
+  background: #e67e22;
+  border-color: #f39c12;
+  box-shadow: 0 0 10px rgba(230,126,34,0.8), inset 0 0 4px rgba(255,255,255,0.4);
+}
+.ap-text {
+  font-family: var(--font-header);
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #3498db;
+  text-align: center;
+  text-shadow: 0 0 8px rgba(52,152,219,0.5);
+  margin-top: 5px;
+}
+.enemy-ap-section .ap-text {
+  color: #e67e22;
+  text-shadow: 0 0 8px rgba(230,126,34,0.5);
+}
+
+/* === Confirmation Modal ==================================================== */
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.55);
+  z-index: 600;
+  backdrop-filter: blur(4px);
+}
+.confirm-box {
+  background: var(--glass-bg);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 16px;
+  padding: 32px 48px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+}
+.confirm-box > p {
+  font-family: var(--font-header);
+  font-size: 1.6rem;
+  color: white;
+  margin-bottom: 24px;
+}
+.confirm-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+.confirm-yes {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+  font-family: var(--font-header);
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 10px 28px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.confirm-yes:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 14px rgba(46,204,113,0.5);
+}
+.confirm-no {
+  background: rgba(255,255,255,0.1);
+  color: #ccc;
+  font-family: var(--font-header);
+  font-size: 1rem;
+  padding: 10px 28px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.confirm-no:hover {
+  background: rgba(255,255,255,0.18);
+}
+
+/* === Card Preview Tooltip ================================================== */
+.card-preview-tooltip {
+  position: fixed;
+  z-index: 9999;
+  width: 300px;
+  background: linear-gradient(160deg, rgba(28,28,28,0.98) 0%, rgba(15,15,15,0.98) 100%);
+  border: 2px solid var(--marvel-red);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 30px var(--marvel-red-glow);
+  backdrop-filter: blur(16px);
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  transform: scale(0.92) translateY(6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.card-preview-tooltip.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+.cp-image-wrap {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  border-bottom: 2px solid var(--marvel-red);
+}
+.cp-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+.cp-body {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cp-name {
+  font-family: var(--font-comic);
+  font-size: 1.4rem;
+  color: var(--marvel-light);
+  text-align: center;
+  line-height: 1.1;
+  text-shadow: 1px 1px 0 #000;
+}
+.cp-category {
+  font-size: 0.7rem;
+  font-family: var(--font-header);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: center;
+}
+.cp-desc {
+  font-size: 0.82rem;
+  color: #ddd;
+  line-height: 1.45;
+  text-align: center;
+  font-style: italic;
+}
+.cp-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-family: var(--font-header);
+  font-size: 1rem;
+}
+.cp-atk  {
+  color: #e03131;
+}
+.cp-cost {
+  color: #3498db;
+  font-size: 0.85rem;
+}
+.cp-def  {
+  color: #2ecc71;
+}
+.info-card-wrapper {
+  cursor: help;
+}
+.info-card-wrapper .marvel-card:hover {
+  transform: translateY(-4px) scale(1.03);
+}
+
+/* === Hero Tile / Section (Heroes compendium) =============================== */
+.hero-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+.hero-tile {
+  background: rgba(255,255,255,0.04);
+  border: 2px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s, background 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.hero-tile:hover {
+  border-color: var(--marvel-red);
+  background: rgba(230,36,41,0.08);
+  transform: translateY(-4px);
+}
+.hero-tile.selected {
+  border-color: var(--marvel-red);
+  background: rgba(230,36,41,0.15);
+  box-shadow: 0 0 16px var(--marvel-red-glow);
+}
+.hero-tile-name {
+  font-family: var(--font-comic);
+  font-size: 1.4rem;
+  color: var(--marvel-light);
+  letter-spacing: 1px;
+}
+.hero-tile-card-count {
+  font-size: 0.8rem;
+  color: var(--marvel-grey);
+}
+.hero-tile-ability {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+.hero-tile-ability.buff {
+  background: rgba(0,200,100,0.2);
+  color: #00c864;
+  border: 1px solid #00c864;
+}
+.hero-tile-ability.debuff {
+  background: rgba(180,0,255,0.2);
+  color: #c87eff;
+  border: 1px solid #c87eff;
+}
+.hero-tile-ability.none {
+  background: rgba(136,136,136,0.2);
+  color: var(--marvel-grey);
+  border: 1px solid var(--marvel-grey);
+}
+.hero-tile-select-btn {
+  margin-top: 8px;
+  padding: 8px 20px;
+  background: var(--marvel-red);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-family: var(--font-header);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.hero-tile-select-btn:hover {
+  opacity: 0.85;
+}
+.hero-tile-select-btn-active {
+  background: transparent !important;
+  border: 2px solid #2ecc71 !important;
+  color: #2ecc71 !important;
+}
+.hero-tile-select-btn-active:hover {
+  opacity: 1 !important;
+  background: rgba(46,204,113,0.1) !important;
+}
+
+.hero-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.hero-section-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.hero-section-meta h3 {
+  margin: 0;
+  font-family: var(--font-comic);
+  font-size: 1.6rem;
+  letter-spacing: 1px;
+}
+.hero-section { 
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+.hero-section-selected {
+  border-color: var(--marvel-red) !important;
+  box-shadow: 0 0 20px var(--marvel-red-glow);
+}
+
+/* === In-Game Notifications ================================================= */
+.in-game-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 2px solid var(--marvel-red);
+  color: white;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-family: var(--font-header);
+  font-size: 1.2rem;
+  z-index: 10000;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 15px var(--marvel-red-glow);
+  text-align: center;
+  pointer-events: none;
+  animation: notifySlideDown 0.3s cubic-bezier(0.25,0.8,0.25,1) forwards, notifyFadeOut 0.3s ease 2.7s forwards;
+}
+.in-game-notification.error {
+  border-color: #e03131;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 15px rgba(224,49,49,0.5);
+  color: #ff8787;
+}
+.in-game-notification.success {
+  border-color: #2ecc71;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 15px rgba(46,204,113,0.5);
+  color: #a9dfbf;
+}
+@keyframes notifySlideDown {
+  from { top: -50px; opacity: 0; }
+  to   { top: 20px; opacity: 1; }
+}
+@keyframes notifyFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* === Flying Card Token (deal animation) ==================================== */
+.flying-card-token {
+  position: fixed;
+  width: 52px;
+  height: 72px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border: 2px solid var(--marvel-red);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 4px 20px rgba(230,36,41,0.5);
+}
+.flying-card-stamp {
+  font-family: var(--font-comic);
+  font-size: 1.6rem;
+  color: var(--marvel-red);
+  text-shadow: 0 0 8px var(--marvel-red-glow);
+  user-select: none;
+}

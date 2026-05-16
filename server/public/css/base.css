@@ -1,0 +1,73 @@
+/* ==========================================================================
+   base.css — CSS Variables, Global Reset, Body, Typography
+   ========================================================================== */
+
+/* === Design Tokens ======================================================== */
+:root {
+  /* Marvel Color Palette */
+  --marvel-red: #E62429;
+  --marvel-red-glow: rgba(230, 36, 41, 0.6);
+  --marvel-dark: #121212;
+  --marvel-darker: #0a0a0a;
+  --marvel-light: #ffffff;
+  --marvel-grey: #888888;
+
+  /* Category Colors */
+  --color-trade:  #E62429; /* Red   */
+  --color-hybrid: #9932CC; /* Purple */
+  --color-summon: #00AEEF; /* Blue  */
+
+  /* Glassmorphism */
+  --glass-bg:     rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur:   blur(12px);
+
+  /* Typography */
+  --font-body:   'Inter', sans-serif;
+  --font-header: 'Oswald', sans-serif;
+  --font-comic:  'Bangers', cursive;
+}
+
+/* === Global Resets ========================================================= */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--marvel-darker);
+  color: var(--marvel-light);
+  min-height: 100vh;
+  /* Subtle halftone/dot pattern */
+  background-image: radial-gradient(var(--glass-border) 1px, transparent 1px);
+  background-size: 20px 20px;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-header);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+button {
+  font-family: var(--font-header);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+}
+
+input {
+  font-family: var(--font-body);
+}
+
+.app-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}

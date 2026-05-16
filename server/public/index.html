@@ -7,7 +7,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css?v=2" />
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/layout.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/game.css" />
+    <link rel="stylesheet" href="/css/auth.css" />
   </head>
   <body>
     <!-- HEADER -->
@@ -317,6 +321,25 @@
 
     <!-- SOCKET.IO -->
     <script src="/socket.io/socket.io.js"></script>
-    <script src="/js/app.js?v=3"></script>
+    <!-- Foundation -->
+    <script src="/js/state.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/router.js"></script>
+    <script src="/js/socket.js"></script>
+    <!-- Views -->
+    <script src="/js/views/auth.js"></script>
+    <script src="/js/views/top10.js"></script>
+    <script src="/js/views/profile.js"></script>
+    <script src="/js/views/heroes.js"></script>
+    <script src="/js/views/lobby.js"></script>
+    <script src="/js/views/waiting.js"></script>
+    <!-- Game -->
+    <script src="/js/game/renderer.js"></script>
+    <script src="/js/game/animation.js"></script>
+    <script src="/js/game/timer.js"></script>
+    <script src="/js/game/actions.js"></script>
+    <script src="/js/game/socketListeners.js"></script>
+    <!-- Entry point -->
+    <script src="/js/main.js"></script>
   </body>
 </html>
