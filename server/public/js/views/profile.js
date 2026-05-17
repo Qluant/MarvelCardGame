@@ -1,7 +1,8 @@
 // Profile view: load stats, render hero-stats grid, settings.
 
 async function loadProfile(targetNickname) {
-  const nicknameToLoad = targetNickname || AppState.currentUser.nickname;
+  const nicknameToLoad = targetNickname || (AppState.currentUser ? AppState.currentUser.nickname : null);
+  if (!nicknameToLoad) return;
   const { data: p } = await Api.get(`/players/${nicknameToLoad}`);
 
   document.getElementById('profile-title').innerText = `${p.nickname}'s Profile`;
@@ -40,7 +41,7 @@ async function loadProfile(targetNickname) {
   }
 
   const settingsContainer = document.getElementById('profile-settings-container');
-  if (nicknameToLoad === AppState.currentUser.nickname) {
+  if (AppState.currentUser && nicknameToLoad === AppState.currentUser.nickname) {
     if (settingsContainer) settingsContainer.style.display = 'block';
     document.getElementById('setting-confirm-end').checked = !!p.confirm_end_turn;
     document.getElementById('setting-confirm-resign').checked = !!p.confirm_resign;

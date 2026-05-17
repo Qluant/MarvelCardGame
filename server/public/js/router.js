@@ -46,8 +46,13 @@ function navigate(viewName) {
 
   // View-specific triggers
   if (viewName === 'top10') loadTop10();
-  if (viewName === 'profile' && AppState.currentUser) {
-    loadProfile(window._targetProfileNickname || AppState.currentUser.nickname);
+  if (viewName === 'profile') {
+    const nicknameToLoad = window._targetProfileNickname || (AppState.currentUser ? AppState.currentUser.nickname : null);
+    if (nicknameToLoad) {
+      loadProfile(nicknameToLoad);
+    } else {
+      return navigate('home');
+    }
     window._targetProfileNickname = null;
   }
   if (viewName === 'home') loadCharacterInfo('home-heroes-list', false);
