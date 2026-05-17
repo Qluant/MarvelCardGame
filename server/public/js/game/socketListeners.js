@@ -145,6 +145,7 @@ function setupSocketListeners() {
     }
 
     AppState.playerHP  = state.player.hp;
+    AppState.playerHeroId = state.player.heroId;
     AppState.playerAP  = state.player.ap;
     AppState.playerMaxAP = state.player.maxAp;
     AppState.playerHand  = state.player.hand || [];
@@ -153,11 +154,13 @@ function setupSocketListeners() {
     document.getElementById('player-hp').innerText = AppState.playerHP;
 
     AppState.enemyHP   = state.opponent.hp;
+    AppState.enemyHeroId = state.opponent.heroId;
     AppState.enemyAP   = state.opponent.ap;
     AppState.enemyMaxAP  = state.opponent.maxAp;
     AppState.enemyHandCount = state.opponent.handCount;
     AppState.enemyActiveCards   = state.opponent.board || [];
     AppState.enemyStagedCount   = state.opponent.stagedCount || 0;
+    AppState.enemyStagedCards   = state.opponent.stagedCards;
     document.getElementById('enemy-hp').innerText = AppState.enemyHP;
 
     document.getElementById('player-avatar').src = (state.player.avatar) || '/assets/images/avatar.jpg';

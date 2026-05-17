@@ -1,7 +1,8 @@
 // Heroes view: load hero list with cards, select hero, card preview tooltip.
 
-async function loadCharacterInfo() {
-  const list = document.getElementById('character-info-heroes-list');
+async function loadCharacterInfo(containerId = 'character-info-heroes-list', showSelect = true) {
+  const list = document.getElementById(containerId);
+  if (!list) return;
   list.innerHTML = '<p>Loading heroes...</p>';
 
   try {
@@ -22,8 +23,19 @@ async function loadCharacterInfo() {
         cardsHtml = '<p>No cards available.</p>';
       }
 
+      let btnHtml = '';
+      if (showSelect && AppState.currentUser) {
+        btnHtml = `
+            <button
+              class="hero-tile-select-btn${isSelected ? ' hero-tile-select-btn-active' : ''}"
+              id="hero-select-btn-${hero.hero_id}"
+              onclick="selectHero(${hero.hero_id}, '${hero.alias}')">
+              ${isSelected ? '✓ Your Hero' : 'Select'}
+            </button>`;
+      }
+
       list.innerHTML += `
-        <div class="hero-section glass-panel${isSelected ? ' hero-section-selected' : ''}" id="hero-section-${hero.hero_id}">
+        <div class="hero-section glass-panel${isSelected && showSelect ? ' hero-section-selected' : ''}" id="hero-section-${hero.hero_id}">
           <div class="hero-section-header">
             <div class="hero-section-meta" style="flex:1;">
               <h3 style="margin:0 0 5px 0;">${hero.alias}</h3>
@@ -31,19 +43,14 @@ async function loadCharacterInfo() {
                 <strong style="color:var(--marvel-red);">Passive:</strong> ${hero.special_ability || 'None'}
               </p>
             </div>
-            <button
-              class="hero-tile-select-btn${isSelected ? ' hero-tile-select-btn-active' : ''}"
-              id="hero-select-btn-${hero.hero_id}"
-              onclick="selectHero(${hero.hero_id}, '${hero.alias}')">
-              ${isSelected ? '✓ Your Hero' : 'Select'}
-            </button>
+            ${btnHtml}
           </div>
           <div class="hero-cards">${cardsHtml}</div>
         </div>
       `;
     });
 
-    initCardPreview();
+    initCardPreview(list);
   } catch (err) {
     list.innerHTML = '<p>Failed to load heroes.</p>';
   }
@@ -73,7 +80,7 @@ window.selectHero = async function (heroId, heroAlias) {
   }
 };
 
-function initCardPreview() {
+function initCardPreview(list) {
   let tooltip = document.getElementById('card-preview-tooltip');
   if (!tooltip) {
     tooltip = document.createElement('div');
@@ -82,8 +89,8 @@ function initCardPreview() {
     document.body.appendChild(tooltip);
   }
 
-  const list = document.getElementById('character-info-heroes-list');
-  if (!list) return;
+  if (!list || list.dataset.previewInit) return;
+  list.dataset.previewInit = 'true';
 
   list.addEventListener('mouseenter', (e) => {
     const wrapper = e.target.closest('.info-card-wrapper');

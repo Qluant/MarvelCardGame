@@ -34,17 +34,22 @@ function animateDrawCards(playerCount, enemyCount) {
   const getCenter = (elId) => { const el = document.getElementById(elId); if (el) { const r = el.getBoundingClientRect(); return { x: r.left + r.width/2, y: r.top + r.height/2 }; } return { x: window.innerWidth/2, y: window.innerHeight/2 }; };
   const pDeckPos = getCenter('player-deck'), eDeckPos = getCenter('enemy-deck');
   const playerRect = playerZone.getBoundingClientRect(), enemyRect = enemyZone.getBoundingClientRect();
+  
+  const getCbClass = (heroId) => heroId === 1 ? ' card-back-ironman' : heroId === 2 ? ' card-back-torch' : heroId === 3 ? ' card-back-venom' : '';
+  const pCbClass = getCbClass(AppState.playerHeroId);
+  const eCbClass = getCbClass(AppState.enemyHeroId);
+
   let totalToLand = playerCount + enemyCount;
   if (totalToLand === 0) { renderBoard(); return; }
   let landed = 0;
   const done = () => { if (++landed === totalToLand) renderBoard(); };
-  for (let i = 0; i < playerCount; i++) spawnFlyingCard(pDeckPos, { x: playerRect.left + (playerRect.width/Math.max(playerCount,1))*i+50, y: playerRect.top+playerRect.height/2 }, i*CARD_DELAY, DEAL_DURATION, done);
-  for (let i = 0; i < enemyCount; i++) spawnFlyingCard(eDeckPos, { x: enemyRect.left + (enemyRect.width/Math.max(enemyCount,1))*i+50, y: enemyRect.top+enemyRect.height/2 }, (i+playerCount)*CARD_DELAY, DEAL_DURATION, done);
+  for (let i = 0; i < playerCount; i++) spawnFlyingCard(pDeckPos, { x: playerRect.left + (playerRect.width/Math.max(playerCount,1))*i+50, y: playerRect.top+playerRect.height/2 }, i*CARD_DELAY, DEAL_DURATION, pCbClass, done);
+  for (let i = 0; i < enemyCount; i++) spawnFlyingCard(eDeckPos, { x: enemyRect.left + (enemyRect.width/Math.max(enemyCount,1))*i+50, y: enemyRect.top+enemyRect.height/2 }, (i+playerCount)*CARD_DELAY, DEAL_DURATION, eCbClass, done);
 }
 
-function spawnFlyingCard(from, to, cardDelay, duration, onDone) {
+function spawnFlyingCard(from, to, cardDelay, duration, cbClass, onDone) {
   const el = document.createElement('div');
-  el.className = 'flying-card-token';
+  el.className = 'flying-card-token' + cbClass;
   el.innerHTML = '<div class="flying-card-stamp">M</div>';
   Object.assign(el.style, { left: from.x+'px', top: from.y+'px' });
   document.body.appendChild(el);

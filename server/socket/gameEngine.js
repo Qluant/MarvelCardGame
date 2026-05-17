@@ -48,6 +48,7 @@ function syncGameState(io, roomId, rooms) {
       player: {
         nickname: player.nickname,
         avatar: player.avatar,
+        heroId: player.heroId,
         hp: player.hp,
         ap: player.ap,
         maxAp: player.maxAp,
@@ -59,12 +60,14 @@ function syncGameState(io, roomId, rooms) {
       opponent: {
         nickname: opponent.nickname,
         avatar: opponent.avatar,
+        heroId: opponent.heroId,
         hp: opponent.hp,
         ap: opponent.ap,
         maxAp: opponent.maxAp,
         handCount: opponent.hand ? opponent.hand.length : 0,
         board: opponent.board,
         stagedCount: opponent.stagedCards ? opponent.stagedCards.length : 0,
+        stagedCards: room.currentTurn === null ? opponent.stagedCards : undefined,
       },
     };
 

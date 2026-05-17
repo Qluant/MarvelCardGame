@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateHeaderAuth();
 
   if (!AppState.currentUser) {
-    navigate('login');
+    navigate('home');
     return;
   }
 

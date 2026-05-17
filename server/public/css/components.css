@@ -192,6 +192,18 @@
   justify-content: center;
   box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
+.card-back-ironman {
+  background: repeating-linear-gradient(45deg, #0a3d62, #0a3d62 10px, #c23616 10px, #c23616 20px);
+  border-color: #0a3d62;
+}
+.card-back-torch {
+  background: repeating-linear-gradient(45deg, #d35400, #d35400 10px, #f39c12 10px, #f39c12 20px);
+  border-color: #d35400;
+}
+.card-back-venom {
+  background: repeating-linear-gradient(45deg, #1a1a1a, #1a1a1a 15px, #f5f6fa 15px, #f5f6fa 20px);
+  border-color: #1a1a1a;
+}
 .card-back-stamp {
   font-family: var(--font-comic);
   font-size: 4rem;

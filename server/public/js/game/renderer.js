@@ -156,6 +156,16 @@ function renderBoard() {
   });
 
   // Enemy hand (face-down)
+  const getCbClass = (heroId) => heroId === 1 ? ' card-back-ironman' : heroId === 2 ? ' card-back-torch' : heroId === 3 ? ' card-back-venom' : '';
+  const playerCbClass = getCbClass(AppState.playerHeroId);
+  const enemyCbClass = getCbClass(AppState.enemyHeroId);
+
+  const pDeck = document.getElementById('player-deck');
+  if (pDeck) pDeck.className = 'deck-visual' + playerCbClass;
+
+  const eDeck = document.getElementById('enemy-deck');
+  if (eDeck) eDeck.className = 'deck-visual' + enemyCbClass;
+
   const eHandList = document.getElementById('enemy-hand-list');
   eHandList.innerHTML = '';
   for (let i = 0; i < AppState.enemyHandCount; i++) {
@@ -165,16 +175,26 @@ function renderBoard() {
     const translateY = Math.abs(offset) * -12;
     const translateX = offset * 40;
     eHandList.innerHTML += `
-      <li class="card-back" style="transform:translateX(${translateX}px) translateY(${translateY}px) rotate(${rotate}deg) scale(0.7)">
+      <li class="card-back${enemyCbClass}" style="transform:translateX(${translateX}px) translateY(${translateY}px) rotate(${rotate}deg) scale(0.7)">
         <div class="card-back-stamp">M</div>
       </li>`;
   }
 
-  // Enemy staged (face-down)
+  // Enemy staged (face-down, or face-up if combat phase)
   const eStagedList = document.getElementById('enemy-staged-cards');
   eStagedList.innerHTML = '';
-  for (let i = 0; i < AppState.enemyStagedCount; i++) {
-    eStagedList.innerHTML += `<li class="card-back" style="transform:scale(0.6)"><div class="card-back-stamp">M</div></li>`;
+  if (AppState.enemyStagedCards && AppState.enemyStagedCards.length > 0) {
+    AppState.enemyStagedCards.forEach((c) => {
+      if (c.category === 'Summon') {
+        eStagedList.innerHTML += `<li class="card-back${enemyCbClass}" style="transform:scale(0.6)"><div class="card-back-stamp">M</div></li>`;
+      } else {
+        eStagedList.innerHTML += `<li class="active-card-slot" style="transform:scale(0.9)">${renderBoardCard(c, false)}</li>`;
+      }
+    });
+  } else {
+    for (let i = 0; i < AppState.enemyStagedCount; i++) {
+      eStagedList.innerHTML += `<li class="card-back${enemyCbClass}" style="transform:scale(0.6)"><div class="card-back-stamp">M</div></li>`;
+    }
   }
 
   // Active cards

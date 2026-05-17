@@ -7,11 +7,15 @@ function updateHeaderAuth() {
     document.getElementById('nav-profile').style.display = 'inline';
     document.getElementById('nav-login').style.display = 'none';
     document.getElementById('nav-logout').style.display = 'inline';
+    const navHome = document.getElementById('nav-home');
+    if(navHome) navHome.style.display = 'none';
     document.getElementById('nav-profile').innerText = `Profile (${AppState.currentUser.nickname})`;
   } else {
     document.getElementById('nav-profile').style.display = 'none';
     document.getElementById('nav-login').style.display = 'inline';
     document.getElementById('nav-logout').style.display = 'none';
+    const navHome = document.getElementById('nav-home');
+    if(navHome) navHome.style.display = 'inline';
   }
 }
 
@@ -46,7 +50,8 @@ function navigate(viewName) {
     loadProfile(window._targetProfileNickname || AppState.currentUser.nickname);
     window._targetProfileNickname = null;
   }
-  if (viewName === 'character-info') loadCharacterInfo();
+  if (viewName === 'home') loadCharacterInfo('home-heroes-list', false);
+  if (viewName === 'character-info') loadCharacterInfo('character-info-heroes-list', true);
   if (viewName === 'lobby') {
     if (!AppState.currentUser) return navigate('login');
     AppState.socket.emit('get-rooms');
