@@ -79,6 +79,8 @@ function setupSocketListeners() {
           }
         }
       };
+      AppState.playerHeroId = me.heroId;
+      AppState.enemyHeroId = opponent.heroId;
       applyHeroBg(document.getElementById('hero-bg-player'), me.heroId);
       applyHeroBg(document.getElementById('hero-bg-enemy'), opponent.heroId);
       renderBoard();

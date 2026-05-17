@@ -241,23 +241,23 @@
 }
 
 .deck-visual.card-back-ironman {
-  background: repeating-linear-gradient(45deg, #0a3d62, #0a3d62 10px, #f1c40f 10px, #f1c40f 20px);
-  border-color: #0a3d62;
+  background: repeating-linear-gradient(45deg, #e62429, #e62429 10px, #f1c40f 10px, #f1c40f 20px);
+  border-color: #e62429;
 }
 .deck-visual.card-back-torch {
-  background: repeating-linear-gradient(45deg, #d35400, #d35400 10px, #f39c12 10px, #f39c12 20px);
-  border-color: #d35400;
+  background: repeating-linear-gradient(45deg, #ffeb3b, #ffeb3b 10px, #f39c12 10px, #f39c12 20px);
+  border-color: #ffeb3b;
 }
 .deck-visual.card-back-venom {
   background: repeating-linear-gradient(45deg, #1a1a1a, #1a1a1a 15px, #f5f6fa 15px, #f5f6fa 20px);
   border-color: #1a1a1a;
 }
 
-#player-deck.card-back-ironman { box-shadow: -2px -2px 0 #0a3d62, -4px -4px 0 #f1c40f, -6px -6px 0 #0a3d62, -8px -8px 0 #f1c40f, -10px -10px 0 #0a3d62, -15px -15px 15px rgba(0,0,0,0.8); }
-#enemy-deck.card-back-ironman { box-shadow: 2px 2px 0 #0a3d62, 4px 4px 0 #f1c40f, 6px 6px 0 #0a3d62, 8px 8px 0 #f1c40f, 10px 10px 0 #0a3d62, 15px 15px 15px rgba(0,0,0,0.8); }
+#player-deck.card-back-ironman { box-shadow: -2px -2px 0 #e62429, -4px -4px 0 #f1c40f, -6px -6px 0 #e62429, -8px -8px 0 #f1c40f, -10px -10px 0 #e62429, -15px -15px 15px rgba(0,0,0,0.8); }
+#enemy-deck.card-back-ironman { box-shadow: 2px 2px 0 #e62429, 4px 4px 0 #f1c40f, 6px 6px 0 #e62429, 8px 8px 0 #f1c40f, 10px 10px 0 #e62429, 15px 15px 15px rgba(0,0,0,0.8); }
 
-#player-deck.card-back-torch { box-shadow: -2px -2px 0 #d35400, -4px -4px 0 #f39c12, -6px -6px 0 #d35400, -8px -8px 0 #f39c12, -10px -10px 0 #d35400, -15px -15px 15px rgba(0,0,0,0.8); }
-#enemy-deck.card-back-torch { box-shadow: 2px 2px 0 #d35400, 4px 4px 0 #f39c12, 6px 6px 0 #d35400, 8px 8px 0 #f39c12, 10px 10px 0 #d35400, 15px 15px 15px rgba(0,0,0,0.8); }
+#player-deck.card-back-torch { box-shadow: -2px -2px 0 #ffeb3b, -4px -4px 0 #f39c12, -6px -6px 0 #ffeb3b, -8px -8px 0 #f39c12, -10px -10px 0 #ffeb3b, -15px -15px 15px rgba(0,0,0,0.8); }
+#enemy-deck.card-back-torch { box-shadow: 2px 2px 0 #ffeb3b, 4px 4px 0 #f39c12, 6px 6px 0 #ffeb3b, 8px 8px 0 #f39c12, 10px 10px 0 #ffeb3b, 15px 15px 15px rgba(0,0,0,0.8); }
 
 #player-deck.card-back-venom { box-shadow: -2px -2px 0 #1a1a1a, -4px -4px 0 #f5f6fa, -6px -6px 0 #1a1a1a, -8px -8px 0 #f5f6fa, -10px -10px 0 #1a1a1a, -15px -15px 15px rgba(0,0,0,0.8); }
 #enemy-deck.card-back-venom { box-shadow: 2px 2px 0 #1a1a1a, 4px 4px 0 #f5f6fa, 6px 6px 0 #1a1a1a, 8px 8px 0 #f5f6fa, 10px 10px 0 #1a1a1a, 15px 15px 15px rgba(0,0,0,0.8); }

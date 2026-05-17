@@ -16,6 +16,7 @@ const AppState = {
   currentRoundCount: 1,
 
   // Player state (authoritative from server)
+  playerHeroId: null,
   playerHand: [],
   playerActiveCards: [],
   playerStagedCards: [],
@@ -24,6 +25,7 @@ const AppState = {
   playerMaxAP: 15,
 
   // Enemy state
+  enemyHeroId: null,
   enemyActiveCards: [],
   enemyHandCount: 0,
   enemyStagedCount: 0,

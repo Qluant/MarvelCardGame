@@ -79,6 +79,8 @@ function exitRoom() {
   AppState.enemyActiveCards = [];
   AppState.enemyHandCount = 0;
   AppState.enemyStagedCount = 0;
+  AppState.playerHeroId = null;
+  AppState.enemyHeroId = null;
 
   // Clear hero backgrounds
   const playerBg = document.getElementById('hero-bg-player');
