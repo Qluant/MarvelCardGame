@@ -193,8 +193,8 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
 .card-back-ironman {
-  background: repeating-linear-gradient(45deg, #0a3d62, #0a3d62 10px, #f1c40f 10px, #f1c40f 20px);
-  border-color: #0a3d62;
+  background: repeating-linear-gradient(45deg, #e62429, #e62429 10px, #f1c40f 10px, #f1c40f 20px);
+  border-color: #e62429;
 }
 .card-back-torch {
   background: repeating-linear-gradient(45deg, #d35400, #d35400 10px, #f39c12 10px, #f39c12 20px);
