@@ -1,4 +1,26 @@
-require('dotenv').config();
+// Load .env natively — no external dependencies needed
+const fs   = require('fs');
+const path = require('path');
+
+const envPath = path.resolve(__dirname, '../.env');
+if (fs.existsSync(envPath)) {
+  fs.readFileSync(envPath, 'utf-8')
+    .split(/\r?\n/)
+    .forEach((line) => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) return;
+      const eqIndex = trimmed.indexOf('=');
+      if (eqIndex === -1) return;
+      const key = trimmed.slice(0, eqIndex).trim();
+      let   val = trimmed.slice(eqIndex + 1).trim();
+      if (/^["']/.test(val) && val[0] === val[val.length - 1]) {
+        val = val.slice(1, -1);
+      }
+      if (process.env[key] === undefined) {
+        process.env[key] = val;
+      }
+    });
+}
 
 // Fail fast: check required env vars at startup
 const required = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'JWT_SECRET'];
@@ -17,7 +39,6 @@ module.exports = {
   },
   jwt: {
     secret: process.env.JWT_SECRET,
-    expiresIn: '24h',
   },
   port: parseInt(process.env.PORT, 10) || 3000,
   clientOrigin: process.env.CLIENT_ORIGIN || `http://localhost:${process.env.PORT || 3000}`,

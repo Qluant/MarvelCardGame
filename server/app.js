@@ -7,17 +7,22 @@
  */
 
 const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const config = require('./config');
+const path    = require('path');
+const config  = require('./config');
 
 const app = express();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-app.use(cors({
-  origin: config.clientOrigin,
-  methods: ['GET', 'POST', 'PUT'],
-}));
+// Native CORS headers — replaces the 'cors' npm package
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin',  config.clientOrigin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 

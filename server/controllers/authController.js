@@ -5,13 +5,10 @@
  * No SQL here — only model calls.
  */
 
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const { hashPassword, verifyPassword, signJwt } = require('../utils/cryptoHelper');
 const config = require('../config');
 const Player = require('../models/Player');
 const { validateNickname, validatePassword } = require('../utils/validate');
-
-const SALT_ROUNDS = 10;
 
 const authController = {
   /**
@@ -40,7 +37,7 @@ const authController = {
     }
 
     // 4. Hash password and create player
-    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+    const passwordHash = await hashPassword(password);
     const { insertId } = await Player.create({ nickname: username, passwordHash });
 
     res.status(201).json({ message: 'User registered successfully', userId: insertId });
@@ -65,16 +62,15 @@ const authController = {
     }
 
     // 3. Verify password
-    const isValid = await bcrypt.compare(password, user.password);
+    const isValid = await verifyPassword(password, user.password);
     if (!isValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // 4. Sign JWT
-    const token = jwt.sign(
+    // 4. Sign JWT (24 hours = 86400 seconds)
+    const token = signJwt(
       { userId: user.player_id, username: user.nickname },
-      config.jwt.secret,
-      { expiresIn: config.jwt.expiresIn }
+      config.jwt.secret
     );
 
     res.json({ message: 'Login successful', token });

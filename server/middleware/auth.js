@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+const { verifyJwt } = require('../utils/cryptoHelper');
 const config = require('../config');
 
 /**
@@ -18,7 +18,7 @@ function authMiddleware(req, res, next) {
 
   const token = authHeader.slice(7); // strip "Bearer "
   try {
-    const payload = jwt.verify(token, config.jwt.secret);
+    const payload = verifyJwt(token, config.jwt.secret);
     req.user = payload; // { userId, username }
     next();
   } catch (err) {

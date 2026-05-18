@@ -6,7 +6,7 @@
  * Exported as a factory function: (server) => void
  */
 
-const jwt = require('jsonwebtoken');
+const { verifyJwt } = require('../utils/cryptoHelper');
 const config = require('../config');
 const { getPublicRooms } = require('./gameEngine');
 
@@ -34,7 +34,7 @@ module.exports = (server) => {
       return next(new Error('Authentication required'));
     }
     try {
-      const payload = jwt.verify(token, config.jwt.secret);
+      const payload = verifyJwt(token, config.jwt.secret);
       socket.user = payload; // { userId, username } — available in all handlers
       next();
     } catch {
