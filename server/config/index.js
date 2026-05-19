@@ -1,5 +1,4 @@
-// Load .env natively — no external dependencies needed
-const fs   = require('fs');
+const fs = require('fs');
 const path = require('path');
 
 const envPath = path.resolve(__dirname, '../.env');
@@ -12,7 +11,7 @@ if (fs.existsSync(envPath)) {
       const eqIndex = trimmed.indexOf('=');
       if (eqIndex === -1) return;
       const key = trimmed.slice(0, eqIndex).trim();
-      let   val = trimmed.slice(eqIndex + 1).trim();
+      let val = trimmed.slice(eqIndex + 1).trim();
       if (/^["']/.test(val) && val[0] === val[val.length - 1]) {
         val = val.slice(1, -1);
       }
@@ -22,7 +21,6 @@ if (fs.existsSync(envPath)) {
     });
 }
 
-// Fail fast: check required env vars at startup
 const required = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'JWT_SECRET'];
 required.forEach((key) => {
   if (!process.env[key]) {

@@ -1,73 +1,58 @@
-/**
- * controllers/authController.js
- * Handles registration and login.
- * Validates input → calls Player model → returns HTTP response.
- * No SQL here — only model calls.
- */
-
 const { hashPassword, verifyPassword, signJwt } = require('../utils/cryptoHelper');
 const config = require('../config');
 const Player = require('../models/Player');
 const { validateNickname, validatePassword } = require('../utils/validate');
 
 const authController = {
-  /**
-   * POST /api/auth/register
-   * Body: { username, password }
-   */
   async register(req, res, next) {
     const { username, password } = req.body;
 
-    // 1. Validate nickname
+    // Validate nickname
     const nickCheck = validateNickname(username);
     if (!nickCheck.valid) {
       return res.status(400).json({ error: nickCheck.message });
     }
 
-    // 2. Validate password
+    // Validate password
     const passCheck = validatePassword(password);
     if (!passCheck.valid) {
       return res.status(400).json({ error: passCheck.message });
     }
 
-    // 3. Check uniqueness
+    // Check uniqueness
     const existing = await Player.findByNickname(username);
     if (existing) {
       return res.status(409).json({ error: 'Username already taken' });
     }
 
-    // 4. Hash password and create player
+    // Hash password and create player
     const passwordHash = await hashPassword(password);
     const { insertId } = await Player.create({ nickname: username, passwordHash });
 
     res.status(201).json({ message: 'User registered successfully', userId: insertId });
   },
 
-  /**
-   * POST /api/auth/login
-   * Body: { username, password }
-   */
   async login(req, res, next) {
     const { username, password } = req.body;
 
-    // 1. Basic presence check (full validation would leak info via different 400 messages)
+    // Basic presence check
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    // 2. Find player — same 401 for "not found" and "wrong password" (security: no enumeration)
+    // Find player — same 401 for "not found" and "wrong password"
     const user = await Player.findByNickname(username);
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // 3. Verify password
+    // Verify password
     const isValid = await verifyPassword(password, user.password);
     if (!isValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // 4. Sign JWT (24 hours = 86400 seconds)
+    // Sign JWT (24 hours = 86400 seconds)
     const token = signJwt(
       { userId: user.player_id, username: user.nickname },
       config.jwt.secret

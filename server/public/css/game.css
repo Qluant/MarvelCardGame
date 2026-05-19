@@ -1,4 +1,3 @@
-/* === Board Shell =========================================================== */
 .board {
   position: fixed;
   top: 0;
@@ -13,11 +12,12 @@
   z-index: 10;
   background-color: #000;
 }
-.board > .leave-btn {
+
+.board>.leave-btn {
   position: absolute;
   bottom: 20px;
   left: 20px;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
   color: white;
   padding: 8px 16px;
   border-radius: 4px;
@@ -45,11 +45,10 @@
   color: #fff;
   text-transform: uppercase;
   letter-spacing: 2px;
-  text-shadow: 0 0 8px rgba(0,0,0,0.8), 0 0 4px var(--marvel-red);
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8), 0 0 4px var(--marvel-red);
   z-index: 100;
 }
 
-/* === End Turn Button ======================================================= */
 .end-turn-btn {
   position: absolute;
   top: 80px;
@@ -64,13 +63,13 @@
   border-radius: 8px;
   cursor: pointer;
   z-index: 100;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.5), 0 0 8px rgba(46,204,113,0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 8px rgba(46, 204, 113, 0.4);
   transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
 }
 
 .end-turn-btn:hover:not(:disabled) {
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.6), 0 0 14px rgba(46,204,113,0.6);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 0 14px rgba(46, 204, 113, 0.6);
 }
 
 .end-turn-btn:active:not(:disabled) {
@@ -78,13 +77,12 @@
 }
 
 .end-turn-btn.ready {
-  background: rgba(46,204,113,0.2);
+  background: rgba(46, 204, 113, 0.2);
   color: #2ecc71;
   border-color: #2ecc71;
-  box-shadow: 0 0 15px rgba(46,204,113,0.4);
+  box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
 }
 
-/* === Turn Overlay ========================================================== */
 .turn-overlay {
   position: fixed;
   inset: 0;
@@ -93,34 +91,42 @@
   justify-content: center;
   z-index: 500;
   pointer-events: none;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0, 0, 0, 0.35);
   animation: overlayFadeIn 0.3s ease;
 }
+
 @keyframes overlayFadeIn {
-   from { opacity: 0; }
-   to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .overlay-text {
   font-family: var(--font-header);
   font-size: 3.5rem;
   font-weight: bold;
-  text-shadow: 0 0 30px currentColor, 0 4px 12px rgba(0,0,0,0.9);
-  animation: overlayPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  text-shadow: 0 0 30px currentColor, 0 4px 12px rgba(0, 0, 0, 0.9);
+  animation: overlayPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   letter-spacing: 2px;
   text-transform: uppercase;
 }
+
 @keyframes overlayPop {
   from {
     transform: scale(0.5);
     opacity: 0;
-  } to {
+  }
+
+  to {
     transform: scale(1);
     opacity: 1;
   }
 }
 
-/* === Turn Indicator (divider pill) ======================================== */
 .turn-indicator {
   position: relative;
   z-index: 10;
@@ -135,30 +141,37 @@
   transition: background 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
   white-space: nowrap;
 }
+
 .turn-indicator.waiting {
-  background: rgba(80,80,80,0.8);
+  background: rgba(80, 80, 80, 0.8);
   color: #aaa;
-  border-color: rgba(150,150,150,0.3);
+  border-color: rgba(150, 150, 150, 0.3);
 }
+
 .turn-indicator.my-turn {
-  background: rgba(10,60,120,0.9);
+  background: rgba(10, 60, 120, 0.9);
   color: #74c0fc;
   border-color: #4dabf7;
-  box-shadow: 0 0 16px rgba(77,171,247,0.6);
+  box-shadow: 0 0 16px rgba(77, 171, 247, 0.6);
   animation: pulseTurn 1.5s ease-in-out infinite;
 }
+
 .turn-indicator.enemy-turn {
-  background: rgba(100,10,10,0.9);
+  background: rgba(100, 10, 10, 0.9);
   color: #ff8787;
   border-color: #e03131;
-  box-shadow: 0 0 16px rgba(224,49,49,0.5);
+  box-shadow: 0 0 16px rgba(224, 49, 49, 0.5);
 }
+
 @keyframes pulseTurn {
-  0%, 100% {
-    box-shadow: 0 0 16px rgba(77,171,247,0.6);
+
+  0%,
+  100% {
+    box-shadow: 0 0 16px rgba(77, 171, 247, 0.6);
   }
+
   50% {
-    box-shadow: 0 0 28px rgba(77,171,247,1);
+    box-shadow: 0 0 28px rgba(77, 171, 247, 1);
   }
 }
 
@@ -166,14 +179,14 @@
   opacity: 0.55;
   cursor: not-allowed;
 }
+
 .hand-slot.no-play .marvel-card {
   cursor: not-allowed;
   pointer-events: none;
 }
 
-/* === Player / Enemy Zones ================================================== */
 .player-zone,
-.enemy-zone { 
+.enemy-zone {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -183,18 +196,22 @@
   height: 150px;
   flex-shrink: 0;
 }
+
 .player-zone {
   justify-content: flex-start;
 }
+
 .player-zone .hero-portrait-container {
   position: absolute;
   bottom: 10px;
   right: 120px;
   z-index: 40;
 }
+
 .enemy-zone {
   justify-content: flex-end;
 }
+
 .enemy-zone .hero-portrait-container {
   position: absolute;
   top: 10px;
@@ -214,6 +231,7 @@
   align-items: center;
   z-index: 20;
 }
+
 .deck-visual::after {
   content: 'M';
   font-family: var(--font-comic);
@@ -229,38 +247,57 @@
   font-style: normal;
   font-weight: normal;
 }
+
 #player-deck {
   bottom: 10px;
   left: 120px;
-  box-shadow: -2px -2px 0 #111, -4px -4px 0 var(--marvel-red), -6px -6px 0 #111, -8px -8px 0 var(--marvel-red), -10px -10px 0 #111, -15px -15px 15px rgba(0,0,0,0.8);
+  box-shadow: -2px -2px 0 #111, -4px -4px 0 var(--marvel-red), -6px -6px 0 #111, -8px -8px 0 var(--marvel-red), -10px -10px 0 #111, -15px -15px 15px rgba(0, 0, 0, 0.8);
 }
+
 #enemy-deck {
   top: 10px;
   right: 120px;
-  box-shadow: 2px 2px 0 #111, 4px 4px 0 var(--marvel-red), 6px 6px 0 #111, 8px 8px 0 var(--marvel-red), 10px 10px 0 #111, 15px 15px 15px rgba(0,0,0,0.8);
+  box-shadow: 2px 2px 0 #111, 4px 4px 0 var(--marvel-red), 6px 6px 0 #111, 8px 8px 0 var(--marvel-red), 10px 10px 0 #111, 15px 15px 15px rgba(0, 0, 0, 0.8);
 }
 
 .deck-visual.card-back-ironman {
   background: repeating-linear-gradient(45deg, #e62429, #e62429 10px, #f1c40f 10px, #f1c40f 20px);
   border-color: #e62429;
 }
+
 .deck-visual.card-back-torch {
   background: repeating-linear-gradient(45deg, #ffeb3b, #ffeb3b 10px, #f39c12 10px, #f39c12 20px);
   border-color: #ffeb3b;
 }
+
 .deck-visual.card-back-venom {
   background: repeating-linear-gradient(45deg, #1a1a1a, #1a1a1a 15px, #f5f6fa 15px, #f5f6fa 20px);
   border-color: #1a1a1a;
 }
 
-#player-deck.card-back-ironman { box-shadow: -2px -2px 0 #e62429, -4px -4px 0 #f1c40f, -6px -6px 0 #e62429, -8px -8px 0 #f1c40f, -10px -10px 0 #e62429, -15px -15px 15px rgba(0,0,0,0.8); }
-#enemy-deck.card-back-ironman { box-shadow: 2px 2px 0 #e62429, 4px 4px 0 #f1c40f, 6px 6px 0 #e62429, 8px 8px 0 #f1c40f, 10px 10px 0 #e62429, 15px 15px 15px rgba(0,0,0,0.8); }
+#player-deck.card-back-ironman {
+  box-shadow: -2px -2px 0 #e62429, -4px -4px 0 #f1c40f, -6px -6px 0 #e62429, -8px -8px 0 #f1c40f, -10px -10px 0 #e62429, -15px -15px 15px rgba(0, 0, 0, 0.8);
+}
 
-#player-deck.card-back-torch { box-shadow: -2px -2px 0 #ffeb3b, -4px -4px 0 #f39c12, -6px -6px 0 #ffeb3b, -8px -8px 0 #f39c12, -10px -10px 0 #ffeb3b, -15px -15px 15px rgba(0,0,0,0.8); }
-#enemy-deck.card-back-torch { box-shadow: 2px 2px 0 #ffeb3b, 4px 4px 0 #f39c12, 6px 6px 0 #ffeb3b, 8px 8px 0 #f39c12, 10px 10px 0 #ffeb3b, 15px 15px 15px rgba(0,0,0,0.8); }
+#enemy-deck.card-back-ironman {
+  box-shadow: 2px 2px 0 #e62429, 4px 4px 0 #f1c40f, 6px 6px 0 #e62429, 8px 8px 0 #f1c40f, 10px 10px 0 #e62429, 15px 15px 15px rgba(0, 0, 0, 0.8);
+}
 
-#player-deck.card-back-venom { box-shadow: -2px -2px 0 #1a1a1a, -4px -4px 0 #f5f6fa, -6px -6px 0 #1a1a1a, -8px -8px 0 #f5f6fa, -10px -10px 0 #1a1a1a, -15px -15px 15px rgba(0,0,0,0.8); }
-#enemy-deck.card-back-venom { box-shadow: 2px 2px 0 #1a1a1a, 4px 4px 0 #f5f6fa, 6px 6px 0 #1a1a1a, 8px 8px 0 #f5f6fa, 10px 10px 0 #1a1a1a, 15px 15px 15px rgba(0,0,0,0.8); }
+#player-deck.card-back-torch {
+  box-shadow: -2px -2px 0 #ffeb3b, -4px -4px 0 #f39c12, -6px -6px 0 #ffeb3b, -8px -8px 0 #f39c12, -10px -10px 0 #ffeb3b, -15px -15px 15px rgba(0, 0, 0, 0.8);
+}
+
+#enemy-deck.card-back-torch {
+  box-shadow: 2px 2px 0 #ffeb3b, 4px 4px 0 #f39c12, 6px 6px 0 #ffeb3b, 8px 8px 0 #f39c12, 10px 10px 0 #ffeb3b, 15px 15px 15px rgba(0, 0, 0, 0.8);
+}
+
+#player-deck.card-back-venom {
+  box-shadow: -2px -2px 0 #1a1a1a, -4px -4px 0 #f5f6fa, -6px -6px 0 #1a1a1a, -8px -8px 0 #f5f6fa, -10px -10px 0 #1a1a1a, -15px -15px 15px rgba(0, 0, 0, 0.8);
+}
+
+#enemy-deck.card-back-venom {
+  box-shadow: 2px 2px 0 #1a1a1a, 4px 4px 0 #f5f6fa, 6px 6px 0 #1a1a1a, 8px 8px 0 #f5f6fa, 10px 10px 0 #1a1a1a, 15px 15px 15px rgba(0, 0, 0, 0.8);
+}
 
 .hero-portrait-container {
   position: relative;
@@ -269,16 +306,18 @@
   align-items: center;
   z-index: 20;
 }
+
 .hero-avatar {
   width: 75px;
   height: 75px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid var(--marvel-darker);
-  box-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 10px var(--marvel-red-glow);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), 0 0 10px var(--marvel-red-glow);
   background: #222;
   flex-shrink: 0;
 }
+
 .hero-hp {
   position: absolute;
   bottom: -4px;
@@ -295,77 +334,87 @@
   font-size: 1.2rem;
   font-weight: bold;
   border: 3px solid var(--marvel-darker);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
   z-index: 50;
 }
+
 .hero-name {
   margin-top: 10px;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   padding: 4px 12px;
   border-radius: 12px;
   font-size: 1rem;
   white-space: nowrap;
 }
 
-/* === Hand Fans ============================================================= */
 .player-hand,
-.enemy-hand { 
+.enemy-hand {
   position: absolute;
   width: 100%;
   display: flex;
   justify-content: center;
   pointer-events: none;
 }
-.player-hand { 
+
+.player-hand {
   bottom: -50px;
   z-index: 30;
 }
+
 .player-hand:has(li:hover) {
   z-index: 60;
 }
-.enemy-hand { 
-  top: -50px; 
+
+.enemy-hand {
+  top: -50px;
   z-index: 10;
 }
-.hand-fanned, .hand-fanned-enemy { 
-  display: flex; 
-  justify-content: center; 
-  align-items: center; 
-  list-style: none; 
-  pointer-events: auto; 
-}
-.hand-fanned li, .hand-fanned-enemy li { 
-  margin: 0 -35px; 
-  position: relative; 
-  z-index: 10; 
-  transition: transform 0.3s cubic-bezier(0.25,0.8,0.25,1), margin 0.3s ease, z-index 0.3s; 
-}
-.hand-fanned-enemy li {
-  transform-origin: top center; 
-}
-.hand-fanned li:hover { 
-  z-index: 200 !important; 
-  transform: translateX(0) translateY(-140px) rotate(0deg) scale(1) !important; 
-  margin: 0 20px; 
-  position: relative; 
-}
-.hand-fanned li::after {
-  content: ''; 
-  position: absolute; 
-  top: 0; 
-  left: 0; 
-  right: 0; 
-  bottom: 0; 
-  z-index: -1;
-  background: transparent; 
-}
-.hand-fanned li:hover::after {
-  bottom: -140px; 
-  left: -60px; 
-  right: -60px; 
+
+.hand-fanned,
+.hand-fanned-enemy {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  list-style: none;
+  pointer-events: auto;
 }
 
-/* === Battlefield =========================================================== */
+.hand-fanned li,
+.hand-fanned-enemy li {
+  margin: 0 -35px;
+  position: relative;
+  z-index: 10;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), margin 0.3s ease, z-index 0.3s;
+}
+
+.hand-fanned-enemy li {
+  transform-origin: top center;
+}
+
+.hand-fanned li:hover {
+  z-index: 200 !important;
+  transform: translateX(0) translateY(-140px) rotate(0deg) scale(1) !important;
+  margin: 0 20px;
+  position: relative;
+}
+
+.hand-fanned li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  background: transparent;
+}
+
+.hand-fanned li:hover::after {
+  bottom: -140px;
+  left: -60px;
+  right: -60px;
+}
+
 .battlefield {
   flex-grow: 1;
   display: flex;
@@ -374,8 +423,9 @@
   padding: 10px 40px;
   position: relative;
   min-height: 0;
-  isolation: isolate; 
+  isolation: isolate;
 }
+
 .battlefield-half {
   flex-grow: 1;
   display: flex;
@@ -383,11 +433,13 @@
   justify-content: center;
   position: relative;
 }
+
 .battlefield-half ul {
   display: flex;
   gap: 15px;
   list-style: none;
 }
+
 .battlefield-divider {
   height: 30px;
   width: 100%;
@@ -398,20 +450,20 @@
   margin: 2px 0;
   flex-shrink: 0;
 }
+
 .battlefield-divider::before {
   content: '';
   position: absolute;
   inset: 50% 0 auto;
   height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(230,36,41,0.5), transparent);
+  background: linear-gradient(90deg, transparent, rgba(230, 36, 41, 0.5), transparent);
   box-shadow: 0 0 10px var(--marvel-red-glow);
 }
 
-/* === Staging Areas ========================================================= */
 .staging-area {
   height: 150px;
-  background: rgba(0,0,0,0.2);
-  border: 1px dashed rgba(255,255,255,0.1);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   margin: 5px auto;
   display: flex;
@@ -419,6 +471,7 @@
   align-items: center;
   width: 90%;
 }
+
 .staging-area ul {
   display: flex;
   gap: 15px;
@@ -426,7 +479,9 @@
   padding: 0;
   margin: 0;
 }
-#player-active-cards, #enemy-active-cards {
+
+#player-active-cards,
+#enemy-active-cards {
   display: flex;
   justify-content: center;
   gap: 15px;
@@ -436,8 +491,7 @@
   width: 100%;
 }
 
-/* === Hero Background Overlays ============================================== */
-.hero-bg-overlay { 
+.hero-bg-overlay {
   position: absolute;
   left: 0;
   width: 100%;
@@ -446,17 +500,20 @@
   z-index: 1;
   overflow: hidden;
 }
+
 .hero-bg-top {
   top: 0;
 }
+
 .hero-bg-bottom {
   bottom: 0;
 }
 
-/* Human Torch (hero 2) */
+/* Human Torch */
 .hero-bg-overlay.half-torch {
-  background: radial-gradient(ellipse at 20% 100%, rgba(244,67,54,0.18) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(255,152,0,0.12) 0%, transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(255,87,34,0.08) 0%, transparent 60%);
+  background: radial-gradient(ellipse at 20% 100%, rgba(244, 67, 54, 0.18) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(255, 152, 0, 0.12) 0%, transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(255, 87, 34, 0.08) 0%, transparent 60%);
 }
+
 .hero-bg-overlay.half-torch::before {
   content: '';
   position: absolute;
@@ -464,28 +521,32 @@
   left: 0;
   width: 100%;
   height: 50%;
-  background: linear-gradient(0deg, rgba(255,87,34,0.15) 0%, rgba(255,152,0,0.08) 40%, transparent 100%);
+  background: linear-gradient(0deg, rgba(255, 87, 34, 0.15) 0%, rgba(255, 152, 0, 0.08) 40%, transparent 100%);
   animation: torchHeatWave 3s ease-in-out infinite alternate;
 }
+
 .hero-bg-top.half-torch {
-  background: radial-gradient(ellipse at 20% 0%, rgba(244,67,54,0.18) 0%, transparent 50%), radial-gradient(ellipse at 80% 0%, rgba(255,152,0,0.12) 0%, transparent 50%), radial-gradient(ellipse at 50% 20%, rgba(255,87,34,0.08) 0%, transparent 60%);
+  background: radial-gradient(ellipse at 20% 0%, rgba(244, 67, 54, 0.18) 0%, transparent 50%), radial-gradient(ellipse at 80% 0%, rgba(255, 152, 0, 0.12) 0%, transparent 50%), radial-gradient(ellipse at 50% 20%, rgba(255, 87, 34, 0.08) 0%, transparent 60%);
 }
+
 .hero-bg-top.half-torch::before {
   top: 0;
   bottom: auto;
-  background: linear-gradient(180deg, rgba(255,87,34,0.15) 0%, rgba(255,152,0,0.08) 40%, transparent 100%);
+  background: linear-gradient(180deg, rgba(255, 87, 34, 0.15) 0%, rgba(255, 152, 0, 0.08) 40%, transparent 100%);
 }
 
 .torch-spark-wrapper {
   position: absolute;
   bottom: -10px;
-  animation: sparkRiseY var(--dur-y) linear var(--delay) infinite; 
+  animation: sparkRiseY var(--dur-y) linear var(--delay) infinite;
 }
+
 .hero-bg-top .torch-spark-wrapper {
   bottom: auto;
   top: -10px;
-  animation: sparkFallY var(--dur-y) linear var(--delay) infinite; 
+  animation: sparkFallY var(--dur-y) linear var(--delay) infinite;
 }
+
 .torch-spark-particle {
   width: 4px;
   height: 4px;
@@ -494,151 +555,199 @@
   opacity: 0;
   animation: sparkSwayX var(--dur-x) ease-in-out var(--delay) infinite alternate, sparkFade var(--dur-y) linear var(--delay) infinite;
 }
+
 @keyframes torchHeatWave {
   0% {
     opacity: 0.6;
     transform: scaleY(1);
   }
+
   50% {
     opacity: 1;
     transform: scaleY(1.05);
   }
+
   100% {
     opacity: 0.7;
     transform: scaleY(0.97);
   }
 }
+
 @keyframes sparkRiseY {
   0% {
     transform: translateY(0);
   }
-  100% { transform: translateY(-55vh); }
-}
-@keyframes sparkFallY {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(55vh); }
-}
-@keyframes sparkSwayX {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(var(--end-x)); }
-}
-@keyframes sparkFade  {
-  0% { opacity: 0; }
-  10% { opacity: 1; }
-  70% { opacity: 1; }
-  100% { opacity: 0; }
+
+  100% {
+    transform: translateY(-55vh);
+  }
 }
 
-/* Iron Man (hero 1) */
-.hero-bg-overlay.half-ironman {
-  background: radial-gradient(ellipse at 50% 50%, rgba(2,136,209,0.08) 0%, transparent 60%);
+@keyframes sparkFallY {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(55vh);
+  }
 }
+
+@keyframes sparkSwayX {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(var(--end-x));
+  }
+}
+
+@keyframes sparkFade {
+  0% {
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Iron Man */
+.hero-bg-overlay.half-ironman {
+  background: radial-gradient(ellipse at 50% 50%, rgba(2, 136, 209, 0.08) 0%, transparent 60%);
+}
+
 .hero-bg-overlay.half-ironman::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(0deg, rgba(79,195,247,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(79,195,247,0.07) 1px, transparent 1px);
+  background-image: linear-gradient(0deg, rgba(79, 195, 247, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(79, 195, 247, 0.07) 1px, transparent 1px);
   background-size: 50px 50px;
   animation: ironmanGridScroll 8s linear infinite;
 }
+
 .hero-bg-overlay.half-ironman::after {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(0deg, transparent 48%, rgba(79,195,247,0.10) 49%, rgba(79,195,247,0.10) 51%, transparent 52%), linear-gradient(90deg, transparent 48%, rgba(79,195,247,0.07) 49%, rgba(79,195,247,0.07) 51%, transparent 52%), radial-gradient(2px 2px at 25% 25%, rgba(79,195,247,0.5) 100%, transparent), radial-gradient(2px 2px at 75% 25%, rgba(79,195,247,0.4) 100%, transparent), radial-gradient(2px 2px at 25% 75%, rgba(79,195,247,0.4) 100%, transparent), radial-gradient(2px 2px at 75% 75%, rgba(79,195,247,0.5) 100%, transparent), radial-gradient(3px 3px at 50% 50%, rgba(79,195,247,0.6) 100%, transparent), radial-gradient(2px 2px at 10% 50%, rgba(79,195,247,0.3) 100%, transparent), radial-gradient(2px 2px at 90% 50%, rgba(79,195,247,0.3) 100%, transparent), radial-gradient(2px 2px at 50% 15%, rgba(79,195,247,0.35) 100%, transparent), radial-gradient(2px 2px at 50% 85%, rgba(79,195,247,0.35) 100%, transparent), radial-gradient(2px 2px at 35% 40%, rgba(129,212,250,0.3) 100%, transparent), radial-gradient(2px 2px at 65% 60%, rgba(129,212,250,0.3) 100%, transparent);
+  background-image: linear-gradient(0deg, transparent 48%, rgba(79, 195, 247, 0.10) 49%, rgba(79, 195, 247, 0.10) 51%, transparent 52%), linear-gradient(90deg, transparent 48%, rgba(79, 195, 247, 0.07) 49%, rgba(79, 195, 247, 0.07) 51%, transparent 52%), radial-gradient(2px 2px at 25% 25%, rgba(79, 195, 247, 0.5) 100%, transparent), radial-gradient(2px 2px at 75% 25%, rgba(79, 195, 247, 0.4) 100%, transparent), radial-gradient(2px 2px at 25% 75%, rgba(79, 195, 247, 0.4) 100%, transparent), radial-gradient(2px 2px at 75% 75%, rgba(79, 195, 247, 0.5) 100%, transparent), radial-gradient(3px 3px at 50% 50%, rgba(79, 195, 247, 0.6) 100%, transparent), radial-gradient(2px 2px at 10% 50%, rgba(79, 195, 247, 0.3) 100%, transparent), radial-gradient(2px 2px at 90% 50%, rgba(79, 195, 247, 0.3) 100%, transparent), radial-gradient(2px 2px at 50% 15%, rgba(79, 195, 247, 0.35) 100%, transparent), radial-gradient(2px 2px at 50% 85%, rgba(79, 195, 247, 0.35) 100%, transparent), radial-gradient(2px 2px at 35% 40%, rgba(129, 212, 250, 0.3) 100%, transparent), radial-gradient(2px 2px at 65% 60%, rgba(129, 212, 250, 0.3) 100%, transparent);
   background-size: 120px 120px;
   animation: ironmanCircuitPulse 3s ease-in-out infinite alternate;
 }
+
 @keyframes ironmanGridScroll {
   from {
     background-position: 0 0, 0 0;
   }
+
   to {
     background-position: 50px 50px, 50px 50px;
   }
 }
+
 @keyframes ironmanCircuitPulse {
   0% {
     opacity: 0.4;
     filter: brightness(0.8);
   }
+
   50% {
     opacity: 0.9;
     filter: brightness(1.4);
   }
+
   100% {
     opacity: 0.5;
     filter: brightness(1);
   }
 }
 
-/* Venom (hero 3) */
+/* Venom */
 .hero-bg-overlay.half-venom {
-  background: radial-gradient(ellipse at 30% 70%, rgba(15,15,15,0.8) 0%, transparent 50%), radial-gradient(ellipse at 70% 30%, rgba(20,20,20,0.7) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(10,10,10,0.6) 0%, transparent 70%);
+  background: radial-gradient(ellipse at 30% 70%, rgba(15, 15, 15, 0.8) 0%, transparent 50%), radial-gradient(ellipse at 70% 30%, rgba(20, 20, 20, 0.7) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(10, 10, 10, 0.6) 0%, transparent 70%);
 }
+
 .hero-bg-overlay.half-venom::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(ellipse 80px 60px at 10% 30%, rgba(25,25,25,0.7), transparent), radial-gradient(ellipse 100px 80px at 35% 70%, rgba(20,20,20,0.65), transparent), radial-gradient(ellipse 70px 90px at 65% 20%, rgba(25,25,25,0.6), transparent), radial-gradient(ellipse 90px 60px at 85% 80%, rgba(15,15,15,0.7), transparent), radial-gradient(ellipse 75px 55px at 20% 90%, rgba(22,22,22,0.6), transparent), radial-gradient(ellipse 65px 80px at 50% 45%, rgba(12,12,12,0.65), transparent), radial-gradient(ellipse 85px 70px at 75% 55%, rgba(18,18,18,0.6), transparent);
+  background-image: radial-gradient(ellipse 80px 60px at 10% 30%, rgba(25, 25, 25, 0.7), transparent), radial-gradient(ellipse 100px 80px at 35% 70%, rgba(20, 20, 20, 0.65), transparent), radial-gradient(ellipse 70px 90px at 65% 20%, rgba(25, 25, 25, 0.6), transparent), radial-gradient(ellipse 90px 60px at 85% 80%, rgba(15, 15, 15, 0.7), transparent), radial-gradient(ellipse 75px 55px at 20% 90%, rgba(22, 22, 22, 0.6), transparent), radial-gradient(ellipse 65px 80px at 50% 45%, rgba(12, 12, 12, 0.65), transparent), radial-gradient(ellipse 85px 70px at 75% 55%, rgba(18, 18, 18, 0.6), transparent);
   animation: venomBubble 4s ease-in-out infinite;
 }
+
 .hero-bg-overlay.half-venom::after {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(ellipse 50px 45px at 15% 60%, rgba(30,30,30,0.5), transparent), radial-gradient(ellipse 70px 55px at 45% 25%, rgba(25,25,25,0.45), transparent), radial-gradient(ellipse 55px 65px at 80% 50%, rgba(22,22,22,0.5), transparent), radial-gradient(ellipse 45px 50px at 30% 40%, rgba(28,28,28,0.45), transparent), radial-gradient(ellipse 60px 70px at 60% 80%, rgba(20,20,20,0.5), transparent), radial-gradient(ellipse 80px 55px at 90% 35%, rgba(15,15,15,0.55), transparent), radial-gradient(ellipse 55px 45px at 5% 75%, rgba(22,22,22,0.45), transparent);
+  background-image: radial-gradient(ellipse 50px 45px at 15% 60%, rgba(30, 30, 30, 0.5), transparent), radial-gradient(ellipse 70px 55px at 45% 25%, rgba(25, 25, 25, 0.45), transparent), radial-gradient(ellipse 55px 65px at 80% 50%, rgba(22, 22, 22, 0.5), transparent), radial-gradient(ellipse 45px 50px at 30% 40%, rgba(28, 28, 28, 0.45), transparent), radial-gradient(ellipse 60px 70px at 60% 80%, rgba(20, 20, 20, 0.5), transparent), radial-gradient(ellipse 80px 55px at 90% 35%, rgba(15, 15, 15, 0.55), transparent), radial-gradient(ellipse 55px 45px at 5% 75%, rgba(22, 22, 22, 0.45), transparent);
   animation: venomBubble2 3.5s ease-in-out infinite 0.5s;
 }
+
 @keyframes venomBubble {
   0% {
     transform: scale(1) translateY(0);
     opacity: 0.7;
   }
+
   25% {
     transform: scale(1.04) translateY(-3px);
     opacity: 0.9;
   }
+
   50% {
     transform: scale(0.98) translateY(2px);
     opacity: 0.8;
   }
+
   75% {
     transform: scale(1.03) translateY(-2px);
     opacity: 1;
   }
+
   100% {
     transform: scale(1) translateY(0);
     opacity: 0.7;
   }
 }
+
 @keyframes venomBubble2 {
   0% {
     transform: scale(1) translateX(0);
     opacity: 0.6;
   }
+
   30% {
     transform: scale(1.06) translateX(4px);
     opacity: 0.85;
   }
+
   60% {
     transform: scale(0.97) translateX(-3px);
     opacity: 0.7;
   }
+
   100% {
     transform: scale(1) translateX(0);
     opacity: 0.6;
   }
 }
 
-/* === Coin Flip ============================================================= */
 .coin-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0,0,0,0.85);
+  background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(5px);
   z-index: 10000;
   display: flex;
@@ -646,9 +755,11 @@
   justify-content: center;
   align-items: center;
 }
+
 .coin-container {
   perspective: 1000px;
 }
+
 .coin {
   width: 150px;
   height: 150px;
@@ -657,6 +768,7 @@
   will-change: transform;
   transform: rotateY(0deg) translateZ(0);
 }
+
 .coin-face {
   position: absolute;
   width: 100%;
@@ -673,32 +785,33 @@
   box-sizing: border-box;
   padding: 10px;
   border: 6px solid #000;
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 6px 6px 0 rgba(0,0,0,1);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5), 6px 6px 0 rgba(0, 0, 0, 1);
   text-transform: uppercase;
   line-height: 1.1;
   letter-spacing: 1px;
 }
+
 .coin-front {
   background: radial-gradient(circle at 30% 30%, #3498db 0%, #1a5276 100%);
   color: #ffeb3b;
   transform: rotateY(0deg) translateZ(1px);
   text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
 }
-.coin-back  {
+
+.coin-back {
   background: radial-gradient(circle at 30% 30%, #9b59b6 0%, #4a235a 100%);
   color: #2ecc71;
   transform: rotateY(180deg) translateZ(1px);
   text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
 }
 
-/* === Game Result Overlay =================================================== */
 #game-result-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0,0,0,0.9);
+  background: rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(10px);
   z-index: 10000;
   display: none;
@@ -706,38 +819,50 @@
   justify-content: center;
   align-items: center;
 }
+
 .gr-box {
   text-align: center;
-  animation: fadeInScale 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+  animation: fadeInScale 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+
 .gr-title {
   font-family: var(--font-comic);
   font-size: 6rem;
   letter-spacing: 4px;
-  text-shadow: 0 0 30px rgba(255,255,255,0.3);
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
   margin-bottom: 10px;
 }
+
 .gr-subtitle {
   font-family: var(--font-header);
   font-size: 1.5rem;
   color: var(--marvel-light);
   margin-bottom: 30px;
 }
+
 .gr-countdown {
   font-family: var(--font-comic);
   color: var(--marvel-grey);
   font-size: 1.1rem;
 }
+
 #gr-count {
   color: var(--marvel-red);
   font-weight: bold;
 }
+
 @keyframes fadeInScale {
-  from { opacity: 0; transform: scale(0.5); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-/* === Reconnect Banner ====================================================== */
 .reconnect-banner {
   position: absolute;
   top: 60px;
@@ -747,193 +872,241 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(20,20,20,0.95);
+  background: rgba(20, 20, 20, 0.95);
   border: 1px solid #e67e22;
   border-radius: 10px;
   padding: 10px 20px;
-  box-shadow: 0 0 20px rgba(230,126,34,0.4);
+  box-shadow: 0 0 20px rgba(230, 126, 34, 0.4);
   animation: slideDown 0.3s ease;
   white-space: nowrap;
 }
+
 .rb-icon {
   font-size: 1.2rem;
 }
+
 .rb-text {
   font-family: var(--font-header);
   font-size: 0.9rem;
   color: #f39c12;
   letter-spacing: 0.5px;
 }
+
 #rb-count {
   font-weight: bold;
   color: #e74c3c;
 }
+
 @keyframes slideDown {
   from {
     opacity: 0;
     transform: translateX(-50%) translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
 }
 
-/* === Base Combat Projectile ================================================ */
 .combat-projectile {
   position: fixed;
   width: 70px;
   height: 70px;
   transform: translate(-50%, -50%) scale(0);
   transform-origin: center center;
-  transition: transform 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 9999;
   pointer-events: none;
 }
+
 .combat-projectile.visible {
   transform: translate(-50%, -50%) scale(1);
 }
 
-/* Iron Man — Attack: blue energy ball */
 .proj-ironman-atk {
   border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #e0f7ff, #4fc3f7 30%, #0288d1 60%, #01579b);
-  box-shadow: 0 0 25px #4fc3f7, 0 0 50px #0288d1, 0 0 80px rgba(79,195,247,0.4);
+  box-shadow: 0 0 25px #4fc3f7, 0 0 50px #0288d1, 0 0 80px rgba(79, 195, 247, 0.4);
   animation: ironmanAtkSpin 0.6s linear infinite, ironmanAtkPulse 1s ease-in-out infinite alternate;
 }
+
 @keyframes ironmanAtkSpin {
   0% {
     box-shadow: 0 0 25px #4fc3f7,
-    10px 0 15px #81d4fa,
-    0 0 50px #0288d1;
+      10px 0 15px #81d4fa,
+      0 0 50px #0288d1;
   }
+
   25% {
     box-shadow: 0 0 25px #4fc3f7,
-    0 10px 15px #81d4fa,
-    0 0 50px #0288d1;
+      0 10px 15px #81d4fa,
+      0 0 50px #0288d1;
   }
+
   50% {
     box-shadow: 0 0 25px #4fc3f7,
-    -10px 0 15px #81d4fa,
-    0 0 50px #0288d1;
+      -10px 0 15px #81d4fa,
+      0 0 50px #0288d1;
   }
+
   75% {
     box-shadow: 0 0 25px #4fc3f7,
-    0 -10px 15px #81d4fa,
-    0 0 50px #0288d1;
+      0 -10px 15px #81d4fa,
+      0 0 50px #0288d1;
   }
+
   100% {
     box-shadow: 0 0 25px #4fc3f7,
-    10px 0 15px #81d4fa,
-    0 0 50px #0288d1;
+      10px 0 15px #81d4fa,
+      0 0 50px #0288d1;
   }
 }
+
 @keyframes ironmanAtkPulse {
-  from { filter: brightness(1); }
-  to { filter: brightness(1.6) drop-shadow(0 0 15px #4fc3f7); }
+  from {
+    filter: brightness(1);
+  }
+
+  to {
+    filter: brightness(1.6) drop-shadow(0 0 15px #4fc3f7);
+  }
 }
 
-/* Iron Man — Defense: energy shield */
 .proj-ironman-def {
   border-radius: 50%;
-  border: 3px solid rgba(79,195,247,0.8);
-  background: radial-gradient(circle, rgba(79,195,247,0.15), rgba(2,136,209,0.05));
-  box-shadow: 0 0 20px rgba(79,195,247,0.6), inset 0 0 20px rgba(79,195,247,0.3);
+  border: 3px solid rgba(79, 195, 247, 0.8);
+  background: radial-gradient(circle, rgba(79, 195, 247, 0.15), rgba(2, 136, 209, 0.05));
+  box-shadow: 0 0 20px rgba(79, 195, 247, 0.6), inset 0 0 20px rgba(79, 195, 247, 0.3);
   animation: ironmanShieldPulse 1.2s ease-in-out infinite alternate;
 }
+
 .proj-ironman-def::before {
   content: '';
   position: absolute;
   inset: 4px;
   border-radius: 50%;
-  border: 2px dashed rgba(129,212,250,0.5);
+  border: 2px dashed rgba(129, 212, 250, 0.5);
   animation: ironmanShieldRotate 3s linear infinite;
 }
-@keyframes ironmanShieldPulse  {
+
+@keyframes ironmanShieldPulse {
   from {
-    box-shadow: 0 0 20px rgba(79,195,247,0.5), inset 0 0 20px rgba(79,195,247,0.2);
+    box-shadow: 0 0 20px rgba(79, 195, 247, 0.5), inset 0 0 20px rgba(79, 195, 247, 0.2);
   }
+
   to {
-    box-shadow: 0 0 35px rgba(79,195,247,0.9), inset 0 0 35px rgba(79,195,247,0.5);
+    box-shadow: 0 0 35px rgba(79, 195, 247, 0.9), inset 0 0 35px rgba(79, 195, 247, 0.5);
   }
-}
-@keyframes ironmanShieldRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
-/* Torch — Attack: fireball */
+@keyframes ironmanShieldRotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .proj-torch-atk {
   border-radius: 50%;
   background: radial-gradient(circle at 40% 40%, #fff9c4, #ffeb3b 20%, #ff9800 45%, #f44336 70%, #b71c1c);
-  box-shadow: 0 0 30px #ff9800, 0 0 60px #f44336, 0 0 90px rgba(244,67,54,0.4);
+  box-shadow: 0 0 30px #ff9800, 0 0 60px #f44336, 0 0 90px rgba(244, 67, 54, 0.4);
   animation: fireballFlicker 0.15s ease-in-out infinite alternate;
 }
+
 .proj-torch-atk::after {
   content: '';
   position: absolute;
   inset: -8px;
   border-radius: 50%;
-  background: radial-gradient(circle, transparent 40%, rgba(255,152,0,0.3) 70%, transparent);
+  background: radial-gradient(circle, transparent 40%, rgba(255, 152, 0, 0.3) 70%, transparent);
   animation: fireballOuter 0.3s ease-in-out infinite alternate;
 }
+
 @keyframes fireballFlicker {
   0% {
-    transform: scale(1) translate(0,0);
+    transform: scale(1) translate(0, 0);
     filter: brightness(1);
   }
+
   50% {
-    transform: scale(1.05) translate(1px,-1px);
+    transform: scale(1.05) translate(1px, -1px);
     filter: brightness(1.3);
   }
+
   100% {
-    transform: scale(0.97) translate(-1px,1px);
+    transform: scale(0.97) translate(-1px, 1px);
     filter: brightness(1.1);
   }
 }
+
 @keyframes fireballOuter {
-  from { opacity: 0.4; transform: scale(1); }
-  to   { opacity: 0.8; transform: scale(1.15); }
+  from {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0.8;
+    transform: scale(1.15);
+  }
 }
 
-/* Torch — Defense: fire wall */
-.proj-torch-def { 
-  border-radius: 8px; 
-  width: 80px; 
-  height: 70px; 
-  background: linear-gradient(0deg, rgba(183,28,28,0.9) 0%, rgba(244,67,54,0.7) 25%, rgba(255,152,0,0.5) 50%, rgba(255,235,59,0.3) 75%, transparent 100%);
-  box-shadow: 0 0 25px rgba(255,152,0,0.6), 0 0 50px rgba(244,67,54,0.3);
-  animation: firewallWaver 0.4s ease-in-out infinite alternate; 
+.proj-torch-def {
+  border-radius: 8px;
+  width: 80px;
+  height: 70px;
+  background: linear-gradient(0deg, rgba(183, 28, 28, 0.9) 0%, rgba(244, 67, 54, 0.7) 25%, rgba(255, 152, 0, 0.5) 50%, rgba(255, 235, 59, 0.3) 75%, transparent 100%);
+  box-shadow: 0 0 25px rgba(255, 152, 0, 0.6), 0 0 50px rgba(244, 67, 54, 0.3);
+  animation: firewallWaver 0.4s ease-in-out infinite alternate;
 }
-.proj-torch-def::before { 
+
+.proj-torch-def::before {
   content: '';
-  position: absolute; 
-  bottom: 0; 
-  left: 10%; 
-  width: 80%; 
-  height: 60%; 
-  background: linear-gradient(0deg, rgba(255,235,59,0.6) 0%, rgba(255,152,0,0.4) 40%, transparent 100%);
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  width: 80%;
+  height: 60%;
+  background: linear-gradient(0deg, rgba(255, 235, 59, 0.6) 0%, rgba(255, 152, 0, 0.4) 40%, transparent 100%);
   border-radius: 50% 50% 0 0;
   animation: firewallInner 0.3s ease-in-out infinite alternate-reverse;
 }
-@keyframes firewallWaver { 
-  from { transform: scaleX(1) scaleY(1); } 
-  to { transform: scaleX(1.05) scaleY(1.08); } 
-}
-@keyframes firewallInner { 
-  from { opacity: 0.5; transform: scaleY(0.9); } 
-  to { opacity: 1; transform: scaleY(1.1); } 
+
+@keyframes firewallWaver {
+  from {
+    transform: scaleX(1) scaleY(1);
+  }
+
+  to {
+    transform: scaleX(1.05) scaleY(1.08);
+  }
 }
 
-/* Venom — Attack: symbiote fist */
+@keyframes firewallInner {
+  from {
+    opacity: 0.5;
+    transform: scaleY(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scaleY(1.1);
+  }
+}
+
 .proj-venom-atk {
   width: 75px;
   height: 75px;
   border-radius: 30% 70% 50% 50% / 40% 60% 50% 50%;
   background: radial-gradient(ellipse at 40% 40%, #424242, #212121 50%, #000);
-  box-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 40px rgba(100,100,100,0.3);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), 0 0 40px rgba(100, 100, 100, 0.3);
   animation: venomFistPulse 0.5s ease-in-out infinite alternate;
 }
+
 .proj-venom-atk::before {
   content: '';
   position: absolute;
@@ -941,111 +1114,128 @@
   left: 20%;
   width: 60%;
   height: 35%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.15), transparent);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15), transparent);
   border-radius: 50%;
 }
+
 .proj-venom-atk::after {
   content: '';
   position: absolute;
   inset: -6px;
   border-radius: inherit;
   background: transparent;
-  border: 2px solid rgba(100,100,100,0.3);
+  border: 2px solid rgba(100, 100, 100, 0.3);
   animation: venomTendrils 0.4s ease-in-out infinite alternate;
 }
+
 @keyframes venomFistPulse {
   from {
     transform: scale(1) rotate(-5deg);
     filter: brightness(0.8);
   }
+
   to {
     transform: scale(1.08) rotate(2deg);
     filter: brightness(1.1);
   }
 }
+
 @keyframes venomTendrils {
   from {
     border-radius: 30% 70% 50% 50% / 40% 60% 50% 50%;
   }
+
   to {
     border-radius: 50% 50% 60% 40% / 50% 70% 30% 50%;
   }
 }
 
-/* Venom — Defense: absorbing black mass */
 .proj-venom-def {
   border-radius: 50%;
   background: radial-gradient(circle at 50% 50%, #616161, #212121 50%, #000 80%);
-  box-shadow: 0 0 25px rgba(0,0,0,0.9), 0 0 50px rgba(50,50,50,0.5);
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.9), 0 0 50px rgba(50, 50, 50, 0.5);
   animation: venomMassAbsorb 0.8s ease-in-out infinite alternate;
 }
+
 .proj-venom-def::before {
   content: '';
   position: absolute;
   inset: 5px;
   border-radius: 50%;
-  border: 2px solid rgba(150,150,150,0.2);
+  border: 2px solid rgba(150, 150, 150, 0.2);
   animation: venomMassInner 1s linear infinite;
 }
+
 .proj-venom-def::after {
   content: '';
   position: absolute;
   inset: -5px;
   border-radius: 50%;
-  background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.4));
+  background: radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.4));
   animation: venomMassPull 0.6s ease-in-out infinite alternate;
 }
+
 @keyframes venomMassAbsorb {
   from {
     transform: scale(1);
     filter: brightness(0.6);
   }
+
   to {
     transform: scale(1.12);
     filter: brightness(1);
   }
 }
+
 @keyframes venomMassInner {
   from {
     transform: rotate(0deg);
-    border-color: rgba(150,150,150,0.2);
+    border-color: rgba(150, 150, 150, 0.2);
   }
+
   to {
     transform: rotate(360deg);
-    border-color: rgba(150,150,150,0.4);
+    border-color: rgba(150, 150, 150, 0.4);
   }
 }
+
 @keyframes venomMassPull {
   from {
     inset: -5px;
     opacity: 0.3;
   }
+
   to {
     inset: -15px;
     opacity: 0.7;
   }
 }
 
-/* Default fallback */
 .proj-default-atk {
   border-radius: 50%;
   background: radial-gradient(circle, #ecf0f1, #95a5a6);
-  box-shadow: 0 0 20px rgba(149,165,166,0.6);
+  box-shadow: 0 0 20px rgba(149, 165, 166, 0.6);
   animation: defaultPulse 0.8s ease-in-out infinite alternate;
-}
-.proj-default-def {
-  border-radius: 50%;
-  border: 3px solid rgba(149,165,166,0.7);
-  background: radial-gradient(circle, rgba(149,165,166,0.1), transparent);
-  box-shadow: 0 0 15px rgba(149,165,166,0.4), inset 0 0 15px rgba(149,165,166,0.2);
-  animation: defaultPulse 0.8s ease-in-out infinite alternate;
-}
-@keyframes defaultPulse {
-  from { filter: brightness(0.9); }
-  to   { filter: brightness(1.3); }
 }
 
-/* === Shield Overlays ======================================================= */
+.proj-default-def {
+  border-radius: 50%;
+  border: 3px solid rgba(149, 165, 166, 0.7);
+  background: radial-gradient(circle, rgba(149, 165, 166, 0.1), transparent);
+  box-shadow: 0 0 15px rgba(149, 165, 166, 0.4), inset 0 0 15px rgba(149, 165, 166, 0.2);
+  animation: defaultPulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes defaultPulse {
+  from {
+    filter: brightness(0.9);
+  }
+
+  to {
+    filter: brightness(1.3);
+  }
+}
+
 .hero-shield-overlay {
   position: absolute;
   top: -10px;
@@ -1058,124 +1248,145 @@
   transition: all 0.2s;
   opacity: 0.85;
 }
+
 .shield-ironman {
-  border: 3px solid rgba(79,195,247,0.9);
-  box-shadow: 0 0 25px rgba(79,195,247,0.7), inset 0 0 25px rgba(79,195,247,0.3);
+  border: 3px solid rgba(79, 195, 247, 0.9);
+  box-shadow: 0 0 25px rgba(79, 195, 247, 0.7), inset 0 0 25px rgba(79, 195, 247, 0.3);
   animation: ironmanShieldPulse 1.2s ease-in-out infinite alternate;
 }
-.shield-torch   {
-  border: 3px solid rgba(255,152,0,0.8);
-  box-shadow: 0 0 25px rgba(255,152,0,0.6), 0 0 50px rgba(244,67,54,0.3), inset 0 0 20px rgba(255,235,59,0.2);
+
+.shield-torch {
+  border: 3px solid rgba(255, 152, 0, 0.8);
+  box-shadow: 0 0 25px rgba(255, 152, 0, 0.6), 0 0 50px rgba(244, 67, 54, 0.3), inset 0 0 20px rgba(255, 235, 59, 0.2);
   animation: torchShieldPulse 0.8s ease-in-out infinite alternate;
 }
-.shield-venom   {
-  border: 3px solid rgba(100,100,100,0.6);
-  background: radial-gradient(circle, transparent 60%, rgba(0,0,0,0.3));
-  box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(50,50,50,0.5);
+
+.shield-venom {
+  border: 3px solid rgba(100, 100, 100, 0.6);
+  background: radial-gradient(circle, transparent 60%, rgba(0, 0, 0, 0.3));
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(50, 50, 50, 0.5);
   animation: venomShieldPulse 1s ease-in-out infinite alternate;
 }
+
 .shield-default {
-  border: 3px solid rgba(149,165,166,0.7);
-  box-shadow: 0 0 20px rgba(149,165,166,0.5), inset 0 0 15px rgba(149,165,166,0.2);
+  border: 3px solid rgba(149, 165, 166, 0.7);
+  box-shadow: 0 0 20px rgba(149, 165, 166, 0.5), inset 0 0 15px rgba(149, 165, 166, 0.2);
 }
+
 @keyframes torchShieldPulse {
   from {
-    box-shadow: 0 0 25px rgba(255,152,0,0.5), inset 0 0 15px rgba(255,235,59,0.1);
+    box-shadow: 0 0 25px rgba(255, 152, 0, 0.5), inset 0 0 15px rgba(255, 235, 59, 0.1);
   }
+
   to {
-    box-shadow: 0 0 40px rgba(255,152,0,0.9), 0 0 60px rgba(244,67,54,0.4), inset 0 0 30px rgba(255,235,59,0.4);
+    box-shadow: 0 0 40px rgba(255, 152, 0, 0.9), 0 0 60px rgba(244, 67, 54, 0.4), inset 0 0 30px rgba(255, 235, 59, 0.4);
   }
 }
+
 @keyframes venomShieldPulse {
   from {
-    box-shadow: 0 0 25px rgba(0,0,0,0.6), inset 0 0 15px rgba(50,50,50,0.3);
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(50, 50, 50, 0.3);
   }
+
   to {
-    box-shadow: 0 0 40px rgba(0,0,0,0.9), inset 0 0 30px rgba(50,50,50,0.6);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.9), inset 0 0 30px rgba(50, 50, 50, 0.6);
   }
 }
+
 .shield-hit {
   animation: shieldHit 0.3s;
 }
+
 .shield-break {
   animation: shieldBreak 0.6s forwards;
 }
+
 @keyframes shieldHit {
   0% {
     transform: scale(1);
     opacity: 0.85;
   }
+
   50% {
     transform: scale(1.15);
     opacity: 1;
     filter: brightness(2);
   }
+
   100% {
     transform: scale(1);
     opacity: 0.85;
   }
 }
+
 @keyframes shieldBreak {
   0% {
     transform: scale(1);
     opacity: 0.85;
   }
+
   40% {
     transform: scale(1.3);
     opacity: 1;
     filter: brightness(3);
   }
+
   100% {
     transform: scale(2);
     opacity: 0;
   }
 }
 
-/* === Impact Explosions ===================================================== */
 .combat-impact {
   position: absolute;
   top: 50%;
   left: 50%;
   width: 110px;
   height: 110px;
-  transform: translate(-50%,-50%) scale(0);
+  transform: translate(-50%, -50%) scale(0);
   border-radius: 50%;
   z-index: 9999;
   pointer-events: none;
 }
+
 .impact-ironman {
-  background: radial-gradient(circle, rgba(79,195,247,0.8), rgba(2,136,209,0.4), transparent);
+  background: radial-gradient(circle, rgba(79, 195, 247, 0.8), rgba(2, 136, 209, 0.4), transparent);
   animation: impactBlast 0.7s ease-out forwards;
 }
+
 .impact-torch {
-  background: radial-gradient(circle, rgba(255,235,59,0.9), rgba(255,152,0,0.5), rgba(244,67,54,0.3), transparent);
+  background: radial-gradient(circle, rgba(255, 235, 59, 0.9), rgba(255, 152, 0, 0.5), rgba(244, 67, 54, 0.3), transparent);
   animation: impactBlast 0.7s ease-out forwards;
 }
+
 .impact-venom {
-  background: radial-gradient(circle, rgba(100,100,100,0.7), rgba(33,33,33,0.5), transparent);
+  background: radial-gradient(circle, rgba(100, 100, 100, 0.7), rgba(33, 33, 33, 0.5), transparent);
   animation: impactBlast 0.7s ease-out forwards;
 }
+
 .impact-default {
-  background: radial-gradient(circle, rgba(236,240,241,0.8), rgba(149,165,166,0.4), transparent);
+  background: radial-gradient(circle, rgba(236, 240, 241, 0.8), rgba(149, 165, 166, 0.4), transparent);
   animation: impactBlast 0.7s ease-out forwards;
 }
+
 @keyframes impactBlast {
   0% {
-    transform: translate(-50%,-50%) scale(0);
+    transform: translate(-50%, -50%) scale(0);
     opacity: 1;
     filter: brightness(2.5);
   }
+
   40% {
-    transform: translate(-50%,-50%) scale(1.6);
+    transform: translate(-50%, -50%) scale(1.6);
     opacity: 0.7;
   }
+
   100% {
-    transform: translate(-50%,-50%) scale(2.5);
+    transform: translate(-50%, -50%) scale(2.5);
     opacity: 0;
   }
 }
 
-/* === Floating Damage Text ================================================== */
 .floating-dmg {
   position: absolute;
   top: 0;
@@ -1188,40 +1399,47 @@
   pointer-events: none;
   animation: floatUp 1.2s ease-out forwards;
 }
+
 @keyframes floatUp {
   0% {
-    transform: translate(-50%,0) scale(0.5);
+    transform: translate(-50%, 0) scale(0.5);
     opacity: 0;
   }
+
   20% {
-    transform: translate(-50%,-20px) scale(1.2);
+    transform: translate(-50%, -20px) scale(1.2);
     opacity: 1;
   }
+
   100% {
-    transform: translate(-50%,-80px) scale(1);
+    transform: translate(-50%, -80px) scale(1);
     opacity: 0;
   }
 }
 
-/* === Hero Shake ============================================================ */
 .hero-shake {
-  animation: heroShake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+  animation: heroShake 0.4s cubic-bezier(.36, .07, .19, .97) both;
 }
+
 @keyframes heroShake {
+
   10%,
   90% {
     transform: translate3d(-2px, 0, 0);
     filter: brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(3);
   }
+
   20%,
   80% {
     transform: translate3d(4px, 0, 0);
   }
+
   30%,
   50%,
   70% {
     transform: translate3d(-8px, 0, 0);
   }
+
   40%,
   60% {
     transform: translate3d(8px, 0, 0);
