@@ -17,8 +17,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   updateHeaderAuth();
 
+  const path = window.location.pathname;
+  let initialView = path.substring(1) || 'home';
+  if (initialView === 'heroes') initialView = 'character-info';
+
   if (!AppState.currentUser) {
-    navigate('home');
+    const publicViews = ['home', 'login', 'register', 'character-info', 'top10'];
+    if (!publicViews.includes(initialView)) {
+      initialView = 'login';
+    }
+    navigate(initialView, true);
     return;
   }
 
@@ -37,5 +45,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  navigate('lobby');
+  // If path is '/' or '/login' but user is logged in, redirect to lobby
+  if (initialView === 'home' || initialView === 'login' || initialView === 'register') {
+    initialView = 'lobby';
+  }
+
+  navigate(initialView, true);
 });

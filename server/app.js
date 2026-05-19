@@ -37,6 +37,14 @@ app.get('/health', (req, res) => {
   res.json({ status: 'Server is running', timestamp: new Date() });
 });
 
+// ── SPA Fallback (HTML5 History API) ──────────────────────────────────────────
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return next();
+  // Ignore API calls that 404'd
+  if (req.path.startsWith('/api/')) return next();
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // ── Centralized error handler (must be LAST) ──────────────────────────────────
 app.use(require('./middleware/errorHandler'));
 

@@ -15,12 +15,24 @@ function updateHeaderAuth() {
   }
 }
 
-function navigate(viewName) {
+function navigate(viewName, skipHistory = false) {
+  // Block navigation away from game/waiting unless explicitly leaving
   const lockingViews = ['game', 'waiting'];
   const currentActive = document.querySelector('.view.active');
   const currentViewId = currentActive ? currentActive.id.replace('view-', '') : null;
   if (AppState.inRoom && lockingViews.includes(currentViewId) && !lockingViews.includes(viewName)) {
-    return; 
+    return; // silently block — user must use Leave/Resign button
+  }
+
+  // Define route mapping
+  const routeMap = {
+    'home': '/',
+    'character-info': '/heroes'
+  };
+  const urlPath = routeMap[viewName] || `/${viewName}`;
+
+  if (!skipHistory) {
+    history.pushState({ viewName }, '', urlPath);
   }
 
   document.querySelectorAll('.view').forEach((v) => {
@@ -45,17 +57,30 @@ function navigate(viewName) {
     if (nicknameToLoad) {
       loadProfile(nicknameToLoad);
     } else {
-      return navigate('home');
+      return navigate('home', true);
     }
     window._targetProfileNickname = null;
   }
   if (viewName === 'home') loadCharacterInfo('home-heroes-list', false);
   if (viewName === 'character-info') loadCharacterInfo('character-info-heroes-list', true);
   if (viewName === 'lobby') {
-    if (!AppState.currentUser) return navigate('login');
+    if (!AppState.currentUser) return navigate('login', true);
     AppState.socket.emit('get-rooms');
   }
 }
+
+// Handle browser Back/Forward buttons
+window.addEventListener('popstate', (e) => {
+  if (e.state && e.state.viewName) {
+    navigate(e.state.viewName, true);
+  } else {
+    // Fallback if no state
+    const path = window.location.pathname;
+    let view = path.substring(1) || 'home';
+    if (view === 'heroes') view = 'character-info';
+    navigate(view, true);
+  }
+});
 
 window.navigate = navigate;
 
@@ -63,3 +88,11 @@ window.viewUserProfile = function (nickname) {
   window._targetProfileNickname = nickname;
   navigate('profile');
 };
+
+// Prevent '#' from being appended to the URL by default anchor clicks
+document.addEventListener('click', (e) => {
+  const anchor = e.target.closest('a');
+  if (anchor && anchor.getAttribute('href') === '#') {
+    e.preventDefault();
+  }
+});
