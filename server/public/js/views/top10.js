@@ -1,5 +1,3 @@
-// Top-10 leaderboard view loader.
-
 async function loadTop10() {
   try {
     const { data } = await Api.get('/players/top');

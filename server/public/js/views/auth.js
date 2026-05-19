@@ -22,7 +22,6 @@ window.handleLogin = async function (e) {
       localStorage.setItem('token', data.token);
       AppState.currentUser = { nickname };
 
-      // Restore hero/avatar/settings from DB
       try {
         const { res: pRes, data: profile } = await Api.get(`/players/${nickname}`);
         if (pRes.ok) {
@@ -35,7 +34,7 @@ window.handleLogin = async function (e) {
 
       localStorage.setItem('user', JSON.stringify(AppState.currentUser));
       updateHeaderAuth();
-      initSocket(); // connect socket with fresh token
+      initSocket(); 
       navigate('lobby');
     } else {
       showFormError('login-error', data.error);

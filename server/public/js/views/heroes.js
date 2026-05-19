@@ -65,7 +65,6 @@ window.selectHero = async function (heroId, heroAlias) {
     AppState.currentUser.heroAlias = heroAlias;
     localStorage.setItem('user', JSON.stringify(AppState.currentUser));
 
-    // Update visuals without full reload
     document.querySelectorAll('.hero-section').forEach((s) => s.classList.remove('hero-section-selected'));
     document.querySelectorAll('[id^="hero-select-btn-"]').forEach((b) => {
       b.textContent = 'Select';

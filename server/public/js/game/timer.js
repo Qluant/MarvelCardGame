@@ -1,5 +1,3 @@
-// Game turn timer: counts down 60s, auto-passes turn on expiry.
-
 window.startGameTimer = function () {
   if (AppState.gameTimerInterval) clearInterval(AppState.gameTimerInterval);
   AppState.gameTimeLeft = 60;
@@ -12,7 +10,7 @@ window.startGameTimer = function () {
     } else {
       AppState.gameTimeLeft = 60;
       document.querySelector('.timer').innerText = AppState.gameTimeLeft;
-      doPassTurn(); // auto-pass when time runs out
+      doPassTurn(); 
     }
   }, 1000);
 };

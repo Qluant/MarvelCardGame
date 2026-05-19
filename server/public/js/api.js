@@ -1,7 +1,3 @@
-// Api module — all fetch calls go through here.
-// Automatically attaches Authorization header when token exists.
-// All methods return { res, data } so callers can check res.ok and read data.
-
 const API_URL = '/api';
 
 const Api = {

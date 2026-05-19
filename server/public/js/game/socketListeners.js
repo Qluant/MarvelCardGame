@@ -1,7 +1,3 @@
-// All socket.on() handlers. Called once from initSocket() in socket.js.
-// References AppState, renderBoard, animateDrawCards, showTurnOverlay, etc.
-// All those functions are defined in earlier scripts in the load order.
-
 function setupSocketListeners() {
   const socket = AppState.socket;
 
@@ -57,7 +53,6 @@ function setupSocketListeners() {
         AppState.initialCoinTossDone = false;
       } else { AppState.initialCoinTossDone = true; }
 
-      // Apply hero backgrounds
       const heroHalfClass = (id) => ({1:'half-ironman',2:'half-torch',3:'half-venom'}[id]||'');
       const applyHeroBg = (bgElem, heroId) => {
         if (!bgElem) return;
@@ -96,7 +91,6 @@ function setupSocketListeners() {
   });
 
   socket.on('turn-order-change', ({ firstPlayerId, firstPlayerNickname }) => {
-    // Intentionally left blank. The user requested to only keep the blue/red turn text.
   });
 
   socket.on('combat-animation', async (animData) => {
@@ -117,8 +111,7 @@ function setupSocketListeners() {
         const preText = AppState.isMyTurn === null ? 'Next Round' : 'Your turn is over';
         showTurnOverlay(preText, '#4dabf7', 'Enemy Turn', '#e03131');
       }
-      
-      // Reset timer on turn change
+
       if (AppState.gameTimerInterval) clearInterval(AppState.gameTimerInterval);
       AppState.gameTimeLeft = 60;
       document.querySelector('.timer').innerText = AppState.gameTimeLeft;

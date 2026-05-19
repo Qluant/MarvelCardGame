@@ -1,7 +1,3 @@
-// SPA router. Manages view visibility and header state.
-// All views are hidden by default; navigate() shows exactly one at a time.
-// inRoom guard prevents accidental navigation away from game/waiting views.
-
 function updateHeaderAuth() {
   if (AppState.currentUser) {
     document.getElementById('nav-profile').style.display = 'inline';
@@ -20,12 +16,11 @@ function updateHeaderAuth() {
 }
 
 function navigate(viewName) {
-  // Block navigation away from game/waiting unless explicitly leaving
   const lockingViews = ['game', 'waiting'];
   const currentActive = document.querySelector('.view.active');
   const currentViewId = currentActive ? currentActive.id.replace('view-', '') : null;
   if (AppState.inRoom && lockingViews.includes(currentViewId) && !lockingViews.includes(viewName)) {
-    return; // silently block — user must use Leave/Resign button
+    return; 
   }
 
   document.querySelectorAll('.view').forEach((v) => {
@@ -44,7 +39,6 @@ function navigate(viewName) {
     header.style.display = (viewName === 'game' || viewName === 'waiting') ? 'none' : 'flex';
   }
 
-  // View-specific triggers
   if (viewName === 'top10') loadTop10();
   if (viewName === 'profile') {
     const nicknameToLoad = window._targetProfileNickname || (AppState.currentUser ? AppState.currentUser.nickname : null);

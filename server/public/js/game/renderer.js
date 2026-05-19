@@ -97,7 +97,6 @@ window.hideCardInfo = function () {
 };
 
 function renderBoard() {
-  // Turn indicator
   const indicator = document.getElementById('turn-indicator');
   if (indicator) {
     if (!AppState.gameStarted) {
@@ -112,7 +111,6 @@ function renderBoard() {
     }
   }
 
-  // AP displays
   const pApText = document.getElementById('player-ap-text');
   const pApBubbles = document.getElementById('player-ap-bubbles');
   const eApText = document.getElementById('enemy-ap-text');
@@ -155,7 +153,7 @@ function renderBoard() {
       </li>`;
   });
 
-  // Enemy hand (face-down)
+  // Enemy hand 
   const getCbClass = (heroId) => heroId === 1 ? ' card-back-ironman' : heroId === 2 ? ' card-back-torch' : heroId === 3 ? ' card-back-venom' : '';
   const playerCbClass = getCbClass(AppState.playerHeroId);
   const enemyCbClass = getCbClass(AppState.enemyHeroId);
@@ -180,7 +178,7 @@ function renderBoard() {
       </li>`;
   }
 
-  // Enemy staged (face-down, or face-up if combat phase)
+  // Enemy staged 
   const eStagedList = document.getElementById('enemy-staged-cards');
   eStagedList.innerHTML = '';
   if (AppState.enemyStagedCards && AppState.enemyStagedCards.length > 0) {
@@ -197,14 +195,12 @@ function renderBoard() {
     }
   }
 
-  // Active cards
   const pActiveList = document.getElementById('player-active-cards');
   pActiveList.innerHTML = AppState.playerActiveCards.map((c) => `<li class="active-card-slot">${renderBoardCard(c, false)}</li>`).join('');
 
   const eActiveList = document.getElementById('enemy-active-cards');
   eActiveList.innerHTML = AppState.enemyActiveCards.map((c) => `<li class="active-card-slot">${renderBoardCard(c, false)}</li>`).join('');
 
-  // Player staged
   const pStagedList = document.getElementById('player-staged-cards');
   pStagedList.innerHTML = AppState.playerStagedCards.map((c) => `<li class="active-card-slot" style="transform:scale(0.9)">${renderBoardCard(c, true)}</li>`).join('');
 }
