@@ -1,23 +1,8 @@
-/**
- * models/PlayerHeroStats.js
- * Data access layer for the PlayerHeroStats table.
- * Only SQL — no HTTP, no socket, no validation.
- */
-
 const db = require('../db/connection');
 
 const PlayerHeroStats = {
-  /**
-   * Insert or update per-hero stats for a player.
-   * Uses INSERT ... ON DUPLICATE KEY UPDATE — single DB call for both cases.
-   *
-   * @param {number} playerId
-   * @param {number} heroId
-   * @param {{ won: boolean, lost: boolean, drew: boolean, dmgDealt: number, dmgDefended: number, cardsPlayed: number }} data
-   * @returns {Promise<void>}
-   */
   async upsertResult(playerId, heroId, { won, lost, drew, dmgDealt, dmgDefended, cardsPlayed }) {
-    const winAdd  = won  ? 1 : 0;
+    const winAdd = won ? 1 : 0;
     const lossAdd = lost ? 1 : 0;
     const drawAdd = drew ? 1 : 0;
 
@@ -37,11 +22,6 @@ const PlayerHeroStats = {
     );
   },
 
-  /**
-   * Get all hero stats for a given player, joined with hero alias.
-   * @param {number} playerId
-   * @returns {Promise<Object[]>} [{ player_id, hero_id, alias, wins, loses, draws, ... }]
-   */
   async getByPlayer(playerId) {
     const [rows] = await db.query(
       `SELECT phs.*, h.alias

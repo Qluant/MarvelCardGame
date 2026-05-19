@@ -1,8 +1,7 @@
-/* ==========================================================================
-   auth.css — Login / Register forms and form elements
-   ========================================================================== */
-
-.login-form, .register-form, .create-room, .join-room {
+.login-form,
+.register-form,
+.create-room,
+.join-room {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -17,7 +16,8 @@
   gap: 20px;
 }
 
-.login-form h2, .register-form h2 {
+.login-form h2,
+.register-form h2 {
   font-family: var(--font-comic);
   font-size: 2.5rem;
   color: var(--marvel-red);
@@ -47,7 +47,8 @@ label {
   letter-spacing: 1px;
 }
 
-input[type="text"], input[type="password"] {
+input[type="text"],
+input[type="password"] {
   background: rgba(0, 0, 0, 0.5);
   border: 1px solid var(--glass-border);
   color: white;
@@ -57,7 +58,8 @@ input[type="text"], input[type="password"] {
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-input[type="text"]:focus, input[type="password"]:focus {
+input[type="text"]:focus,
+input[type="password"]:focus {
   border-color: var(--marvel-red);
   box-shadow: 0 0 10px var(--marvel-red-glow);
   outline: none;
@@ -77,8 +79,15 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 @keyframes formErrorFadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 button[type="submit"] {
@@ -105,8 +114,9 @@ button[type="submit"]:active {
   transform: translateY(1px);
 }
 
-/* Secondary ghost buttons (login/register "switch" links) */
-.login-form > button, .register-form > button, .join-room > button[type="button"] {
+.login-form>button,
+.register-form>button,
+.join-room>button[type="button"] {
   background: transparent;
   color: var(--marvel-grey);
   font-family: var(--font-body);
@@ -115,7 +125,8 @@ button[type="submit"]:active {
   letter-spacing: normal;
 }
 
-.login-form > button:hover, .register-form > button:hover {
+.login-form>button:hover,
+.register-form>button:hover {
   color: white;
   text-decoration: underline;
 }

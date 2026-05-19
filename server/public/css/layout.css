@@ -1,9 +1,3 @@
-/* ==========================================================================
-   layout.css — Header, Nav, Page shell, View routing, Glass panels,
-                Top10, Profile, Heroes compendium layout
-   ========================================================================== */
-
-/* === Header & Navigation ================================================== */
 .app-header {
   width: 100%;
   background: var(--marvel-darker);
@@ -53,13 +47,13 @@
   padding: 5px 15px;
   border-radius: 4px;
 }
+
 .logout-btn:hover {
   color: var(--marvel-light);
   border-color: var(--marvel-red);
   background: rgba(230, 36, 41, 0.2);
 }
 
-/* === Page Shell ============================================================ */
 .app-container-routed {
   min-height: 100vh;
   display: flex;
@@ -95,73 +89,79 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
-/* === View Routing ========================================================== */
 .view {
   display: none;
 }
+
 .view.active {
   display: flex;
 }
 
-/* === Top 10 / Leaderboard ================================================= */
 .leaderboard-panel h2 {
   text-align: center;
   color: var(--marvel-red);
   font-size: 2.5rem;
   margin-bottom: 20px;
 }
+
 .leaderboard {
   width: 100%;
   border-collapse: collapse;
 }
-.leaderboard th, .leaderboard td {
+
+.leaderboard th,
+.leaderboard td {
   padding: 12px;
   text-align: left;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
-.leaderboard th       {
+
+.leaderboard th {
   color: var(--marvel-red);
   font-family: var(--font-header);
   font-size: 1.2rem;
 }
 
-/* === Profile =============================================================== */
 .profile-panel h2 {
   text-align: center;
   color: var(--marvel-red);
   font-size: 2.5rem;
   margin-bottom: 30px;
 }
+
 .profile-stats {
   display: flex;
   gap: 20px;
   justify-content: space-between;
   flex-wrap: wrap;
 }
+
 .stat-box {
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   padding: 20px;
   border-radius: 8px;
   text-align: center;
   flex: 1;
   min-width: 150px;
 }
+
 .stat-box span {
   display: block;
   color: var(--marvel-grey);
   margin-bottom: 10px;
   font-weight: bold;
 }
+
 .stat-box strong {
   font-size: 2rem;
   font-family: var(--font-header);
   color: var(--marvel-red);
 }
 
-/* === Info / Heroes Compendium ============================================= */
 .info-page {
   flex-direction: column;
 }
+
 .info-page h2 {
   text-align: center;
   font-family: var(--font-comic);
@@ -170,12 +170,14 @@
   margin-bottom: 30px;
   width: 100%;
 }
+
 .heroes-list {
   display: flex;
   flex-direction: column;
   gap: 30px;
   width: 100%;
 }
+
 .hero-section h3 {
   font-family: var(--font-header);
   font-size: 2rem;
@@ -184,12 +186,14 @@
   padding-bottom: 5px;
   color: white;
 }
+
 .hero-cards {
   display: flex;
   gap: 20px;
   overflow-x: auto;
   padding-bottom: 20px;
 }
+
 .card-wrapper {
   flex-shrink: 0;
 }
