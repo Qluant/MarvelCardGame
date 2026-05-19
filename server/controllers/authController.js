@@ -7,25 +7,21 @@ const authController = {
   async register(req, res, next) {
     const { username, password } = req.body;
 
-    // Validate nickname
     const nickCheck = validateNickname(username);
     if (!nickCheck.valid) {
       return res.status(400).json({ error: nickCheck.message });
     }
 
-    // Validate password
     const passCheck = validatePassword(password);
     if (!passCheck.valid) {
       return res.status(400).json({ error: passCheck.message });
     }
 
-    // Check uniqueness
     const existing = await Player.findByNickname(username);
     if (existing) {
       return res.status(409).json({ error: 'Username already taken' });
     }
 
-    // Hash password and create player
     const passwordHash = await hashPassword(password);
     const { insertId } = await Player.create({ nickname: username, passwordHash });
 
@@ -35,24 +31,21 @@ const authController = {
   async login(req, res, next) {
     const { username, password } = req.body;
 
-    // Basic presence check
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    // Find player — same 401 for "not found" and "wrong password"
+    // same 401 for "not found" and "wrong password"
     const user = await Player.findByNickname(username);
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Verify password
     const isValid = await verifyPassword(password, user.password);
     if (!isValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Sign JWT (24 hours = 86400 seconds)
     const token = signJwt(
       { userId: user.player_id, username: user.nickname },
       config.jwt.secret

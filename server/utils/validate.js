@@ -29,7 +29,7 @@ function validatePassword(value) {
 }
 
 function validateUrl(value) {
-  if (!value) return { valid: true }; // null or empty — allowed
+  if (!value) return { valid: true }; // null or empty is allowed
   try {
     const url = new URL(value);
     if (!['http:', 'https:'].includes(url.protocol)) {

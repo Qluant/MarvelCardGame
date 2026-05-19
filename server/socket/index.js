@@ -1,4 +1,3 @@
-// creates io, attaches JWT auth middleware
 const { verifyJwt } = require('../utils/cryptoHelper');
 const config = require('../config');
 const { getPublicRooms } = require('./gameEngine');
