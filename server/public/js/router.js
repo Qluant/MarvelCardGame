@@ -16,15 +16,23 @@ function updateHeaderAuth() {
 }
 
 function navigate(viewName, skipHistory = false) {
-  // Block navigation away from game/waiting unless explicitly leaving
   const lockingViews = ['game', 'waiting'];
   const currentActive = document.querySelector('.view.active');
   const currentViewId = currentActive ? currentActive.id.replace('view-', '') : null;
   if (AppState.inRoom && lockingViews.includes(currentViewId) && !lockingViews.includes(viewName)) {
-    return; // silently block — user must use Leave/Resign button
+    return; 
   }
 
-  // Define route mapping
+  let target = document.getElementById(`view-${viewName}`);
+
+  if (viewName === 'home' && AppState.currentUser) {
+    viewName = '404';
+    target = document.getElementById(`view-404`);
+  } else if (!target) {
+    viewName = '404';
+    target = document.getElementById(`view-404`);
+  }
+
   const routeMap = {
     'home': '/',
     'character-info': '/heroes'
@@ -40,7 +48,6 @@ function navigate(viewName, skipHistory = false) {
     v.classList.remove('active');
   });
 
-  const target = document.getElementById(`view-${viewName}`);
   if (target) {
     target.style.display = 'flex';
     target.classList.add('active');
@@ -69,12 +76,10 @@ function navigate(viewName, skipHistory = false) {
   }
 }
 
-// Handle browser Back/Forward buttons
 window.addEventListener('popstate', (e) => {
   if (e.state && e.state.viewName) {
     navigate(e.state.viewName, true);
   } else {
-    // Fallback if no state
     const path = window.location.pathname;
     let view = path.substring(1) || 'home';
     if (view === 'heroes') view = 'character-info';
@@ -89,7 +94,6 @@ window.viewUserProfile = function (nickname) {
   navigate('profile');
 };
 
-// Prevent '#' from being appended to the URL by default anchor clicks
 document.addEventListener('click', (e) => {
   const anchor = e.target.closest('a');
   if (anchor && anchor.getAttribute('href') === '#') {

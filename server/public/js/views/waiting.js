@@ -82,7 +82,6 @@ function exitRoom() {
   AppState.playerHeroId = null;
   AppState.enemyHeroId = null;
 
-  // Clear hero backgrounds
   const playerBg = document.getElementById('hero-bg-player');
   const enemyBg = document.getElementById('hero-bg-enemy');
   if (playerBg) { playerBg.className = 'hero-bg-overlay hero-bg-bottom'; playerBg.innerHTML = ''; }

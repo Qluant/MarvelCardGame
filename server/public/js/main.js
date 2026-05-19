@@ -18,13 +18,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateHeaderAuth();
 
   const path = window.location.pathname;
-  let initialView = path.substring(1) || 'home';
-  if (initialView === 'heroes') initialView = 'character-info';
+  let initialView = path.substring(1);
+  if (initialView === '') {
+    initialView = AppState.currentUser ? 'lobby' : 'home';
+  } else if (initialView === 'heroes') {
+    initialView = 'character-info';
+  }
 
   if (!AppState.currentUser) {
     const publicViews = ['home', 'login', 'register', 'character-info', 'top10'];
-    if (!publicViews.includes(initialView)) {
+    const protectedViews = ['lobby', 'profile', 'game', 'waiting'];
+    if (protectedViews.includes(initialView)) {
       initialView = 'login';
+    } else if (!publicViews.includes(initialView)) {
+      initialView = '404';
     }
     navigate(initialView, true);
     return;
@@ -45,8 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // If path is '/' or '/login' but user is logged in, redirect to lobby
-  if (initialView === 'home' || initialView === 'login' || initialView === 'register') {
+  if (initialView === 'login' || initialView === 'register') {
     initialView = 'lobby';
   }
 
