@@ -1,18 +1,8 @@
-/**
- * socket/index.js
- * Socket.IO initialization: creates io, attaches JWT auth middleware,
- * declares shared state (rooms), registers all handlers.
- *
- * Exported as a factory function: (server) => void
- */
-
+// creates io, attaches JWT auth middleware
 const { verifyJwt } = require('../utils/cryptoHelper');
 const config = require('../config');
 const { getPublicRooms } = require('./gameEngine');
 
-/**
- * @param {import('http').Server} server
- */
 module.exports = (server) => {
   const io = require('socket.io')(server, {
     cors: {
@@ -21,13 +11,10 @@ module.exports = (server) => {
     },
   });
 
-  // ── Shared in-memory state ─────────────────────────────────────────────────
   const rooms = {};
-  const activeSockets = {}; // { [nickname]: socketId }
-  const reconnectTimers = {}; // { [nickname]: { timeout, roomId, socketId, rejoinsUsed } }
+  const activeSockets = {};
+  const reconnectTimers = {};
 
-  // ── Socket.IO Auth Middleware ──────────────────────────────────────────────
-  // Runs before io.on('connection'). Rejects without valid JWT.
   io.use((socket, next) => {
     const token = socket.handshake.auth.token;
     if (!token) {
@@ -35,20 +22,18 @@ module.exports = (server) => {
     }
     try {
       const payload = verifyJwt(token, config.jwt.secret);
-      socket.user = payload; // { userId, username } — available in all handlers
+      socket.user = payload;
       next();
     } catch {
       return next(new Error('Invalid or expired token'));
     }
   });
 
-  // ── Connection handler ─────────────────────────────────────────────────────
   io.on('connection', (socket) => {
     console.log(`New client connected: ${socket.id}`);
 
     const nickname = socket.user.username;
     
-    // Tab duplication detection
     if (activeSockets[nickname]) {
       const oldSocketId = activeSockets[nickname];
       io.to(oldSocketId).emit('duplicate-tab');
@@ -63,10 +48,8 @@ module.exports = (server) => {
       }
     });
 
-    // Send current lobby state to the new client immediately
     socket.emit('rooms-update', getPublicRooms(rooms));
 
-    // Register event handlers — each file gets (io, socket, rooms)
     require('./lobbyHandlers')(io, socket, rooms, reconnectTimers);
     require('./gameHandlers')(io, socket, rooms);
     require('./reconnectHandlers')(io, socket, rooms, reconnectTimers);

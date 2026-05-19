@@ -1,12 +1,3 @@
-/**
- * socket/gameHandlers.js
- * Handles in-game player actions: playing/revoking cards, board attacks, passing turn.
- *
- * @param {Object} io
- * @param {Object} socket
- * @param {Object} rooms
- */
-
 const { syncGameState, resolveRound } = require('./gameEngine');
 
 module.exports = (io, socket, rooms) => {
@@ -40,7 +31,6 @@ module.exports = (io, socket, rooms) => {
     if (player.ap < card.cost) {
       return socket.emit('error', 'Not enough AP');
     }
-    // Max 7 Summons on board (staged + in-play)
     if (
       card.category === 'Summon' &&
       player.board.length + player.stagedCards.filter((c) => c.category === 'Summon').length >= 7
@@ -85,7 +75,6 @@ module.exports = (io, socket, rooms) => {
     const attackerIndex = player.board.findIndex((c) => c.uid === attackerUid);
     if (attackerIndex === -1) return;
 
-    // Queue or update attack intent for this attacker
     const existingIndex = player.queuedAttacks.findIndex(
       (a) => a.attackerUid === attackerUid
     );

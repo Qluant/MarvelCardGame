@@ -1,14 +1,3 @@
-/**
- * utils/validate.js
- * Pure validation functions. Each returns { valid: Boolean, message: String }.
- * No side effects, no HTTP, no DB.
- */
-
-/**
- * Nickname: 3–30 chars, alphanumeric + underscore + hyphen.
- * @param {*} value
- * @returns {{ valid: boolean, message: string }}
- */
 function validateNickname(value) {
   if (!value || typeof value !== 'string') {
     return { valid: false, message: 'Nickname is required' };
@@ -26,11 +15,6 @@ function validateNickname(value) {
   return { valid: true };
 }
 
-/**
- * Password: 6–72 chars (72 is bcrypt's practical limit).
- * @param {*} value
- * @returns {{ valid: boolean, message: string }}
- */
 function validatePassword(value) {
   if (!value || typeof value !== 'string') {
     return { valid: false, message: 'Password is required' };
@@ -44,12 +28,6 @@ function validatePassword(value) {
   return { valid: true };
 }
 
-/**
- * Avatar URL: null/empty is allowed (clears avatar).
- * If provided, must be a valid http/https URL.
- * @param {*} value
- * @returns {{ valid: boolean, message: string }}
- */
 function validateUrl(value) {
   if (!value) return { valid: true }; // null or empty — allowed
   try {
@@ -63,11 +41,6 @@ function validateUrl(value) {
   }
 }
 
-/**
- * Hero ID: integer >= 1.
- * @param {*} value
- * @returns {{ valid: boolean, message: string }}
- */
 function validateHeroId(value) {
   const id = Number(value);
   if (!Number.isInteger(id) || id < 1) {
@@ -76,11 +49,6 @@ function validateHeroId(value) {
   return { valid: true };
 }
 
-/**
- * Room name: non-empty string, 1–50 chars.
- * @param {*} value
- * @returns {{ valid: boolean, message: string }}
- */
 function validateRoomName(value) {
   if (!value || typeof value !== 'string') {
     return { valid: false, message: 'Room name is required' };

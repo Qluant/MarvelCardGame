@@ -1,18 +1,7 @@
-/**
- * socket/statsHandlers.js
- * Persistence of game results. Called from gameEngine after game-over.
- * Uses Player and PlayerHeroStats models — no direct db.query() here.
- * Not a socket handler — no socket.on(). Pure async functions.
- */
-
 const Player = require('../models/Player');
 const PlayerHeroStats = require('../models/PlayerHeroStats');
 
-/**
- * Record a win/loss result for two players.
- * @param {{ nickname, heroId, stats: { dmgDealt, dmgDefended, cardsPlayed } }} winner
- * @param {{ nickname, heroId, stats: { dmgDealt, dmgDefended, cardsPlayed } }} loser
- */
+// Record a win/loss, not a draw
 async function recordResult(winner, loser) {
   try {
     await Player.recordWin(winner.nickname);
@@ -47,11 +36,6 @@ async function recordResult(winner, loser) {
   }
 }
 
-/**
- * Record a draw result for two players.
- * @param {{ nickname, heroId, stats: { dmgDealt, dmgDefended, cardsPlayed } }} p1
- * @param {{ nickname, heroId, stats: { dmgDealt, dmgDefended, cardsPlayed } }} p2
- */
 async function recordDraw(p1, p2) {
   try {
     await Promise.all([
