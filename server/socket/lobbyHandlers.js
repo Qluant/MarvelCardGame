@@ -1,12 +1,3 @@
-/**
- * socket/lobbyHandlers.js
- * Handles room creation, joining, leaving, and room list sync.
- *
- * @param {Object} io
- * @param {Object} socket
- * @param {Object} rooms
- */
-
 const { validateRoomName, validateHeroId } = require('../utils/validate');
 const {
   getPublicRooms,
@@ -89,7 +80,6 @@ module.exports = (io, socket, rooms, reconnectTimers) => {
   });
 
   socket.on('leave-room', (roomId) => {
-    // Intentional leave — clear any pending reconnect timer for this socket
     const user = Object.keys(reconnectTimers).find(
       (nick) =>
         reconnectTimers[nick].roomId === roomId &&

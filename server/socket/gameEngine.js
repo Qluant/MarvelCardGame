@@ -1,39 +1,15 @@
-/**
- * socket/gameEngine.js
- * All game business logic as pure/quasi-pure functions.
- * Receives io, room, rooms as explicit arguments — no global state.
- * Does NOT register any socket.on(). Handlers call these functions.
- *
- */
-
 const crypto = require('crypto');
 const Card = require('../models/Card');
 const { recordResult, recordDraw } = require('./statsHandlers');
 
 const HAND_SIZE = 5;
 
-// ── Public room list ──────────────────────────────────────────────────────────
-
-/**
- * Returns the list of rooms visible in the lobby (not full, public).
- * @param {Object} rooms
- * @returns {{ id: string, name: string, isPrivate: boolean }[]}
- */
 function getPublicRooms(rooms) {
   return Object.values(rooms)
     .filter((r) => r.players.length < 2)
     .map((r) => ({ id: r.id, name: r.name, isPrivate: r.isPrivate || false }));
 }
 
-// ── Game state sync ───────────────────────────────────────────────────────────
-
-/**
- * Emit personalized sync-game-state to each player in the room.
- * Keeps the same payload shape as the original server.js for client compatibility.
- * @param {Object} io
- * @param {string} roomId
- * @param {Object} rooms
- */
 function syncGameState(io, roomId, rooms) {
   const room = rooms[roomId];
   if (!room || room.players.length < 2) return;
@@ -77,26 +53,16 @@ function syncGameState(io, roomId, rooms) {
   });
 }
 
-// ── Passives ──────────────────────────────────────────────────────────────────
-
-/**
- * Apply hero-specific passive abilities for a player before round resolution.
- * Mutates player in-place.
- * @param {Object} player
- * @returns {string[]} passive trigger messages
- */
 function applyPassives(player) {
   const messages = [];
 
   if (player.heroId === 1) {
-    // Iron Man: 3+ active Summons on board → +1 AP
     const activeSummons = player.board.filter((c) => c.category === 'Summon').length;
     if (activeSummons >= 3) {
       player.ap = Math.min(player.ap + 1, player.maxAp);
       messages.push(`${player.nickname}'s Iron Man passive triggered: +1 AP from active Summons!`);
     }
   } else if (player.heroId === 3) {
-    // Venom: Hybrid cards in staged → boost Trade attack and Summon defense
     const hybridCount = player.stagedCards.filter((c) => c.category === 'Hybrid').length;
     if (hybridCount > 0) {
       let triggeredTrade = false;
@@ -117,7 +83,6 @@ function applyPassives(player) {
       }
     }
   } else if (player.heroId === 2) {
-    // Human Torch: 2+ Trade cards staged → +35% attack for all staged and board cards
     const tradeCards = player.stagedCards.filter((c) => c.category === 'Trade');
     if (tradeCards.length >= 2) {
       player.board.forEach((c) => { c.attack = Math.round(c.attack * 1.35); });
@@ -129,23 +94,10 @@ function applyPassives(player) {
   return messages;
 }
 
-// ── Board attack resolution ───────────────────────────────────────────────────
-
-/**
- * Get the first alive Summon on the opponent's board, or null.
- * @param {Object} opponent
- * @returns {Object|null}
- */
 function getAutoTarget(opponent) {
   return opponent.board.find((c) => c.defense > 0) || null;
 }
 
-/**
- * Resolve all queued board attacks from attackerPlayer against defenderPlayer.
- * Mutates both players' stats, defenderPlayer's armor/hp/board in-place.
- * @param {Object} attackerPlayer
- * @param {Object} defenderPlayer
- */
 function resolveAttacks(attackerPlayer, defenderPlayer) {
   for (const attacker of attackerPlayer.board) {
     if (attacker.defense <= 0) continue;
@@ -189,16 +141,6 @@ function resolveAttacks(attackerPlayer, defenderPlayer) {
   }
 }
 
-// ── Staged card resolution ────────────────────────────────────────────────────
-
-/**
- * Resolve all staged cards for a player:
- * - Trade/Hybrid → attack damage chain against opponent
- * - Summon → pushed to newSummonsList (enters board after all attacks)
- * @param {Object} player
- * @param {Object} opponent
- * @param {Object[]} newSummonsList  mutated in-place
- */
 function resolveStaged(player, opponent, newSummonsList) {
   for (const card of player.stagedCards) {
     if (card.category === 'Trade' || card.category === 'Hybrid') {
@@ -244,14 +186,6 @@ function resolveStaged(player, opponent, newSummonsList) {
   }
 }
 
-// ── Win condition ─────────────────────────────────────────────────────────────
-
-/**
- * Check HP and emit game-over if needed. Records stats via statsHandlers.
- * @param {Object} io
- * @param {Object} room
- * @param {Object} rooms
- */
 function checkWinCondition(io, room, rooms) {
   if (!room || room.players.length !== 2) return;
   const p1 = room.players[0];
@@ -277,23 +211,6 @@ function checkWinCondition(io, room, rooms) {
   }
 }
 
-// ── Round resolution ──────────────────────────────────────────────────────────
-
-/**
- * Full round resolution cycle:
- * 1. Lock UI (currentTurn = null), sync
- * 2. Apply passives
- * 3. Snapshot for animation
- * 4. Calculate armor from Hybrid staged cards
- * 5. Resolve board attacks (both directions)
- * 6. Resolve staged cards (both directions)
- * 7. Summons enter board, dead summons removed
- * 8. Emit combat-animation, wait 4500ms
- * 9. Prep next round (AP, draw, roundCount, turn order)
- * @param {Object} io
- * @param {Object} room
- * @param {Object} rooms
- */
 async function resolveRound(io, room, rooms) {
   room.currentTurn = null;
   syncGameState(io, room.id, rooms);
@@ -345,15 +262,12 @@ async function resolveRound(io, room, rooms) {
   resolveStaged(p1, p2, p1NewSummons);
   resolveStaged(p2, p1, p2NewSummons);
 
-  // Summons enter board only after all attacks resolve
   p1.board.push(...p1NewSummons);
   p2.board.push(...p2NewSummons);
 
-  // Remove dead summons
   p1.board = p1.board.filter((c) => c.defense > 0);
   p2.board = p2.board.filter((c) => c.defense > 0);
 
-  // Finalize animation snapshot
   p1Anim.hpDamageTaken = p1Anim.startHp - p1.hp;
   p1Anim.shieldDamageTaken = Math.max(
     0,
@@ -371,21 +285,17 @@ async function resolveRound(io, room, rooms) {
     passiveMessages: allPassiveMessages,
   });
 
-  // Wait for clients to animate
   await new Promise((resolve) => setTimeout(resolve, 4500));
 
   for (const player of room.players) {
     player.stagedCards = [];
     player.queuedAttacks = [];
 
-    // AP scaling: +3 per round (cumulative up to maxAp)
     player.ap = Math.min(player.ap + 3, player.maxAp);
-    // Every 5th round: bonus +3 AP
     if (room.roundCount % 5 === 0) {
       player.ap = Math.min(player.ap + 3, player.maxAp);
     }
 
-    // Refill hand up to HAND_SIZE
     const cardsNeeded = HAND_SIZE - player.hand.length;
     for (let i = 0; i < cardsNeeded; i++) {
       const card = await drawCard(player.heroId, player.hand);
@@ -396,7 +306,6 @@ async function resolveRound(io, room, rooms) {
   room.turnsPassed = 0;
   room.roundCount = (room.roundCount || 1) + 1;
 
-  // Alternate who goes first each round
   room.firstPlayerIndex = 1 - (room.firstPlayerIndex ?? 0);
   room.currentTurn = room.players[room.firstPlayerIndex].id;
 
@@ -409,22 +318,12 @@ async function resolveRound(io, room, rooms) {
   checkWinCondition(io, room, rooms);
 }
 
-// ── Card draw ─────────────────────────────────────────────────────────────────
-
-/**
- * Draw one card from the hero's deck with weighted randomness.
- * Max 2 copies of any card in hand enforced.
- * @param {number} heroId
- * @param {Object[]} currentHand
- * @returns {Promise<Object|null>}
- */
 async function drawCard(heroId, currentHand = []) {
   if (!heroId) return null;
 
   const rows = await Card.getByHeroId(heroId);
   if (rows.length === 0) return null;
 
-  // Enforce max 2 copies of the same card in hand
   const counts = {};
   for (const c of currentHand) {
     counts[c.baseId] = (counts[c.baseId] || 0) + 1;
@@ -432,7 +331,6 @@ async function drawCard(heroId, currentHand = []) {
   const allowedCards = rows.filter((r) => (counts[r.baseId] || 0) < 2);
   if (allowedCards.length === 0) return null;
 
-  // Weighted random: lower cost = higher probability
   let totalWeight = 0;
   for (const c of allowedCards) {
     c.weight = 100 / (c.cost + 1);
@@ -452,14 +350,6 @@ async function drawCard(heroId, currentHand = []) {
   return { ...card, uid: crypto.randomUUID() };
 }
 
-// ── Initial card deal ─────────────────────────────────────────────────────────
-
-/**
- * Deal initial hands, run coin flip, set first turn.
- * @param {Object} io
- * @param {Object} room
- * @param {Object} rooms
- */
 async function dealCards(io, room, rooms) {
   const firstPlayerIndex = Math.floor(Math.random() * 2);
   room.firstPlayerIndex = firstPlayerIndex;
@@ -487,16 +377,6 @@ async function dealCards(io, room, rooms) {
   syncGameState(io, room.id, rooms);
 }
 
-// ── Player removal ────────────────────────────────────────────────────────────
-
-/**
- * Remove a player from a room by their socket id.
- * If game was active, emits game-over and records stats.
- * @param {Object} io
- * @param {string} socketId
- * @param {string} roomId
- * @param {Object} rooms
- */
 function removePlayerFromRoom(io, socketId, roomId, rooms) {
   const room = rooms[roomId];
   if (!room) return;
@@ -520,13 +400,7 @@ function removePlayerFromRoom(io, socketId, roomId, rooms) {
   io.emit('rooms-update', getPublicRooms(rooms));
 }
 
-/**
- * Remove a player from a room by nickname (used by reconnect timer expiry).
- * @param {Object} io
- * @param {string} nickname
- * @param {string} roomId
- * @param {Object} rooms
- */
+// used by reconnect timer expiry
 function removePlayerByNickname(io, nickname, roomId, rooms) {
   const room = rooms[roomId];
   if (!room) return;
@@ -544,14 +418,11 @@ function removePlayerByNickname(io, nickname, roomId, rooms) {
     if (winner && winner.id && !winner.id.startsWith('__disconnected__')) {
       io.to(winner.id).emit('game-over', { outcome: 'win', opponentNickname: loser.nickname });
     }
-    // Disconnected player has no live socket — nothing to emit to them
     recordResult(winner, loser);
   }
 
   io.emit('rooms-update', getPublicRooms(rooms));
 }
-
-// ── Exports ───────────────────────────────────────────────────────────────────
 
 module.exports = {
   getPublicRooms,
