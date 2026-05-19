@@ -1,374 +1,449 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Great Battle - Marvel Card Game</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/base.css" />
-    <link rel="stylesheet" href="/css/layout.css" />
-    <link rel="stylesheet" href="/css/components.css" />
-    <link rel="stylesheet" href="/css/game.css" />
-    <link rel="stylesheet" href="/css/auth.css" />
-  </head>
-  <body>
-    <!-- HEADER -->
-    <header class="app-header">
-      <div class="header-logo">Great Battle</div>
-      <nav class="header-nav">
-        <a href="#" onclick="navigate('lobby')">Lobby</a>
-        <a href="#" onclick="navigate('home')" id="nav-home">Home</a>
-        <a href="#" onclick="navigate('character-info')" id="nav-hero-select">Heroes</a>
-        <a href="#" onclick="navigate('top10')">Top 10</a>
-        <a href="#" id="nav-profile" style="display:none;" onclick="navigate('profile')">Profile</a>
-        <a href="#" id="nav-login" onclick="navigate('login')">Login</a>
-        <button id="nav-logout" style="display:none;" class="logout-btn" onclick="handleLogout()">Logout</button>
-      </nav>
-    </header>
 
-    <div class="app-container-routed">
-      <main class="main-content">
-        
-        <!-- HOME VIEW (Unregistered & General) -->
-        <div id="view-home" class="view page-container info-page">
-          <div class="glass-panel" style="text-align: center; margin-bottom: 30px;">
-            <h1 style="font-family: var(--font-comic); font-size: 3rem; color: var(--marvel-red); margin-bottom: 15px;">Welcome to Great Battle!</h1>
-            <p style="font-size: 1.2rem; line-height: 1.6;">
-              Great Battle is a fast-paced Hearthstone-like Marvel Card Game.
-              Choose your hero, manage your Action Points (AP), and place cards on the board to defeat your opponent!
-            </p>
-            <div style="margin-top: 20px; text-align: left; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 8px; border: 1px solid var(--marvel-red);">
-              <h3 style="font-family: var(--font-header); color: #f39c12; margin-bottom: 10px;">How to Play:</h3>
-              <ul style="line-height: 1.6; list-style-type: square; margin-left: 20px;">
-                <li><strong>Heroes:</strong> Each player chooses a Marvel hero with a unique passive ability and specialized card deck.</li>
-                <li><strong>Action Points (AP):</strong> You gain AP every round (up to a max cap). Use AP to play cards from your hand.</li>
-                <li><strong>Cards:</strong> Play cards to the staging area. <em>Trade</em> and <em>Hybrid</em> cards deal damage instantly during the Combat Phase. <em>Summons</em> will spawn onto your board to defend you!</li>
-                <li><strong>Combat:</strong> When both players end their turn, the Combat Phase begins. Cards attack automatically. Summons act as a shield to protect your Hero's HP.</li>
-                <li><strong>Victory:</strong> Deplete your opponent's Hero HP to 0 to win the match!</li>
-              </ul>
-            </div>
-            <div style="margin-top: 20px;" id="home-auth-buttons">
-              <button onclick="navigate('register')" style="background: var(--marvel-red); color: white; padding: 12px 24px; font-size: 1.2rem; border: none; border-radius: 6px; cursor: pointer; font-family: var(--font-header);">Create an Account to Play</button>
-              <button onclick="navigate('login')" style="background: transparent; border: 2px solid var(--marvel-grey); color: white; padding: 12px 24px; font-size: 1.2rem; border-radius: 6px; cursor: pointer; font-family: var(--font-header); margin-left: 10px;">Login</button>
-            </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marvel Smash</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600&family=Oswald:wght@500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/layout.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/game.css" />
+  <link rel="stylesheet" href="/css/auth.css" />
+</head>
+
+<body>
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-logo">Marvel Smash</div>
+    <nav class="header-nav">
+      <a href="#" onclick="navigate('lobby')">Lobby</a>
+      <a href="#" onclick="navigate('home')" id="nav-home">Home</a>
+      <a href="#" onclick="navigate('character-info')" id="nav-hero-select">Heroes</a>
+      <a href="#" onclick="navigate('top10')">Top 10</a>
+      <a href="#" id="nav-profile" style="display:none;" onclick="navigate('profile')">Profile</a>
+      <a href="#" id="nav-login" onclick="navigate('login')">Login</a>
+      <button id="nav-logout" style="display:none;" class="logout-btn" onclick="handleLogout()">Logout</button>
+    </nav>
+  </header>
+
+  <div class="app-container-routed">
+    <main class="main-content">
+
+      <!-- HOME VIEW (Unregistered & General) -->
+      <div id="view-home" class="view page-container info-page">
+        <div class="glass-panel" style="text-align: center; margin-bottom: 30px;">
+          <h1 style="font-family: var(--font-comic); font-size: 3rem; color: var(--marvel-red); margin-bottom: 15px;">
+            Welcome to Marvel Smash!</h1>
+          <p style="font-size: 1.2rem; line-height: 1.6;">
+            Marvel Smash is a fast-paced card game.
+            Choose your hero, manage your Action Points (AP), and place cards on the board to defeat your opponent!
+          </p>
+          <div
+            style="margin-top: 20px; text-align: left; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 8px; border: 1px solid var(--marvel-red);">
+            <h3 style="font-family: var(--font-header); color: #f39c12; margin-bottom: 10px;">How to Play:</h3>
+            <ul style="line-height: 1.6; list-style-type: square; margin-left: 20px;">
+              <li><strong>Heroes:</strong> Each player chooses a Marvel hero with a unique passive ability and
+                specialized card deck.</li>
+              <li><strong>Action Points (AP):</strong> You gain AP every round (up to a max cap). Use AP to play cards
+                from your hand.</li>
+              <li><strong>Cards:</strong> Play cards to the staging area. <em>Trade</em> and <em>Hybrid</em> cards deal
+                damage instantly during the Combat Phase. <em>Summons</em> will spawn onto your board to defend you!
+              </li>
+              <li><strong>Combat:</strong> When both players end their turn, the Combat Phase begins. Cards attack
+                automatically. Summons act as a shield to protect your Hero's HP.</li>
+              <li><strong>Victory:</strong> Deplete your opponent's Hero HP to 0 to win the match!</li>
+            </ul>
           </div>
-
-          <h2>Heroes &amp; Cards Compendium</h2>
-          <div class="heroes-list" id="home-heroes-list"></div>
+          <div style="margin-top: 20px;" id="home-auth-buttons">
+            <button onclick="navigate('register')"
+              style="background: var(--marvel-red); color: white; padding: 12px 24px; font-size: 1.2rem; border: none; border-radius: 6px; cursor: pointer; font-family: var(--font-header);">Create
+              an Account to Play</button>
+            <button onclick="navigate('login')"
+              style="background: transparent; border: 2px solid var(--marvel-grey); color: white; padding: 12px 24px; font-size: 1.2rem; border-radius: 6px; cursor: pointer; font-family: var(--font-header); margin-left: 10px;">Login</button>
+          </div>
         </div>
-        
-        <!-- LOGIN VIEW -->
-        <div id="view-login" class="view page-container" style="max-width: 400px;">
-          <div class="login-form">
-            <h2>Sign In</h2>
-            <form onsubmit="handleLogin(event)">
+
+        <h2>Heroes &amp; Cards Compendium</h2>
+        <div class="heroes-list" id="home-heroes-list"></div>
+      </div>
+
+      <!-- LOGIN VIEW -->
+      <div id="view-login" class="view page-container" style="max-width: 400px;">
+        <div class="login-form">
+          <h2>Sign In</h2>
+          <form onsubmit="handleLogin(event)">
+            <div>
+              <label>Nickname</label>
+              <input type="text" id="login-nickname" required />
+            </div>
+            <div>
+              <label>Password</label>
+              <input type="password" id="login-password" required />
+            </div>
+            <div id="login-error" class="form-error" style="display: none;"></div>
+            <button type="submit">Battle</button>
+          </form>
+          <button onclick="navigate('register')">Don't have an account? Register</button>
+        </div>
+      </div>
+
+      <!-- REGISTER VIEW -->
+      <div id="view-register" class="view page-container" style="max-width: 400px;">
+        <div class="register-form">
+          <h2>Create Account</h2>
+          <form onsubmit="handleRegister(event)">
+            <div>
+              <label>Nickname</label>
+              <input type="text" id="reg-nickname" required />
+            </div>
+            <div>
+              <label>Password</label>
+              <input type="password" id="reg-password" required />
+            </div>
+            <div>
+              <label>Confirm Password</label>
+              <input type="password" id="reg-confirm-password" required />
+            </div>
+            <div id="reg-error" class="form-error" style="display: none;"></div>
+            <button type="submit">Sign Up</button>
+          </form>
+          <button onclick="navigate('login')">Already have an account? Login</button>
+        </div>
+      </div>
+
+      <!-- LOBBY VIEW -->
+      <div id="view-lobby" class="view page-container">
+        <div class="room-list glass-panel">
+          <h2>Battle Lobby</h2>
+
+          <div class="create-room" style="margin-bottom: 20px; padding: 20px;">
+            <h3>Create Room</h3>
+            <form onsubmit="handleCreateRoom(event)">
               <div>
-                <label>Nickname</label>
-                <input type="text" id="login-nickname" required />
+                <label>Room Name</label>
+                <input type="text" id="create-room-name" required />
               </div>
-              <div>
+              <div style="flex-direction: row; align-items: center; gap: 10px;">
+                <input type="checkbox" id="create-room-private"
+                  onchange="document.getElementById('create-room-pwd').style.display = this.checked ? 'block' : 'none'"
+                  style="width: auto; margin: 0;" />
+                <label style="margin: 0;">Private Room</label>
+              </div>
+              <div id="create-room-pwd" style="display:none;">
                 <label>Password</label>
-                <input type="password" id="login-password" required />
+                <input type="password" id="create-room-password" />
               </div>
-              <div id="login-error" class="form-error" style="display: none;"></div>
-              <button type="submit">Battle</button>
+              <button type="submit">Create</button>
             </form>
-            <button onclick="navigate('register')">Don't have an account? Register</button>
           </div>
+
+          <h3>Active Open Rooms</h3>
+          <div id="lobby-rooms-container">
+            <p>Loading rooms...</p>
+          </div>
+
+          <div id="join-private-modal"
+            style="display:none; margin-top:20px; padding: 20px; background: rgba(0,0,0,0.8); border: 1px solid var(--marvel-red);">
+            <h3 id="join-private-title">Join Private Room</h3>
+            <input type="hidden" id="join-private-id" />
+            <div>
+              <label>Password</label>
+              <input type="password" id="join-private-password" />
+            </div>
+            <div style="margin-top:15px; display: flex; gap: 10px;">
+              <button onclick="submitJoinPrivate()"
+                style="background: var(--marvel-red); color: white; border: none; padding: 10px 20px; font-family: var(--font-header); font-size: 1.2rem; cursor: pointer; border-radius: 4px;">Join
+                Room</button>
+              <button onclick="document.getElementById('join-private-modal').style.display='none'"
+                style="background: transparent; border: 2px solid var(--marvel-grey); color: white; padding: 10px 20px; font-family: var(--font-header); font-size: 1.2rem; cursor: pointer; border-radius: 4px;">Cancel</button>
+            </div>
+          </div>
+
         </div>
+      </div>
 
-        <!-- REGISTER VIEW -->
-        <div id="view-register" class="view page-container" style="max-width: 400px;">
-          <div class="register-form">
-            <h2>Create Account</h2>
-            <form onsubmit="handleRegister(event)">
-              <div>
-                <label>Nickname</label>
-                <input type="text" id="reg-nickname" required />
-              </div>
-              <div>
-                <label>Password</label>
-                <input type="password" id="reg-password" required />
-              </div>
-              <div>
-                <label>Confirm Password</label>
-                <input type="password" id="reg-confirm-password" required />
-              </div>
-              <div id="reg-error" class="form-error" style="display: none;"></div>
-              <button type="submit">Sign Up</button>
-            </form>
-            <button onclick="navigate('login')">Already have an account? Login</button>
+      <!-- CHARACTER INFO VIEW -->
+      <div id="view-character-info" class="view page-container info-page">
+        <h2>Heroes &amp; Cards Compendium</h2>
+        <p class="character-select-subtitle" style="text-align:center;">Browse hero decks · Click
+          <strong>Select</strong> to choose your fighter
+        </p>
+        <div class="heroes-list" id="character-info-heroes-list"></div>
+      </div>
+
+      <div id="view-waiting" class="view page-container">
+        <div class="waiting-container glass-panel"
+          style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; text-align: center;">
+          <h1 class="waiting-title"
+            style="font-family: var(--font-comic); font-size: 4rem; color: var(--marvel-red); text-shadow: 2px 2px 0px #000; margin: 0; letter-spacing: 4px;">
+            Waiting...</h1>
+          <div class="waiting-spinner"
+            style="width: 60px; height: 60px; border: 6px solid var(--glass-border); border-top: 6px solid var(--marvel-red); border-radius: 50%; animation: spin 1s linear infinite;">
           </div>
+          <div class="waiting-tip-container"
+            style="max-width: 400px; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 12px; border: 1px solid var(--marvel-red);">
+            <h3 style="color: var(--marvel-grey); margin-bottom: 10px; font-size: 1rem; letter-spacing: 2px;">TIP</h3>
+            <p id="waiting-tip" style="font-size: 1.2rem; line-height: 1.5;">Loading tips...</p>
+          </div>
+          <button class="leave-btn"
+            style="position: relative; background: transparent; border: 2px solid var(--marvel-grey); color: white; padding: 10px 20px; border-radius: 8px; font-family: var(--font-header); font-size: 1.2rem; cursor: pointer; transition: all 0.2s;"
+            onmouseover="this.style.borderColor='var(--marvel-red)'; this.style.color='var(--marvel-red)';"
+            onmouseout="this.style.borderColor='var(--marvel-grey)'; this.style.color='white';"
+            onclick="handleLeaveWaiting()">Leave Room</button>
+          <style>
+            @keyframes spin {
+              0% {
+                transform: rotate(0deg);
+              }
+
+              100% {
+                transform: rotate(360deg);
+              }
+            }
+          </style>
         </div>
+      </div>
 
-        <!-- LOBBY VIEW -->
-        <div id="view-lobby" class="view page-container">
-          <div class="room-list glass-panel">
-            <h2>Battle Lobby</h2>
-            
-            <div class="create-room" style="margin-bottom: 20px; padding: 20px;">
-              <h3>Create Room</h3>
-              <form onsubmit="handleCreateRoom(event)">
-                <div>
-                  <label>Room Name</label>
-                  <input type="text" id="create-room-name" required />
-                </div>
-                <div style="flex-direction: row; align-items: center; gap: 10px;">
-                  <input type="checkbox" id="create-room-private" onchange="document.getElementById('create-room-pwd').style.display = this.checked ? 'block' : 'none'" style="width: auto; margin: 0;" />
-                  <label style="margin: 0;">Private Room</label>
-                </div>
-                <div id="create-room-pwd" style="display:none;">
-                  <label>Password</label>
-                  <input type="password" id="create-room-password" />
-                </div>
-                <button type="submit">Create</button>
-              </form>
-            </div>
-
-            <h3>Active Open Rooms</h3>
-            <div id="lobby-rooms-container">
-              <p>Loading rooms...</p>
-            </div>
-            
-            <div id="join-private-modal" style="display:none; margin-top:20px; padding: 20px; background: rgba(0,0,0,0.8); border: 1px solid var(--marvel-red);">
-              <h3 id="join-private-title">Join Private Room</h3>
-              <input type="hidden" id="join-private-id" />
-              <div>
-                <label>Password</label>
-                <input type="password" id="join-private-password" />
-              </div>
-              <div style="margin-top:15px; display: flex; gap: 10px;">
-                <button onclick="submitJoinPrivate()" style="background: var(--marvel-red); color: white; border: none; padding: 10px 20px; font-family: var(--font-header); font-size: 1.2rem; cursor: pointer; border-radius: 4px;">Join Room</button>
-                <button onclick="document.getElementById('join-private-modal').style.display='none'" style="background: transparent; border: 2px solid var(--marvel-grey); color: white; padding: 10px 20px; font-family: var(--font-header); font-size: 1.2rem; cursor: pointer; border-radius: 4px;">Cancel</button>
-              </div>
-            </div>
-
-          </div>
+      <!-- TOP 10 VIEW -->
+      <div id="view-top10" class="view page-container">
+        <div class="glass-panel leaderboard-panel">
+          <h2>Top 10 Performers</h2>
+          <table class="leaderboard">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Avatar</th>
+                <th>Nickname</th>
+                <th>Wins</th>
+                <th>Loses</th>
+                <th>Draws</th>
+                <th>Winstreak</th>
+              </tr>
+            </thead>
+            <tbody id="top10-tbody"></tbody>
+          </table>
         </div>
+      </div>
 
-        <!-- CHARACTER INFO VIEW -->
-        <div id="view-character-info" class="view page-container info-page">
-          <h2>Heroes &amp; Cards Compendium</h2>
-          <p class="character-select-subtitle" style="text-align:center;">Browse hero decks · Click <strong>Select</strong> to choose your fighter</p>
-          <div class="heroes-list" id="character-info-heroes-list"></div>
-        </div>
-
-        <div id="view-waiting" class="view page-container">
-          <div class="waiting-container glass-panel" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; text-align: center;">
-            <h1 class="waiting-title" style="font-family: var(--font-comic); font-size: 4rem; color: var(--marvel-red); text-shadow: 2px 2px 0px #000; margin: 0; letter-spacing: 4px;">Waiting...</h1>
-            <div class="waiting-spinner" style="width: 60px; height: 60px; border: 6px solid var(--glass-border); border-top: 6px solid var(--marvel-red); border-radius: 50%; animation: spin 1s linear infinite;"></div>
-            <div class="waiting-tip-container" style="max-width: 400px; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 12px; border: 1px solid var(--marvel-red);">
-              <h3 style="color: var(--marvel-grey); margin-bottom: 10px; font-size: 1rem; letter-spacing: 2px;">TIP</h3>
-              <p id="waiting-tip" style="font-size: 1.2rem; line-height: 1.5;">Loading tips...</p>
-            </div>
-            <button class="leave-btn" style="position: relative; background: transparent; border: 2px solid var(--marvel-grey); color: white; padding: 10px 20px; border-radius: 8px; font-family: var(--font-header); font-size: 1.2rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--marvel-red)'; this.style.color='var(--marvel-red)';" onmouseout="this.style.borderColor='var(--marvel-grey)'; this.style.color='white';" onclick="handleLeaveWaiting()">Leave Room</button>
-            <style>
-              @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            </style>
+      <!-- PROFILE VIEW -->
+      <div id="view-profile" class="view page-container">
+        <div class="glass-panel profile-panel">
+          <div
+            style="display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+            <img id="profile-avatar-img" src="/assets/images/default_avatar.png" alt="Avatar"
+              style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--marvel-red); box-shadow: 0 0 15px rgba(224, 49, 49, 0.4);">
+            <h2 id="profile-title" style="margin: 0;">Profile</h2>
           </div>
-        </div>
-
-        <!-- TOP 10 VIEW -->
-        <div id="view-top10" class="view page-container">
-          <div class="glass-panel leaderboard-panel">
-            <h2>Top 10 Performers</h2>
-            <table class="leaderboard">
-              <thead><tr><th>Rank</th><th>Avatar</th><th>Nickname</th><th>Wins</th><th>Loses</th><th>Draws</th><th>Winstreak</th></tr></thead>
-              <tbody id="top10-tbody"></tbody>
-            </table>
+          <div class="profile-stats">
+            <div class="stat-box"><span>Games Played</span><strong id="profile-games">0</strong></div>
+            <div class="stat-box"><span>Wins</span><strong id="profile-wins">0</strong></div>
+            <div class="stat-box"><span>Loses</span><strong id="profile-loses">0</strong></div>
+            <div class="stat-box"><span>Draws</span><strong id="profile-draws">0</strong></div>
+            <div class="stat-box"><span>Winstreak</span><strong id="profile-winstreak">0</strong></div>
           </div>
-        </div>
 
-        <!-- PROFILE VIEW -->
-        <div id="view-profile" class="view page-container">
-          <div class="glass-panel profile-panel">
-            <div style="display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; margin-bottom: 20px;">
-              <img id="profile-avatar-img" src="/assets/images/default_avatar.png" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--marvel-red); box-shadow: 0 0 15px rgba(224, 49, 49, 0.4);">
-              <h2 id="profile-title" style="margin: 0;">Profile</h2>
-            </div>
-            <div class="profile-stats">
-              <div class="stat-box"><span>Games Played</span><strong id="profile-games">0</strong></div>
-              <div class="stat-box"><span>Wins</span><strong id="profile-wins">0</strong></div>
-              <div class="stat-box"><span>Loses</span><strong id="profile-loses">0</strong></div>
-              <div class="stat-box"><span>Draws</span><strong id="profile-draws">0</strong></div>
-              <div class="stat-box"><span>Winstreak</span><strong id="profile-winstreak">0</strong></div>
-            </div>
-
-            <!-- Hero specific stats -->
-            <div id="profile-hero-stats" style="margin-top: 30px;">
-              <h3 style="color: var(--marvel-red); font-family: var(--font-comic); margin-bottom: 15px; text-align: center;">Hero Statistics</h3>
-              <div id="hero-stats-grid" style="display: flex; flex-direction: column; gap: 20px;">
-                <!-- Hero blocks dynamically loaded here -->
-              </div>
-            </div>
-            
-            <div class="profile-settings" id="profile-settings-container" style="margin-top: 30px; text-align: left; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px;">
-              <h3 style="color: var(--marvel-red); font-family: var(--font-comic); margin-bottom: 15px;">Settings</h3>
-              <div style="margin-bottom: 15px;">
-                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                  <input type="checkbox" id="setting-confirm-end" style="width: 18px; height: 18px;">
-                  Confirm before ending turn
-                </label>
-              </div>
-              <div style="margin-bottom: 15px;">
-                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                  <input type="checkbox" id="setting-confirm-resign" style="width: 18px; height: 18px;">
-                  Confirm before resigning
-                </label>
-              </div>
-              <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px;">Avatar URL:</label>
-                <input type="text" id="setting-avatar-url" placeholder="https://example.com/image.jpg" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: white;">
-              </div>
-              <button onclick="saveProfileSettings()" style="background: var(--marvel-red); color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%;">Save Settings</button>
-              <div id="settings-msg" style="margin-top: 10px; font-size: 0.9rem; text-align: center; display: none;"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- GAME BOARD VIEW -->
-        <div id="view-game" class="view board" style="padding:0; width:100vw; display: none;">
-          <!-- Hero theme overlays (full-screen halves behind content) -->
-          <div id="hero-bg-enemy" class="hero-bg-overlay hero-bg-top"></div>
-          <div id="hero-bg-player" class="hero-bg-overlay hero-bg-bottom"></div>
-          <button class="leave-btn" onclick="handleResign()">Resign</button>
-          <button class="end-turn-btn" id="end-turn-btn" onclick="handleEndTurn()">End Turn</button>
-
-          <div class="timer">60</div>
-          <div id="round-counter" class="round-counter">Round 1</div>
-
-          <!-- TURN OVERLAY -->
-          <div class="turn-overlay" id="turn-overlay" style="display:none;"></div>
-
-          <!-- COIN FLIP OVERLAY -->
-          <div class="coin-overlay" id="coin-overlay" style="display:none;">
-            <div class="coin-container">
-              <div class="coin" id="start-coin">
-                <div class="coin-face coin-front">YOUR<br>TURN</div>
-                <div class="coin-face coin-back">ENEMY<br>TURN</div>
-              </div>
-              <div id="coin-winner-label" style="margin-top:20px; font-family:var(--font-header); font-size:1.8rem; color:#f39c12; text-shadow:0 0 10px rgba(243,156,18,0.8); letter-spacing:2px; opacity:0; transition:opacity 0.5s;"></div>
+          <!-- Hero specific stats -->
+          <div id="profile-hero-stats" style="margin-top: 30px;">
+            <h3
+              style="color: var(--marvel-red); font-family: var(--font-comic); margin-bottom: 15px; text-align: center;">
+              Hero Statistics</h3>
+            <div id="hero-stats-grid" style="display: flex; flex-direction: column; gap: 20px;">
+              <!-- Hero blocks dynamically loaded here -->
             </div>
           </div>
 
-          <!-- TURN ORDER CHANGE BANNER -->
-          <div id="turn-order-banner" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:8000; align-items:center; justify-content:center; flex-direction:column; gap:15px;">
-            <div id="turn-order-text" style="font-family:var(--font-header); font-size:3rem; color:#f39c12; text-shadow:0 0 20px rgba(243,156,18,0.9); letter-spacing:4px; animation:pulseTurn 0.8s infinite;"></div>
-            <div id="turn-order-sub" style="font-family:var(--font-comic); font-size:1.2rem; color:#ccc; letter-spacing:1px;">goes first this round</div>
-          </div>
-
-          <!-- END TURN CONFIRMATION -->
-          <div class="confirm-modal" id="end-turn-modal" style="display:none;">
-            <div class="confirm-box">
-              <p>End your turn?</p>
-              <label style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; color: #ccc; margin: 10px 0 20px; cursor: pointer;">
-                <input type="checkbox" id="dont-ask-end-turn" style="width: 16px; height: 16px;"> Don't ask again
+          <div class="profile-settings" id="profile-settings-container"
+            style="margin-top: 30px; text-align: left; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px;">
+            <h3 style="color: var(--marvel-red); font-family: var(--font-comic); margin-bottom: 15px;">Settings</h3>
+            <div style="margin-bottom: 15px;">
+              <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="setting-confirm-end" style="width: 18px; height: 18px;">
+                Confirm before ending turn
               </label>
-              <div class="confirm-actions">
-                <button class="confirm-yes" onclick="confirmEndTurn()">Yes</button>
-                <button class="confirm-no" onclick="document.getElementById('end-turn-modal').style.display='none'">Cancel</button>
-              </div>
             </div>
-          </div>
-
-          <!-- RESIGN CONFIRMATION -->
-          <div class="confirm-modal" id="resign-modal" style="display:none;">
-            <div class="confirm-box">
-              <p>Are you sure you want to resign?</p>
-              <label style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; color: #ccc; margin: 10px 0 20px; cursor: pointer;">
-                <input type="checkbox" id="dont-ask-resign" style="width: 16px; height: 16px;"> Don't ask again
+            <div style="margin-bottom: 15px;">
+              <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="setting-confirm-resign" style="width: 18px; height: 18px;">
+                Confirm before resigning
               </label>
-              <div class="confirm-actions">
-                <button class="confirm-yes" onclick="confirmResign()">Yes, Resign</button>
-                <button class="confirm-no" onclick="document.getElementById('resign-modal').style.display='none'">Cancel</button>
-              </div>
+            </div>
+            <div style="margin-bottom: 15px;">
+              <label style="display: block; margin-bottom: 5px;">Avatar URL:</label>
+              <input type="text" id="setting-avatar-url" placeholder="https://example.com/image.jpg"
+                style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: white;">
+            </div>
+            <button onclick="saveProfileSettings()"
+              style="background: var(--marvel-red); color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%;">Save
+              Settings</button>
+            <div id="settings-msg" style="margin-top: 10px; font-size: 0.9rem; text-align: center; display: none;">
             </div>
           </div>
+        </div>
+      </div>
 
-          <!-- ENEMY ZONE -->
-          <div class="enemy-zone">
-            <div id="enemy-deck" class="deck-visual"></div>
-            <div class="hero-portrait-container">
-              <img id="enemy-avatar" src="" alt="Enemy Hero" class="hero-avatar" />
-              <div class="hero-hp" id="enemy-hp">30</div>
-              <h3 class="hero-name" id="enemy-nickname">Waiting...</h3>
-            </div>
-            <div class="enemy-hand">
-              <ul class="hand-fanned-enemy" id="enemy-hand-list"></ul>
-            </div>
-          </div>
-          
-          <!-- BATTLEFIELD -->
-          <div class="battlefield">
-            <div class="battlefield-half enemy-half">
-              <ul id="enemy-active-cards"></ul>
-              <div class="staging-area"><ul id="enemy-staged-cards"></ul></div>
-            </div>
-            <div class="battlefield-divider">
-              <div class="turn-indicator waiting" id="turn-indicator">Waiting for opponent...</div>
-            </div>
-            <div class="battlefield-half player-half">
-              <div class="staging-area"><ul id="player-staged-cards"></ul></div>
-              <ul id="player-active-cards"></ul>
-            </div>
-          </div>
+      <!-- GAME BOARD VIEW -->
+      <div id="view-game" class="view board" style="padding:0; width:100vw; display: none;">
+        <!-- Hero theme overlays (full-screen halves behind content) -->
+        <div id="hero-bg-enemy" class="hero-bg-overlay hero-bg-top"></div>
+        <div id="hero-bg-player" class="hero-bg-overlay hero-bg-bottom"></div>
+        <button class="leave-btn" onclick="handleResign()">Resign</button>
+        <button class="end-turn-btn" id="end-turn-btn" onclick="handleEndTurn()">End Turn</button>
 
-          <!-- PLAYER ZONE -->
-          <div class="player-zone">
-            <div id="player-deck" class="deck-visual"></div>
-            <div class="player-hand">
-              <ul class="hand-fanned" id="player-hand-list"></ul>
-            </div>
-            <div class="hero-portrait-container">
-              <img id="player-avatar" src="" alt="Player Hero" class="hero-avatar" />
-              <div class="hero-hp" id="player-hp">30</div>
-              <h3 class="hero-name" id="player-nickname">Player</h3>
-            </div>
-          </div>
+        <div class="timer">60</div>
+        <div id="round-counter" class="round-counter">Round 1</div>
 
-          <!-- AP BARS (Middle Right) -->
-          <div class="ap-side-container">
-            <div class="ap-section enemy-ap-section">
-              <div class="ap-display">
-                <div id="enemy-ap-bubbles" class="ap-bubbles"></div>
-                <div id="enemy-ap-text" class="ap-text">3/3</div>
-              </div>
+        <!-- TURN OVERLAY -->
+        <div class="turn-overlay" id="turn-overlay" style="display:none;"></div>
+
+        <!-- COIN FLIP OVERLAY -->
+        <div class="coin-overlay" id="coin-overlay" style="display:none;">
+          <div class="coin-container">
+            <div class="coin" id="start-coin">
+              <div class="coin-face coin-front">YOUR<br>TURN</div>
+              <div class="coin-face coin-back">ENEMY<br>TURN</div>
             </div>
-            <div class="ap-section player-ap-section">
-              <div class="ap-display">
-                <div id="player-ap-bubbles" class="ap-bubbles"></div>
-                <div id="player-ap-text" class="ap-text">3/3</div>
-              </div>
+            <div id="coin-winner-label"
+              style="margin-top:20px; font-family:var(--font-header); font-size:1.8rem; color:#f39c12; text-shadow:0 0 10px rgba(243,156,18,0.8); letter-spacing:2px; opacity:0; transition:opacity 0.5s;">
             </div>
           </div>
         </div>
 
-      </main>
-    </div>
+        <!-- TURN ORDER CHANGE BANNER -->
+        <div id="turn-order-banner"
+          style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:8000; align-items:center; justify-content:center; flex-direction:column; gap:15px;">
+          <div id="turn-order-text"
+            style="font-family:var(--font-header); font-size:3rem; color:#f39c12; text-shadow:0 0 20px rgba(243,156,18,0.9); letter-spacing:4px; animation:pulseTurn 0.8s infinite;">
+          </div>
+          <div id="turn-order-sub"
+            style="font-family:var(--font-comic); font-size:1.2rem; color:#ccc; letter-spacing:1px;">goes first this
+            round</div>
+        </div>
 
-    <!-- SOCKET.IO -->
-    <script src="/socket.io/socket.io.js"></script>
-    <!-- Foundation -->
-    <script src="/js/state.js"></script>
-    <script src="/js/api.js"></script>
-    <script src="/js/router.js"></script>
-    <script src="/js/socket.js"></script>
-    <!-- Views -->
-    <script src="/js/views/auth.js"></script>
-    <script src="/js/views/top10.js"></script>
-    <script src="/js/views/profile.js"></script>
-    <script src="/js/views/heroes.js"></script>
-    <script src="/js/views/lobby.js"></script>
-    <script src="/js/views/waiting.js"></script>
-    <!-- Game -->
-    <script src="/js/game/renderer.js"></script>
-    <script src="/js/game/animation.js"></script>
-    <script src="/js/game/timer.js"></script>
-    <script src="/js/game/actions.js"></script>
-    <script src="/js/game/socketListeners.js"></script>
-    <!-- Entry point -->
-    <script src="/js/main.js"></script>
-  </body>
+        <!-- END TURN CONFIRMATION -->
+        <div class="confirm-modal" id="end-turn-modal" style="display:none;">
+          <div class="confirm-box">
+            <p>End your turn?</p>
+            <label
+              style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; color: #ccc; margin: 10px 0 20px; cursor: pointer;">
+              <input type="checkbox" id="dont-ask-end-turn" style="width: 16px; height: 16px;"> Don't ask again
+            </label>
+            <div class="confirm-actions">
+              <button class="confirm-yes" onclick="confirmEndTurn()">Yes</button>
+              <button class="confirm-no"
+                onclick="document.getElementById('end-turn-modal').style.display='none'">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESIGN CONFIRMATION -->
+        <div class="confirm-modal" id="resign-modal" style="display:none;">
+          <div class="confirm-box">
+            <p>Are you sure you want to resign?</p>
+            <label
+              style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; color: #ccc; margin: 10px 0 20px; cursor: pointer;">
+              <input type="checkbox" id="dont-ask-resign" style="width: 16px; height: 16px;"> Don't ask again
+            </label>
+            <div class="confirm-actions">
+              <button class="confirm-yes" onclick="confirmResign()">Yes, Resign</button>
+              <button class="confirm-no"
+                onclick="document.getElementById('resign-modal').style.display='none'">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ENEMY ZONE -->
+        <div class="enemy-zone">
+          <div id="enemy-deck" class="deck-visual"></div>
+          <div class="hero-portrait-container">
+            <img id="enemy-avatar" src="" alt="Enemy Hero" class="hero-avatar" />
+            <div class="hero-hp" id="enemy-hp">30</div>
+            <h3 class="hero-name" id="enemy-nickname">Waiting...</h3>
+          </div>
+          <div class="enemy-hand">
+            <ul class="hand-fanned-enemy" id="enemy-hand-list"></ul>
+          </div>
+        </div>
+
+        <!-- BATTLEFIELD -->
+        <div class="battlefield">
+          <div class="battlefield-half enemy-half">
+            <ul id="enemy-active-cards"></ul>
+            <div class="staging-area">
+              <ul id="enemy-staged-cards"></ul>
+            </div>
+          </div>
+          <div class="battlefield-divider">
+            <div class="turn-indicator waiting" id="turn-indicator">Waiting for opponent...</div>
+          </div>
+          <div class="battlefield-half player-half">
+            <div class="staging-area">
+              <ul id="player-staged-cards"></ul>
+            </div>
+            <ul id="player-active-cards"></ul>
+          </div>
+        </div>
+
+        <!-- PLAYER ZONE -->
+        <div class="player-zone">
+          <div id="player-deck" class="deck-visual"></div>
+          <div class="player-hand">
+            <ul class="hand-fanned" id="player-hand-list"></ul>
+          </div>
+          <div class="hero-portrait-container">
+            <img id="player-avatar" src="" alt="Player Hero" class="hero-avatar" />
+            <div class="hero-hp" id="player-hp">30</div>
+            <h3 class="hero-name" id="player-nickname">Player</h3>
+          </div>
+        </div>
+
+        <!-- AP BARS (Middle Right) -->
+        <div class="ap-side-container">
+          <div class="ap-section enemy-ap-section">
+            <div class="ap-display">
+              <div id="enemy-ap-bubbles" class="ap-bubbles"></div>
+              <div id="enemy-ap-text" class="ap-text">3/3</div>
+            </div>
+          </div>
+          <div class="ap-section player-ap-section">
+            <div class="ap-display">
+              <div id="player-ap-bubbles" class="ap-bubbles"></div>
+              <div id="player-ap-text" class="ap-text">3/3</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- SOCKET.IO -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Foundation -->
+  <script src="/js/state.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/router.js"></script>
+  <script src="/js/socket.js"></script>
+  <!-- Views -->
+  <script src="/js/views/auth.js"></script>
+  <script src="/js/views/top10.js"></script>
+  <script src="/js/views/profile.js"></script>
+  <script src="/js/views/heroes.js"></script>
+  <script src="/js/views/lobby.js"></script>
+  <script src="/js/views/waiting.js"></script>
+  <!-- Game -->
+  <script src="/js/game/renderer.js"></script>
+  <script src="/js/game/animation.js"></script>
+  <script src="/js/game/timer.js"></script>
+  <script src="/js/game/actions.js"></script>
+  <script src="/js/game/socketListeners.js"></script>
+  <!-- Entry point -->
+  <script src="/js/main.js"></script>
+</body>
+
 </html>
